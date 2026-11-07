@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -69,15 +69,38 @@ namespace GotinhaAgua
                 }
             };
 
-            // Gradiente suave de fundo: Azul-bebê para celeste e branco fresco
+            // Detecção suave do Modo Escuro das preferências salvas
+            bool isDark = false;
+            try
+            {
+                string dadosPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dados_agua.json");
+                if (File.Exists(dadosPath))
+                {
+                    string j = File.ReadAllText(dadosPath);
+                    isDark = j.Contains("\"ModoEscuro\":true") || j.Contains("\"ModoEscuro\": true");
+                }
+            }
+            catch { }
+
+            // Gradiente de fundo calibrado
             LinearGradientBrush cardBg = new LinearGradientBrush
             {
                 StartPoint = new Point(0.5, 0),
                 EndPoint = new Point(0.5, 1)
             };
-            cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(224, 242, 254), 0.0)); // #E0F2FE
-            cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(186, 230, 253), 0.5)); // #BAE6FD
-            cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(240, 249, 255), 1.0)); // #F0F9FF
+            if (isDark)
+            {
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(11, 19, 43), 0.0));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 0.5));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(23, 37, 84), 1.0));
+                mainCard.BorderBrush = new SolidColorBrush(Color.FromArgb(140, 56, 189, 248));
+            }
+            else
+            {
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(224, 242, 254), 0.0));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(186, 230, 253), 0.5));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(240, 249, 255), 1.0));
+            }
             mainCard.Background = cardBg;
 
             // Canvas para bolhas animadas e partículas cintilantes no fundo
@@ -186,37 +209,26 @@ namespace GotinhaAgua
             };
             mascotContainer.Children.Add(glowAura);
 
-            // Medalhão circular estilizado com a Mascote Gotinha
+            // Mascote Gotinha Waving em Alta Definição com fundo transparente natural
             string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
             if (File.Exists(mascotPath))
             {
                 try
                 {
-                    Border imgBorder = new Border
+                    Image mascotImg = new Image
                     {
-                        Width = 170,
-                        Height = 170,
-                        CornerRadius = new CornerRadius(85), // Círculo perfeito
-                        BorderThickness = new Thickness(3.5),
-                        BorderBrush = Brushes.White,
-                        ClipToBounds = true,
+                        Width = 175,
+                        Height = 175,
+                        Stretch = Stretch.Uniform,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center,
                         Effect = new DropShadowEffect
                         {
-                            Color = Color.FromRgb(2, 132, 199),
-                            BlurRadius = 24,
-                            ShadowDepth = 5,
-                            Opacity = 0.35
+                            Color = Color.FromRgb(56, 189, 248),
+                            BlurRadius = 26,
+                            ShadowDepth = 4,
+                            Opacity = 0.45
                         }
-                    };
-
-                    Image mascotImg = new Image
-                    {
-                        Width = 163,
-                        Height = 163,
-                        Stretch = Stretch.UniformToFill,
-                        Clip = new EllipseGeometry(new Point(81.5, 81.5), 81.5, 81.5)
                     };
                     BitmapImage bmp = new BitmapImage();
                     bmp.BeginInit();
@@ -225,35 +237,10 @@ namespace GotinhaAgua
                     bmp.EndInit();
                     mascotImg.Source = bmp;
 
-                    imgBorder.Child = mascotImg;
-                    mascotContainer.Children.Add(imgBorder);
+                    mascotContainer.Children.Add(mascotImg);
                 }
                 catch { }
             }
-
-            // Pálpebras e olhos animados para o efeito de piscar (Eye Blink)
-            Canvas canvasOlhos = new Canvas
-            {
-                Width = 170,
-                Height = 170,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                IsHitTestVisible = false
-            };
-
-            // Olho esquerdo piscando
-            FrameworkElement olhoEsq = CriarEyelidElemento();
-            Canvas.SetLeft(olhoEsq, 54);
-            Canvas.SetTop(olhoEsq, 91);
-            canvasOlhos.Children.Add(olhoEsq);
-
-            // Olho direito piscando
-            FrameworkElement olhoDir = CriarEyelidElemento();
-            Canvas.SetLeft(olhoDir, 96);
-            Canvas.SetTop(olhoDir, 91);
-            canvasOlhos.Children.Add(olhoDir);
-
-            mascotContainer.Children.Add(canvasOlhos);
 
             // ==========================================
             // ANIMAÇÕES: Entrada (Pulo), Flutuação, Aceno e Piscar
@@ -318,25 +305,6 @@ namespace GotinhaAgua
             _mascotScale.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleX);
             _mascotScale.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleY);
             mascotContainer.BeginAnimation(UIElement.OpacityProperty, animMascotOpacity);
-
-            // 3. Piscar de olhos ocasional a cada 3.8 segundos
-            Storyboard blinkSb = new Storyboard
-            {
-                RepeatBehavior = RepeatBehavior.Forever,
-                Duration = new Duration(TimeSpan.FromSeconds(3.8))
-            };
-
-            DoubleAnimationUsingKeyFrames blinkEsq = CriarFramesPiscar();
-            Storyboard.SetTarget(blinkEsq, olhoEsq);
-            Storyboard.SetTargetProperty(blinkEsq, new PropertyPath(UIElement.OpacityProperty));
-            blinkSb.Children.Add(blinkEsq);
-
-            DoubleAnimationUsingKeyFrames blinkDir = CriarFramesPiscar();
-            Storyboard.SetTarget(blinkDir, olhoDir);
-            Storyboard.SetTargetProperty(blinkDir, new PropertyPath(UIElement.OpacityProperty));
-            blinkSb.Children.Add(blinkDir);
-
-            blinkSb.Begin();
 
             // Interação fofa ao passar o mouse ou clicar na Gotinha
             mascotContainer.MouseEnter += delegate
@@ -455,6 +423,18 @@ namespace GotinhaAgua
             tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(3, 105, 161), 1.0));  // Sky 700
             txtTitulo.Foreground = tituloBrush;
 
+            bool isDark = false;
+            try
+            {
+                string dadosPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dados_agua.json");
+                if (File.Exists(dadosPath))
+                {
+                    string j = File.ReadAllText(dadosPath);
+                    isDark = j.Contains("\"ModoEscuro\":true") || j.Contains("\"ModoEscuro\": true");
+                }
+            }
+            catch { }
+
             // Frase principal: "Oiê! Que bom ter você aqui! 💧"
             TextBlock txtMensagem = new TextBlock
             {
@@ -462,7 +442,7 @@ namespace GotinhaAgua
                 FontFamily = new FontFamily("Segoe UI, sans-serif"),
                 FontSize = 18,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)), // Slate 900
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextAlignment = TextAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 6)
@@ -475,7 +455,7 @@ namespace GotinhaAgua
                 FontFamily = new FontFamily("Segoe UI, sans-serif"),
                 FontSize = 14,
                 FontWeight = FontWeights.Normal,
-                Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)), // Slate 600
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextAlignment = TextAlignment.Center
             };

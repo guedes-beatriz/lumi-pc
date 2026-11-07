@@ -1,4 +1,4 @@
-﻿using System.Windows.Media.Imaging;
+using System.Windows.Media.Imaging;
 using System.Web.Script.Serialization;
 using System;
 using System.Runtime.InteropServices; // DPI awareness
@@ -515,7 +515,7 @@ namespace GotinhaAgua
     // ==========================================
     public class MainWindow : Window
     {
-        private HistoricoApp _dados;
+        public HistoricoApp _dados;
         private string _caminhoArquivo;
         private DispatcherTimer _timerLembrete;
         private DispatcherTimer _timerAnimacaoMascote;
@@ -950,6 +950,19 @@ namespace GotinhaAgua
                 Padding = new Thickness(12, 6, 12, 6),
                 Cursor = Cursors.Hand,
                 VerticalAlignment = VerticalAlignment.Center
+            };
+            AplicarEstiloPill(_btnToggleHistorico, 12);
+            _btnToggleHistorico.MouseEnter += delegate
+            {
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                _btnToggleHistorico.Background = isDark ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnToggleHistorico.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+            };
+            _btnToggleHistorico.MouseLeave += delegate
+            {
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                _btnToggleHistorico.Background = isDark ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
+                _btnToggleHistorico.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
             };
             _btnToggleHistorico.Click += delegate { AlternarVisualizacaoHistorico(); };
             Grid.SetColumn(_btnToggleHistorico, 0);
@@ -2682,17 +2695,35 @@ namespace GotinhaAgua
             else
             {
                 _txtFaltaMl.Text = "\uD83C\uDF89 Meta batida com sucesso! Corpo 100% hidratado!";
-                _txtFaltaMl.Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52));
-                if (_cardStatusFalta != null)
+                if (_dados.ModoEscuro)
                 {
-                    _cardStatusFalta.Background = new SolidColorBrush(Color.FromRgb(240, 253, 244));
-                    _cardStatusFalta.BorderBrush = new SolidColorBrush(Color.FromRgb(187, 247, 208));
+                    _txtFaltaMl.Foreground = new SolidColorBrush(Color.FromRgb(52, 211, 153));
+                    if (_cardStatusFalta != null)
+                    {
+                        _cardStatusFalta.Background = new SolidColorBrush(Color.FromRgb(6, 46, 26));
+                        _cardStatusFalta.BorderBrush = new SolidColorBrush(Color.FromRgb(5, 150, 105));
+                    }
+                    if (_badgePorcentagem != null)
+                    {
+                        _badgePorcentagem.Background = new SolidColorBrush(Color.FromRgb(6, 46, 26));
+                        _badgePorcentagem.BorderBrush = new SolidColorBrush(Color.FromRgb(5, 150, 105));
+                        _txtPorcentagem.Foreground = new SolidColorBrush(Color.FromRgb(52, 211, 153));
+                    }
                 }
-                if (_badgePorcentagem != null)
+                else
                 {
-                    _badgePorcentagem.Background = new SolidColorBrush(Color.FromRgb(240, 253, 244));
-                    _badgePorcentagem.BorderBrush = new SolidColorBrush(Color.FromRgb(187, 247, 208));
-                    _txtPorcentagem.Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52));
+                    _txtFaltaMl.Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52));
+                    if (_cardStatusFalta != null)
+                    {
+                        _cardStatusFalta.Background = new SolidColorBrush(Color.FromRgb(240, 253, 244));
+                        _cardStatusFalta.BorderBrush = new SolidColorBrush(Color.FromRgb(187, 247, 208));
+                    }
+                    if (_badgePorcentagem != null)
+                    {
+                        _badgePorcentagem.Background = new SolidColorBrush(Color.FromRgb(240, 253, 244));
+                        _badgePorcentagem.BorderBrush = new SolidColorBrush(Color.FromRgb(187, 247, 208));
+                        _txtPorcentagem.Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52));
+                    }
                 }
             }
 
@@ -3767,6 +3798,8 @@ namespace GotinhaAgua
                 bool escuro = _dados.ModoEscuro;
                 _btnTema.ToolTip = escuro ? "Ativar Modo Claro (Brisa Aqu\u00E1tica)" : "Ativar Modo Escuro (Oceano Noturno)";
                 _btnTema.Content = CriarIconeTema(escuro);
+                _btnTema.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _btnTema.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
             }
         }
 
@@ -3877,6 +3910,12 @@ namespace GotinhaAgua
             Brush corSub = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105));
             if (_txtBrandTitle != null) _txtBrandTitle.Foreground = corTitulo;
             if (_txtBrandSub != null) _txtBrandSub.Foreground = corSub;
+            if (_statusPill != null && _txtStatusPill != null)
+            {
+                _statusPill.Background = escuro ? new SolidColorBrush(Color.FromRgb(6, 78, 59)) : new SolidColorBrush(Color.FromRgb(236, 253, 245));
+                _statusPill.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(5, 150, 105)) : new SolidColorBrush(Color.FromRgb(167, 243, 208));
+                _txtStatusPill.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(5, 150, 105));
+            }
             if (_btnMin != null) _btnMin.Content = CriarIconeMinimizar(corTitulo);
             if (_btnMax != null) _btnMax.Content = CriarIconeMaximizar(corTitulo, WindowState == WindowState.Maximized);
             if (_btnClose != null) _btnClose.Content = CriarIconeFechar(corTitulo);
@@ -3900,6 +3939,13 @@ namespace GotinhaAgua
             if (_btnNotif != null) { _btnNotif.Background = bgBtn; _btnNotif.BorderBrush = borderBtn; _btnNotif.Content = CriarIconeNotif(_dados.NotificacoesAtivadas); }
             if (_btnConfig != null) { _btnConfig.Background = bgBtn; _btnConfig.BorderBrush = borderBtn; _btnConfig.Content = CriarIconeEngrenagem(escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105))); }
             AtualizarVisualBtnTema();
+
+            if (_btnToggleHistorico != null)
+            {
+                _btnToggleHistorico.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
+                _btnToggleHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnToggleHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
 
             // 5. Card Progresso
             if (_txtMlAtual != null) _txtMlAtual.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
@@ -3990,6 +4036,7 @@ namespace GotinhaAgua
                 FocusVisualStyle = null,
                 Cursor = Cursors.Hand
             };
+            AplicarEstiloPill(btn, 10);
             TransformGroup tg = new TransformGroup();
             ScaleTransform st = new ScaleTransform(1.0, 1.0);
             RotateTransform rt = new RotateTransform(0);
@@ -3999,7 +4046,8 @@ namespace GotinhaAgua
             btn.RenderTransform = tg;
             btn.MouseEnter += delegate
             {
-                btn.Background = new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                btn.Background = isDark ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
                 btn.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
                 st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.0, 1.08, TimeSpan.FromMilliseconds(150)));
                 st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.0, 1.08, TimeSpan.FromMilliseconds(150)));
@@ -4007,8 +4055,9 @@ namespace GotinhaAgua
             };
             btn.MouseLeave += delegate
             {
-                btn.Background = new SolidColorBrush(Color.FromRgb(240, 249, 255));
-                btn.BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                btn.Background = isDark ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                btn.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
                 st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.08, 1.0, TimeSpan.FromMilliseconds(150)));
                 st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.08, 1.0, TimeSpan.FromMilliseconds(150)));
                 if (isGear) rt.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(45, 0, TimeSpan.FromMilliseconds(220)));
@@ -4102,119 +4151,156 @@ namespace GotinhaAgua
         public LembreteAlertaWindow(MainWindow main)
         {
             _main = main;
-            Title = "Hora do Gole! 💧";
-            Width = 340;
-            Height = 310;
+            bool escuro = (_main != null && _main._dados != null && _main._dados.ModoEscuro);
+
+            Title = "Hora do Gole! \uD83D\uDCA7";
+            Width = 350;
+            Height = 320;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
-            Background = Brushes.White;
+            Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
             Opacity = 0;
+
+            try
+            {
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(iconPath))
+                {
+                    Icon = BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
+                }
+            }
+            catch { }
+
             Loaded += delegate {
                 DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                           };
+                };
                 BeginAnimation(UIElement.OpacityProperty, fadeIn);
-                       };
+            };
 
-            StackPanel sp = new StackPanel { Margin = new Thickness(20), VerticalAlignment = VerticalAlignment.Center            };
+            StackPanel sp = new StackPanel { Margin = new Thickness(22), VerticalAlignment = VerticalAlignment.Center };
 
             string mascotAlertPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
             if (File.Exists(mascotAlertPath))
             {
                 try
                 {
-                    Border bImg = new Border
+                    Image imgAlert = new Image
                     {
-                        Width = 64,
-                        Height = 64,
-                        CornerRadius = new CornerRadius(16),
-                        ClipToBounds = true,
-                        BorderBrush = new SolidColorBrush(Color.FromRgb(125, 211, 252)),
-                        BorderThickness = new Thickness(1.5),
-                RenderTransformOrigin = new Point(0.5, 0.5),
-                RenderTransform = new ScaleTransform(1.0, 1.0),
+                        Width = 72,
+                        Height = 72,
+                        Stretch = Stretch.Uniform,
                         HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 0, 0, 8),
-                        Effect = new DropShadowEffect { BlurRadius = 10, ShadowDepth = 2, Opacity = 0.25, Color = Color.FromRgb(2, 132, 199) }
-                               };
-                    Image imgAlert = new Image { Width = 64, Height = 64, Stretch = Stretch.UniformToFill            };
+                        Margin = new Thickness(0, 0, 0, 10),
+                        Effect = new DropShadowEffect
+                        {
+                            BlurRadius = 16,
+                            ShadowDepth = 3,
+                            Opacity = 0.35,
+                            Color = Color.FromRgb(56, 189, 248)
+                        }
+                    };
                     BitmapImage bmpAlert = new BitmapImage();
                     bmpAlert.BeginInit();
                     bmpAlert.UriSource = new Uri(mascotAlertPath, UriKind.Absolute);
                     bmpAlert.CacheOption = BitmapCacheOption.OnLoad;
                     bmpAlert.EndInit();
                     imgAlert.Source = bmpAlert;
-                    bImg.Child = imgAlert;
-                    sp.Children.Add(bImg);
+                    sp.Children.Add(imgAlert);
                 }
                 catch
                 {
-                    sp.Children.Add(new TextBlock { Text = "💧", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
+                    sp.Children.Add(new TextBlock { Text = "\uD83D\uDCA7", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
                 }
             }
             else
             {
-                sp.Children.Add(new TextBlock { Text = "💧", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
+                sp.Children.Add(new TextBlock { Text = "\uD83D\uDCA7", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
             }
 
             TextBlock title = new TextBlock
             {
-                Text = "Hora de Beber Água!",
+                Text = "Hora de Beber \u00C1gua!",
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 8, 0, 4)
-                       };
+                Margin = new Thickness(0, 4, 0, 4)
+            };
             sp.Children.Add(title);
 
             TextBlock desc = new TextBlock
             {
                 Text = "Seus olhos e sua mente precisam de uma pausa.\nHidrate seu corpo agora!",
-                FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                FontSize = 11.5,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 14)
-                       };
+                Margin = new Thickness(0, 0, 0, 16)
+            };
             sp.Children.Add(desc);
 
             Button btn250 = new Button
             {
-                Content = "🥛 Tomei um Copo (+250 ml)",
+                Content = "\uD83E\uDD5B Tomei um Copo (+250 ml)",
                 FontWeight = FontWeights.Bold,
+                FontSize = 12.5,
                 Foreground = Brushes.White,
                 Background = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Padding = new Thickness(12, 8, 12, 8),
-                Margin = new Thickness(0, 0, 0, 6),
+                Padding = new Thickness(14, 10, 14, 10),
+                Margin = new Thickness(0, 0, 0, 8),
                 BorderThickness = new Thickness(0),
                 Cursor = Cursors.Hand
-                       };
+            };
+            AplicarPillModal(btn250, 12);
             btn250.Click += delegate
             {
-                _main.AdicionarAgua(250, "Copo (🥛)");
+                _main.AdicionarAgua(250, "Copo (\uD83E\uDD5B)");
                 FecharSuave();
-                       };
+            };
             sp.Children.Add(btn250);
 
             Button btnAdiar = new Button
             {
-                Content = "⏳ Adiar por 5 minutos",
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
-                Padding = new Thickness(12, 6, 12, 6),
-                BorderThickness = new Thickness(0),
+                Content = "\u23F3 Adiar por 5 minutos",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Medium,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(12, 7, 12, 7),
                 Cursor = Cursors.Hand
-                       };
-            btnAdiar.Click += delegate { FecharSuave();            };
+            };
+            AplicarPillModal(btnAdiar, 12);
+            btnAdiar.Click += delegate { FecharSuave(); };
             sp.Children.Add(btnAdiar);
 
             Content = sp;
         }
 
+        private static void AplicarPillModal(Button btn, double cornerRadius)
+        {
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(cornerRadius));
+            borderFactory.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderThicknessProperty, new Binding("BorderThickness") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.PaddingProperty, new Binding("Padding") { RelativeSource = RelativeSource.TemplatedParent });
+
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borderFactory.AppendChild(presenter);
+
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+        }
+
         private void FecharSuave()
         {
             DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
-            fadeOut.Completed += delegate { Close();            };
+            fadeOut.Completed += delegate { Close(); };
             BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
     }
@@ -4222,13 +4308,10 @@ namespace GotinhaAgua
     // ==========================================
     // Janela Modal: Configurações
     // ==========================================
-    // Componente Moderno: Toggle Switch (BotÃ£o de AlternÃ¢ncia)
-    // ==========================================
-    // Componente Moderno: Toggle Switch (BotÃ£o de AlternÃ¢ncia)
-    // ==========================================
     public class ModernToggleSwitch : ContentControl
     {
         private bool _isChecked;
+        private bool _isDark;
         private Border _track;
         private Ellipse _thumb;
         private TextBlock _labelStatus;
@@ -4252,13 +4335,14 @@ namespace GotinhaAgua
 
         public event Action<object, bool> IsCheckedChanged;
 
-        public ModernToggleSwitch(bool initialValue)
+        public ModernToggleSwitch(bool initialValue, bool isDark = false)
         {
             _isChecked = initialValue;
+            _isDark = isDark;
             Cursor = Cursors.Hand;
             Focusable = true;
 
-            Grid container = new Grid { VerticalAlignment = VerticalAlignment.Center            };
+            Grid container = new Grid { VerticalAlignment = VerticalAlignment.Center };
             container.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             container.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -4267,10 +4351,12 @@ namespace GotinhaAgua
                 Width = 48,
                 Height = 26,
                 CornerRadius = new CornerRadius(13),
-                Background = _isChecked ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                Background = _isChecked 
+                    ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) 
+                    : (_isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225))),
                 Padding = new Thickness(3),
                 VerticalAlignment = VerticalAlignment.Center
-                       };
+            };
 
             Grid thumbGrid = new Grid();
             _thumb = new Ellipse
@@ -4279,7 +4365,7 @@ namespace GotinhaAgua
                 Height = 20,
                 Fill = Brushes.White,
                 HorizontalAlignment = _isChecked ? HorizontalAlignment.Right : HorizontalAlignment.Left
-                       };
+            };
             thumbGrid.Children.Add(_thumb);
             _track.Child = thumbGrid;
 
@@ -4288,11 +4374,13 @@ namespace GotinhaAgua
                 Text = _isChecked ? "Ativado" : "Desativado",
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = _isChecked ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)),
+                Foreground = _isChecked 
+                    ? (_isDark ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)))
+                    : (_isDark ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(148, 163, 184))),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(10, 0, 0, 0),
                 MinWidth = 65
-                       };
+            };
 
             Grid.SetColumn(_track, 0);
             Grid.SetColumn(_labelStatus, 1);
@@ -4305,7 +4393,7 @@ namespace GotinhaAgua
             {
                 IsChecked = !IsChecked;
                 e.Handled = true;
-                       };
+            };
 
             KeyDown += delegate(object s, KeyEventArgs e)
             {
@@ -4314,79 +4402,104 @@ namespace GotinhaAgua
                     IsChecked = !IsChecked;
                     e.Handled = true;
                 }
-                       };
+            };
         }
 
         private void AtualizarVisual()
         {
             if (_track == null || _thumb == null || _labelStatus == null) return;
 
-            _track.Background = _isChecked ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+            _track.Background = _isChecked 
+                ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) 
+                : (_isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)));
             _thumb.HorizontalAlignment = _isChecked ? HorizontalAlignment.Right : HorizontalAlignment.Left;
             _labelStatus.Text = _isChecked ? "Ativado" : "Desativado";
-            _labelStatus.Foreground = _isChecked ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184));
+            _labelStatus.Foreground = _isChecked 
+                ? (_isDark ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)))
+                : (_isDark ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)));
         }
     }
 
     // ==========================================
-    // Janela Modal: ConfiguraÃ§Ãµes com Toggle Nativo
+    // Janela Modal: Configurações com Toggle Nativo & Suporte a Modo Escuro
     // ==========================================
     public class ConfigWindow : Window
     {
         public ConfigWindow(HistoricoApp dados, Action onSalvar)
         {
+            bool escuro = (dados != null && dados.ModoEscuro);
+
             Title = "Configura\u00E7\u00F5es da Gotinha \u2699\uFE0F";
-            Width = 400;
-            Height = 490;
+            Width = 420;
+            Height = 520;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
-            Background = new SolidColorBrush(Color.FromRgb(248, 250, 252));
+            Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
             Opacity = 0;
+
+            try
+            {
+                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(iconPath))
+                {
+                    Icon = BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
+                }
+            }
+            catch { }
+
             Loaded += delegate {
                 DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                           };
+                };
                 BeginAnimation(UIElement.OpacityProperty, fadeIn);
-                       };
+            };
 
-            ScrollViewer sv = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto            };
-            StackPanel sp = new StackPanel { Margin = new Thickness(22)            };
+            ScrollViewer sv = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            StackPanel sp = new StackPanel { Margin = new Thickness(22) };
 
-            // CabeÃ§alho da Janela
-            StackPanel headerSp = new StackPanel { Margin = new Thickness(0, 0, 0, 16)            };
+            // Cabeçalho da Janela
+            StackPanel headerSp = new StackPanel { Margin = new Thickness(0, 0, 0, 16) };
             headerSp.Children.Add(new TextBlock
             {
                 Text = "Configura\u00E7\u00F5es & Lembretes",
-                FontSize = 16,
+                FontSize = 17,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42))
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(15, 23, 42))
             });
             headerSp.Children.Add(new TextBlock
             {
                 Text = "Ajuste sua meta di\u00E1ria e prefer\u00EAncias do Windows",
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                Margin = new Thickness(0, 2, 0, 0)
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Margin = new Thickness(0, 3, 0, 0)
             });
             sp.Children.Add(headerSp);
 
-            // Card 1: Meta DiÃ¡ria
+            Brush cardBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.White;
+            Brush cardBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+            Brush textTitle = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(30, 41, 59));
+            Brush textDesc = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            Brush inputBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(15, 23, 42)) : Brushes.White;
+            Brush inputBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+            Brush inputFg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+
+            // Card 1: Meta Diária
             Border cardMeta = new Border
             {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(10),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                Background = cardBg,
+                CornerRadius = new CornerRadius(12),
+                BorderBrush = cardBorder,
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(14),
                 Margin = new Thickness(0, 0, 0, 12)
-                       };
+            };
             StackPanel spMeta = new StackPanel();
             spMeta.Children.Add(new TextBlock
             {
                 Text = "\uD83D\uDCA7 Meta Di\u00E1ria de \u00C1gua (ml)",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                Foreground = textTitle,
                 Margin = new Thickness(0, 0, 0, 6)
             });
 
@@ -4395,9 +4508,12 @@ namespace GotinhaAgua
                 Text = dados.MetaDiaria.ToString(),
                 FontSize = 13,
                 Padding = new Thickness(8, 6, 8, 6),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                Background = inputBg,
+                Foreground = inputFg,
+                BorderBrush = inputBorder,
+                CaretBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : null,
                 Margin = new Thickness(0, 0, 0, 8)
-                       };
+            };
             spMeta.Children.Add(txtMeta);
 
             Grid pesoGrid = new Grid();
@@ -4409,8 +4525,11 @@ namespace GotinhaAgua
                 FontSize = 11,
                 Padding = new Thickness(8, 6, 8, 6),
                 ToolTip = "Digite seu peso em kg (ex: 70)",
-                BorderBrush = new SolidColorBrush(Color.FromRgb(203, 213, 225))
-                       };
+                Background = inputBg,
+                Foreground = inputFg,
+                BorderBrush = inputBorder,
+                CaretBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : null
+            };
             Grid.SetColumn(txtPeso, 0);
             pesoGrid.Children.Add(txtPeso);
 
@@ -4418,13 +4537,16 @@ namespace GotinhaAgua
             {
                 Content = "Calcular p/ Peso",
                 FontSize = 11,
-                Padding = new Thickness(10, 6, 10, 6),
+                FontWeight = FontWeights.SemiBold,
+                Padding = new Thickness(12, 6, 12, 6),
                 Margin = new Thickness(8, 0, 0, 0),
-                Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand
-                       };
+            };
+            AplicarPillModal(btnCalcular, 8);
             btnCalcular.Click += delegate
             {
                 double peso;
@@ -4437,102 +4559,102 @@ namespace GotinhaAgua
                 {
                     MessageBox.Show("Digite um peso v\u00E1lido em kg (ex: 65).", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-                       };
+            };
             Grid.SetColumn(btnCalcular, 1);
             pesoGrid.Children.Add(btnCalcular);
             spMeta.Children.Add(pesoGrid);
             cardMeta.Child = spMeta;
             sp.Children.Add(cardMeta);
 
-            // Card 2: NotificaÃ§Ãµes Nativas do Windows com TOGGLE SWITCH
+            // Card 2: Notificações Nativas
             Border cardNotif = new Border
             {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(10),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                Background = cardBg,
+                CornerRadius = new CornerRadius(12),
+                BorderBrush = cardBorder,
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(14),
                 Margin = new Thickness(0, 0, 0, 12)
-                       };
+            };
             Grid notifGrid = new Grid();
             notifGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             notifGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            StackPanel notifTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center            };
+            StackPanel notifTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             notifTextSp.Children.Add(new TextBlock
             {
                 Text = "\uD83D\uDD14 Notifica\u00E7\u00F5es do Windows",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 41, 59))
+                Foreground = textTitle
             });
             notifTextSp.Children.Add(new TextBlock
             {
                 Text = "Exibe lembretes na Central de A\u00E7\u00F5es no canto inferior direito, mesmo em segundo plano.",
                 FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = textDesc,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 2, 8, 0)
             });
             Grid.SetColumn(notifTextSp, 0);
             notifGrid.Children.Add(notifTextSp);
 
-            ModernToggleSwitch toggleNotif = new ModernToggleSwitch(dados.NotificacoesAtivadas);
+            ModernToggleSwitch toggleNotif = new ModernToggleSwitch(dados.NotificacoesAtivadas, escuro);
             Grid.SetColumn(toggleNotif, 1);
             notifGrid.Children.Add(toggleNotif);
 
             cardNotif.Child = notifGrid;
             sp.Children.Add(cardNotif);
 
-            // Card 3: Efeitos Sonoros com TOGGLE SWITCH
+            // Card 3: Efeitos Sonoros
             Border cardSom = new Border
             {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(10),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                Background = cardBg,
+                CornerRadius = new CornerRadius(12),
+                BorderBrush = cardBorder,
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(14),
-                Margin = new Thickness(0, 0, 0, 18)
-                       };
+                Margin = new Thickness(0, 0, 0, 12)
+            };
             Grid somGrid = new Grid();
             somGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             somGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            StackPanel somTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center            };
+            StackPanel somTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             somTextSp.Children.Add(new TextBlock
             {
                 Text = "\uD83D\uDD0A Sons de Gota e Sino",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 41, 59))
+                Foreground = textTitle
             });
             somTextSp.Children.Add(new TextBlock
             {
                 Text = "Tocar efeitos sonoros relaxantes ao registrar \u00E1gua e alertar.",
                 FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = textDesc,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 2, 8, 0)
             });
             Grid.SetColumn(somTextSp, 0);
             somGrid.Children.Add(somTextSp);
 
-            ModernToggleSwitch toggleSom = new ModernToggleSwitch(dados.SomAtivado);
+            ModernToggleSwitch toggleSom = new ModernToggleSwitch(dados.SomAtivado, escuro);
             Grid.SetColumn(toggleSom, 1);
             somGrid.Children.Add(toggleSom);
 
             cardSom.Child = somGrid;
             sp.Children.Add(cardSom);
 
-            // Card 4: Modo Escuro (Oceano Noturno)
+            // Card 4: Modo Escuro
             Border cardTema = new Border
             {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(10),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                Background = cardBg,
+                CornerRadius = new CornerRadius(12),
+                BorderBrush = cardBorder,
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(14),
-                Margin = new Thickness(0, 0, 0, 12)
+                Margin = new Thickness(0, 0, 0, 16)
             };
             Grid temaGrid = new Grid();
             temaGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -4541,30 +4663,30 @@ namespace GotinhaAgua
             StackPanel temaTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             temaTextSp.Children.Add(new TextBlock
             {
-                Text = "🌙 Modo Escuro (Oceano Noturno)",
+                Text = "\uD83C\uDF19 Modo Escuro (Oceano Noturno)",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 41, 59))
+                Foreground = textTitle
             });
             temaTextSp.Children.Add(new TextBlock
             {
                 Text = "Visual confort\u00E1vel para os olhos e uso noturno, com tema azul marinho profundo.",
                 FontSize = 10,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = textDesc,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 2, 8, 0)
             });
             Grid.SetColumn(temaTextSp, 0);
             temaGrid.Children.Add(temaTextSp);
 
-            ModernToggleSwitch toggleTema = new ModernToggleSwitch(dados.ModoEscuro);
+            ModernToggleSwitch toggleTema = new ModernToggleSwitch(dados.ModoEscuro, escuro);
             Grid.SetColumn(toggleTema, 1);
             temaGrid.Children.Add(toggleTema);
 
             cardTema.Child = temaGrid;
             sp.Children.Add(cardTema);
 
-            // BotÃ£o Salvar
+            // Botão Salvar
             Button btnSalvar = new Button
             {
                 Content = "Salvar Prefer\u00EAncias",
@@ -4575,7 +4697,8 @@ namespace GotinhaAgua
                 Padding = new Thickness(16, 10, 16, 10),
                 BorderThickness = new Thickness(0),
                 Cursor = Cursors.Hand
-                       };
+            };
+            AplicarPillModal(btnSalvar, 12);
             btnSalvar.Click += delegate
             {
                 int novaMeta;
@@ -4587,23 +4710,40 @@ namespace GotinhaAgua
                     dados.ModoEscuro = toggleTema.IsChecked;
                     onSalvar();
                     DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
-                    fadeOut.Completed += delegate { Close();            };
+                    fadeOut.Completed += delegate { Close(); };
                     BeginAnimation(UIElement.OpacityProperty, fadeOut);
                 }
                 else
                 {
                     MessageBox.Show("Por favor informe uma meta di\u00E1ria v\u00E1lida entre 500 ml e 8000 ml.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-                       };
+            };
             sp.Children.Add(btnSalvar);
 
             sv.Content = sp;
             Content = sv;
         }
+
+        private static void AplicarPillModal(Button btn, double cornerRadius)
+        {
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(cornerRadius));
+            borderFactory.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderThicknessProperty, new Binding("BorderThickness") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.PaddingProperty, new Binding("Padding") { RelativeSource = RelativeSource.TemplatedParent });
+
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borderFactory.AppendChild(presenter);
+
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+        }
     }
 
-    // ==========================================
-    // Serializador JSON Real
     // ==========================================
     public static class SimpleJson
     {
