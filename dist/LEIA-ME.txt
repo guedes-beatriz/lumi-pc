@@ -1,24 +1,24 @@
 =====================================================
-💧 GOTINHA - LEMBRETE DE ÁGUA FOFO & ZEN (WINDOWS) 💧
+GOTINHA - LEMBRETE DE ÁGUA (WINDOWS)
 =====================================================
 
-Oie! Que bom ter você testando o Gotinha! 🥰
+Oie! Que bom ter você testando o Gotinha!
 
 COMO INICIAR:
 1. Extraia todos os arquivos desta pasta zip (Gotinha.exe, mascote.png, app.ico).
 2. Dê dois cliques em "Gotinha.exe".
-3. Pronto! O aplicativo vai abrir com a tela de boas-vindas da Gotinha!
+3. Pronto! O aplicativo vai abrir com a tela de boas-vindas da Gotinha.
 
 DICA PARA O DIA A DIA:
 - Para criar um atalho na sua Área de Trabalho:
   Clique com o botão direito em "Gotinha.exe" -> "Enviar para" -> "Área de trabalho (criar atalho)".
 
 RECURSOS PRINCIPAIS:
-- 💧 Clique na Gotinha para receber frases carinhosas e vê-la pular de alegria.
-- 🥛 Registre goles com os botões coloridos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
-- ⏳ Temporizador Zen com contagem regressiva para te lembrar de beber água.
-- 📊 Veja seu histórico do dia e o gráfico semanal com estrelinhas de meta batida.
-- 🌙 Clique no ícone de Sol/Lua para alternar entre o Modo Claro e o Modo Escuro.
-- ⚙️ Configure sua meta diária ou calcule pelo seu peso corporal.
+- Clique na Gotinha para receber frases carinhosas e vê-la pular de alegria.
+- Registre goles com os botões coloridos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
+- Temporizador Zen com contagem regressiva para te lembrar de beber água.
+- Veja seu histórico do dia e o gráfico semanal com metas atingidas.
+- Alterne entre o Modo Claro e o Modo Escuro.
+- Configure sua meta diária ou calcule pelo seu peso corporal.
 
-Feito com muito carinho! Beba água e cuide-se! 💙
+Feito com carinho! Beba água e cuide-se.
