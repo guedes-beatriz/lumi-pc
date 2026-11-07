@@ -1,4 +1,4 @@
-using System.Windows.Media.Imaging;
+﻿using System.Windows.Media.Imaging;
 using System.Web.Script.Serialization;
 using System;
 using System.Runtime.InteropServices; // DPI awareness
@@ -1897,53 +1897,70 @@ namespace GotinhaAgua
         }
 
         // --- Card 4: Botões de Registro Rápido ---
+        public class BebidaInfo
+        {
+            public int Index;
+            public string Icone;
+            public string Nome;
+            public int Ml;
+            public bool Destaque;
+            public Border BadgeIcone;
+            public TextBlock TxtIcone;
+            public TextBlock TxtNome;
+            public TextBlock TxtMl;
+        }
+
+        // --- Card 4: Botões de Registro Rápido Vivos & Fofos ---
         private UIElement CriarCardBotoes()
         {
             Border card = CriarCardBase();
+            card.Padding = new Thickness(14, 12, 14, 12);
+            card.Margin = new Thickness(0, 0, 0, 8);
 
             StackPanel sp = new StackPanel();
 
-            Grid tituloRow = new Grid();
+            // Header do Card: Título com gota + Botão Desfazer em pílula
+            Grid tituloRow = new Grid { Margin = new Thickness(0, 0, 0, 10) };
             tituloRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             tituloRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             _txtTituloRegistrar = new TextBlock
             {
-                Text = "Registrar \u00C1gua",
+                Text = "Registrar \u00C1gua \uD83D\uDCA7",
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42))
+                Foreground = _dados.ModoEscuro ? (Brush)Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                VerticalAlignment = VerticalAlignment.Center
             };
-            TextBlock titulo = _txtTituloRegistrar;
-            Grid.SetColumn(titulo, 0);
-            tituloRow.Children.Add(titulo);
+            Grid.SetColumn(_txtTituloRegistrar, 0);
+            tituloRow.Children.Add(_txtTituloRegistrar);
 
-            _btnDesfazer = new Button
+            _btnDesfazer = CriarBotaoPill("\u21A9 Desfazer", true, delegate
             {
-                Content = "\u21A9 Desfazer",
-                FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                Cursor = Cursors.Hand
-            };
-            Button btnDesfazer = _btnDesfazer;
-            btnDesfazer.Click += delegate { DesfazerUltimo();            };
-            Grid.SetColumn(btnDesfazer, 1);
-            tituloRow.Children.Add(btnDesfazer);
+                DesfazerUltimo();
+            });
+            _btnDesfazer.Padding = new Thickness(10, 4, 10, 4);
+            _btnDesfazer.FontSize = 11;
+            _btnDesfazer.ToolTip = "Desfazer o \u00FAltimo gole registrado";
+            Grid.SetColumn(_btnDesfazer, 1);
+            tituloRow.Children.Add(_btnDesfazer);
 
             sp.Children.Add(tituloRow);
 
-            UniformGrid gridBotoes = new UniformGrid { Columns = 4, Margin = new Thickness(0, 10, 0, 8) };
+            // 4 Botões de Bebidas Vivos em Grid 4 colunas
+            UniformGrid gridBotoes = new UniformGrid { Columns = 4, Margin = new Thickness(0, 0, 0, 10) };
             _botoesBebida.Clear();
-            Button b1 = CriarBotaoBebida("\u2615", "Gole", 150, false);
-            Button b2 = CriarBotaoBebida("\uD83E\uDD5B", "Copo", 250, true);
-            Button b3 = CriarBotaoBebida("\uD83E\uDD64", "Grande", 350, false);
-            Button b4 = CriarBotaoBebida("\uD83C\uDF76", "Garrafa", 500, false);
+
+            Button b1 = CriarBotaoBebida(0, "\u2615", "Gole", 150, false);
+            Button b2 = CriarBotaoBebida(1, "\uD83E\uDD5B", "Copo", 250, true);
+            Button b3 = CriarBotaoBebida(2, "\uD83E\uDD64", "Grande", 350, false);
+            Button b4 = CriarBotaoBebida(3, "\uD83C\uDF76", "Garrafa", 500, false);
+
             _botoesBebida.Add(b1);
             _botoesBebida.Add(b2);
             _botoesBebida.Add(b3);
             _botoesBebida.Add(b4);
+
             gridBotoes.Children.Add(b1);
             gridBotoes.Children.Add(b2);
             gridBotoes.Children.Add(b3);
@@ -1951,134 +1968,291 @@ namespace GotinhaAgua
 
             sp.Children.Add(gridBotoes);
 
-            // Entrada personalizada
+            // Entrada personalizada de ml com container arredondado e botão pill
             Grid customGrid = new Grid();
             customGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             customGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            Border customBoxBorder = new Border
+            {
+                Background = _dados.ModoEscuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.White,
+                BorderBrush = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(12, 2, 12, 2),
+                Height = 36
+            };
+
             _txtCustomAgua = new TextBox
             {
                 FontSize = 12,
-                Padding = new Thickness(10, 6, 10, 6),
-                VerticalContentAlignment = VerticalAlignment.Center,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(203, 213, 225)),
-                Background = Brushes.White
-            };
-            TextBox txtCustom = _txtCustomAgua;
-            txtCustom.ToolTip = "Digite um valor em ml (ex: 200, 400)";
-            Grid.SetColumn(txtCustom, 0);
-            customGrid.Children.Add(txtCustom);
-
-            Button btnAddCustom = new Button
-            {
-                Content = "+ Adicionar ml",
-                FontSize = 11,
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Padding = new Thickness(14, 6, 14, 6),
-                Margin = new Thickness(8, 0, 0, 0),
                 BorderThickness = new Thickness(0),
-                Cursor = Cursors.Hand
-                       };
-            btnAddCustom.Click += delegate
+                Background = Brushes.Transparent,
+                Foreground = _dados.ModoEscuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                ToolTip = "Digite um valor em ml (ex: 200, 350, 600)"
+            };
+            customBoxBorder.Child = _txtCustomAgua;
+            Grid.SetColumn(customBoxBorder, 0);
+            customGrid.Children.Add(customBoxBorder);
+
+            Button btnAddCustom = CriarBotaoPill("+ Adicionar ml", false, delegate
             {
+                if (_txtCustomAgua == null) return;
                 int val;
-                if (int.TryParse(txtCustom.Text, out val) && val > 0 && val <= 3000)
+                if (int.TryParse(_txtCustomAgua.Text.Trim(), out val) && val > 0 && val <= 3000)
                 {
-                    AdicionarAgua(val, "Personalizado 💧");
-                    txtCustom.Text = "";
+                    AdicionarAgua(val, "Personalizado (" + val + " ml) \uD83D\uDCA7");
+                    AtualizarFalaGotinha("Mais " + val + " ml registrados! Cada gota te faz brilhar! \u2728");
+                    ExecutarAnimacaoPuloGotinha();
+                    _txtCustomAgua.Text = "";
                 }
                 else
                 {
-                    MessageBox.Show("Por favor digite um número válido em ml (ex: 200).", "Valor inválido", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ExibirSnackBar("Digite um n\u00FAmero v\u00E1lido em ml (ex: 200, 350).");
                 }
-                       };
+            });
+            btnAddCustom.Padding = new Thickness(14, 8, 14, 8);
+            btnAddCustom.Margin = new Thickness(8, 0, 0, 0);
             Grid.SetColumn(btnAddCustom, 1);
             customGrid.Children.Add(btnAddCustom);
 
             sp.Children.Add(customGrid);
 
+            // Aplica os estilos individuais de tema em cada botão
+            AtualizarVisualBotoesBebida();
+
             card.Child = sp;
             return card;
         }
 
-        private Button CriarBotaoBebida(string icone, string nome, int ml, bool destaque = false)
+        private Button CriarBotaoBebida(int index, string icone, string nome, int ml, bool destaque = false)
         {
+            BebidaInfo info = new BebidaInfo
+            {
+                Index = index,
+                Icone = icone,
+                Nome = nome,
+                Ml = ml,
+                Destaque = destaque
+            };
+
             Button btn = new Button
             {
-                Tag = destaque,
-                Margin = new Thickness(3),
-                Padding = new Thickness(4, 10, 4, 10),
-                Background = destaque ? new SolidColorBrush(Color.FromRgb(240, 249, 255)) : Brushes.White,
-                BorderBrush = destaque ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
-                BorderThickness = new Thickness(destaque ? 1.5 : 1),
+                Tag = info,
+                Margin = new Thickness(3, 0, 3, 0),
+                Padding = new Thickness(4, 8, 4, 8),
+                BorderThickness = new Thickness(destaque ? 2 : 1.2),
                 RenderTransformOrigin = new Point(0.5, 0.5),
                 RenderTransform = new ScaleTransform(1.0, 1.0),
                 Cursor = Cursors.Hand
-                       };
+            };
+            AplicarEstiloPill(btn, 14);
 
-            StackPanel sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center            };
-            sp.Children.Add(new TextBlock { Text = icone, FontSize = 22, HorizontalAlignment = HorizontalAlignment.Center });
-            sp.Children.Add(new TextBlock { Text = nome, FontSize = 11, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 2, 0, 0) });
-            sp.Children.Add(new TextBlock { Text = "+" + ml + " ml", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)), HorizontalAlignment = HorizontalAlignment.Center });
+            StackPanel sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+
+            // Badge com ícone
+            info.BadgeIcone = new Border
+            {
+                Width = 38,
+                Height = 38,
+                CornerRadius = new CornerRadius(12),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            info.TxtIcone = new TextBlock
+            {
+                Text = icone,
+                FontSize = 19,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            info.BadgeIcone.Child = info.TxtIcone;
+            sp.Children.Add(info.BadgeIcone);
+
+            // Nome da bebida
+            info.TxtNome = new TextBlock
+            {
+                Text = nome,
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 1, 0, 0)
+            };
+            sp.Children.Add(info.TxtNome);
+
+            // Quantidade em ml
+            info.TxtMl = new TextBlock
+            {
+                Text = "+" + ml + " ml",
+                FontSize = 10.5,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 1, 0, 0)
+            };
+            sp.Children.Add(info.TxtMl);
 
             btn.Content = sp;
 
+            // Animações de Hover
             btn.MouseEnter += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
                 {
                     ScaleTransform st = (ScaleTransform)btn.RenderTransform;
-                    DoubleAnimation sa = new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(160))
+                    DoubleAnimation sa = new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(130))
                     {
                         EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                               };
+                    };
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                 }
-                       };
+            };
             btn.MouseLeave += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
                 {
                     ScaleTransform st = (ScaleTransform)btn.RenderTransform;
-                    DoubleAnimation sa = new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(160))
+                    DoubleAnimation sa = new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(130))
                     {
                         EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                               };
+                    };
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                 }
-                       };
+            };
+
+            // Clique com efeito de mola gostoso (Bounce) + feedback fofo da Gotinha
             btn.PreviewMouseDown += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
                 {
                     ScaleTransform st = (ScaleTransform)btn.RenderTransform;
-                    DoubleAnimation sa = new DoubleAnimation(1.05, 0.94, TimeSpan.FromMilliseconds(80));
+                    DoubleAnimation sa = new DoubleAnimation(1.05, 0.93, TimeSpan.FromMilliseconds(70));
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                 }
-                       };
+            };
             btn.PreviewMouseUp += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
                 {
                     ScaleTransform st = (ScaleTransform)btn.RenderTransform;
-                    DoubleAnimation sa = new DoubleAnimation(0.94, 1.05, TimeSpan.FromMilliseconds(100));
+                    DoubleAnimation sa = new DoubleAnimation(0.93, 1.05, TimeSpan.FromMilliseconds(160))
+                    {
+                        EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 }
+                    };
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                 }
-                       };
+            };
+
             btn.Click += delegate
             {
                 AdicionarAgua(ml, nome + " (" + icone + ")");
-                       };
+
+                // Fala fofa e personalizada para cada bebida
+                string fala = "";
+                switch (index)
+                {
+                    case 0: fala = "Um golinho gostoso para refrescar! Cada gota conta! \u2728"; break;
+                    case 1: fala = "Muito bem! Um copo d'\u00E1gua fresquinha faz maravilhas! \uD83E\uDD5B\uD83D\uDCA7"; break;
+                    case 2: fala = "Uau, super hidrata\u00E7\u00E3o! Seu corpo est\u00E1 amando! \uD83E\uDD64\uD83C\uDF0A"; break;
+                    case 3: fala = "Uma garrafa inteira! Voc\u00EA est\u00E1 de parab\u00E9ns! \uD83C\uDFC6\uD83C\uDF76"; break;
+                    default: fala = "Mais " + ml + " ml de \u00E1gua para voc\u00EA! Muito bem! \uD83D\uDCA7"; break;
+                }
+                AtualizarFalaGotinha(fala);
+                ExecutarAnimacaoPuloGotinha();
+            };
+
             return btn;
         }
 
-        // --- Card 5: Histórico de Hoje e Semana ---
+        private void AtualizarVisualBotoesBebida()
+        {
+            bool escuro = _dados.ModoEscuro;
+            if (_txtTituloRegistrar != null)
+                _txtTituloRegistrar.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+
+            if (_btnDesfazer != null)
+            {
+                _btnDesfazer.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249));
+                _btnDesfazer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+                _btnDesfazer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            }
+
+            if (_txtCustomAgua != null && _txtCustomAgua.Parent is Border)
+            {
+                Border b = (Border)_txtCustomAgua.Parent;
+                b.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.White;
+                b.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+                _txtCustomAgua.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+            }
+
+            foreach (var btn in _botoesBebida)
+            {
+                if (!(btn.Tag is BebidaInfo)) continue;
+                BebidaInfo info = (BebidaInfo)btn.Tag;
+
+                switch (info.Index)
+                {
+                    case 0: // Gole (Âmbar/Pêssego)
+                        btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 45, 24, 7)) : new SolidColorBrush(Color.FromRgb(255, 251, 235));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(180, 83, 9)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
+                        if (info.BadgeIcone != null)
+                            info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(120, 53, 15)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                        if (info.TxtNome != null)
+                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(253, 230, 138)) : new SolidColorBrush(Color.FromRgb(146, 64, 14));
+                        if (info.TxtMl != null)
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(217, 119, 6));
+                        btn.Effect = null;
+                        break;
+
+                    case 1: // Copo (Azul Celeste - Destaque com glow suave)
+                        btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(220, 8, 47, 73)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                        btn.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+                        if (info.BadgeIcone != null)
+                            info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                        if (info.TxtNome != null)
+                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(186, 230, 253)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                        if (info.TxtMl != null)
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                        btn.Effect = new DropShadowEffect
+                        {
+                            Color = Color.FromRgb(2, 132, 199),
+                            BlurRadius = 8,
+                            Opacity = escuro ? 0.35 : 0.22,
+                            ShadowDepth = 2
+                        };
+                        break;
+
+                    case 2: // Grande (Turquesa / Aqua)
+                        btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 4, 47, 46)) : new SolidColorBrush(Color.FromRgb(240, 253, 250));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(13, 148, 136)) : new SolidColorBrush(Color.FromRgb(153, 246, 228));
+                        if (info.BadgeIcone != null)
+                            info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(19, 78, 74)) : new SolidColorBrush(Color.FromRgb(204, 251, 241));
+                        if (info.TxtNome != null)
+                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(153, 246, 228)) : new SolidColorBrush(Color.FromRgb(15, 118, 110));
+                        if (info.TxtMl != null)
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(45, 212, 191)) : new SolidColorBrush(Color.FromRgb(13, 148, 136));
+                        btn.Effect = null;
+                        break;
+
+                    case 3: // Garrafa (Menta / Esmeralda)
+                        btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 5, 46, 22)) : new SolidColorBrush(Color.FromRgb(240, 253, 244));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(5, 150, 105)) : new SolidColorBrush(Color.FromRgb(167, 243, 208));
+                        if (info.BadgeIcone != null)
+                            info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(6, 78, 59)) : new SolidColorBrush(Color.FromRgb(209, 250, 229));
+                        if (info.TxtNome != null)
+                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(167, 243, 208)) : new SolidColorBrush(Color.FromRgb(4, 120, 87));
+                        if (info.TxtMl != null)
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(5, 150, 105));
+                        btn.Effect = null;
+                        break;
+                }
+            }
+        }
+
         private Border CriarCardMiniStat(string titulo, out TextBlock txtValor, out TextBlock txtSub, string icone)
         {
             bool escuro = _dados.ModoEscuro;
@@ -2461,7 +2635,9 @@ namespace GotinhaAgua
                 SalvarDados();
                 AtualizarInterface();
                 ExibirSnackBar("Registro desfeito com sucesso.");
-                if (_dados.SomAtivado) GeradorDeSom.TocarGota(); ExecutarAnimacaoPuloGotinha();
+                AtualizarFalaGotinha("Tudo bem, último gole desfeito com sucesso! ✨");
+                if (_dados.SomAtivado) GeradorDeSom.TocarGota();
+                ExecutarAnimacaoPuloGotinha();
             }
         }
 
@@ -3759,45 +3935,8 @@ namespace GotinhaAgua
                 _txtLembrarACada.Foreground = corSub;
             }
 
-            // 7. Card Registrar Água
-            if (_txtTituloRegistrar != null) _txtTituloRegistrar.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-            if (_btnDesfazer != null) _btnDesfazer.Foreground = corSub;
-            foreach (var btnBebida in _botoesBebida)
-            {
-                bool dest = (btnBebida.Tag is bool) ? (bool)btnBebida.Tag : false;
-                if (escuro)
-                {
-                    btnBebida.Background = dest ? new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(23, 32, 54));
-                    btnBebida.BorderBrush = dest ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(51, 65, 85));
-                }
-                else
-                {
-                    btnBebida.Background = dest ? new SolidColorBrush(Color.FromRgb(240, 249, 255)) : Brushes.White;
-                    btnBebida.BorderBrush = dest ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                }
-                if (btnBebida.Content is StackPanel)
-                {
-                    StackPanel spContent = (StackPanel)btnBebida.Content;
-                    if (spContent.Children.Count >= 3)
-                    {
-                        if (spContent.Children[1] is TextBlock)
-                        {
-                            ((TextBlock)spContent.Children[1]).Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-                        }
-                        if (spContent.Children[2] is TextBlock)
-                        {
-                            ((TextBlock)spContent.Children[2]).Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
-                        }
-                    }
-                }
-            }
-
-            if (_txtCustomAgua != null)
-            {
-                _txtCustomAgua.Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : Brushes.White;
-                _txtCustomAgua.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-                _txtCustomAgua.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
-            }
+            // 7. Card Registrar Água Vivo & Fofo
+            AtualizarVisualBotoesBebida();
 
             // 8. View Histórico Zen
             if (_txtTituloHistorico != null)
