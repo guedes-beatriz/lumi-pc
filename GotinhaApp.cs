@@ -558,6 +558,10 @@ namespace GotinhaAgua
         private Border _bordaAguaCopo;
         private Border _copoContainer;
         private Canvas _canvasMascote;
+        private Border _imgBorderMascote;
+        private ScaleTransform _stMascote;
+        private TranslateTransform _ttMascote;
+        private RotateTransform _rtMascote;
         private System.Windows.Shapes.Path _pathBocaGotinha;
         private System.Windows.Shapes.Polygon _coroaGotinha;
         private Ellipse _olhoEsquerdo;
@@ -714,15 +718,19 @@ namespace GotinhaAgua
 
             // Layout principal: TituloBar (topo) + área de conteúdo (widescreen 2 colunas)
             Grid layoutInterno = new Grid();
-            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Barra de título
-            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Conteúdo
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Row 0: TitleBar (36px)
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Row 1: ActionToolbar (44px espaçosa)
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Row 2: Conteúdo
 
-            // 1. Barra de Título Customizada
+            // 1. Barra de Título Customizada (Apenas Marca na esquerda + Janela na direita)
             Grid titleBar = new Grid
             {
-                Height = 42,
+                Height = 36,
                 Background = Brushes.Transparent
-                       };
+            };
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
             titleBar.MouseDown += delegate(object s, MouseButtonEventArgs e)
             {
                 if (e.ChangedButton == MouseButton.Left)
@@ -745,35 +753,35 @@ namespace GotinhaAgua
                 }
             };
 
-                        StackPanel appBrand = new StackPanel
+            StackPanel appBrand = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(16, 0, 0, 0)
+                Margin = new Thickness(14, 0, 0, 0)
             };
 
             Border iconBadge = new Border
             {
-                Width = 28,
-                Height = 28,
-                CornerRadius = new CornerRadius(14),
+                Width = 24,
+                Height = 24,
+                CornerRadius = new CornerRadius(12),
                 Background = new LinearGradientBrush(
                     Color.FromRgb(56, 189, 248),
                     Color.FromRgb(2, 132, 199),
                     135.0
                 ),
-                Margin = new Thickness(0, 0, 8, 0),
+                Margin = new Thickness(0, 0, 6, 0),
                 Effect = new DropShadowEffect
                 {
                     Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 8,
-                    ShadowDepth = 2,
-                    Opacity = 0.455
+                    BlurRadius = 6,
+                    ShadowDepth = 1,
+                    Opacity = 0.35
                 },
                 Child = new TextBlock
                 {
                     Text = "\uD83D\uDCA7",
-                    FontSize = 13,
+                    FontSize = 11.5,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 }
@@ -792,9 +800,9 @@ namespace GotinhaAgua
 
             _txtBrandSub = new TextBlock
             {
-                Text = " \u2022 Lembrete de Hidrata\u00E7\u00E3o",
+                Text = " \u2022 Hidrata\u00E7\u00E3o",
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)),
+                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 VerticalAlignment = VerticalAlignment.Center
             };
             appBrand.Children.Add(_txtBrandSub);
@@ -802,7 +810,7 @@ namespace GotinhaAgua
             _txtStatusPill = new TextBlock
             {
                 Text = "\u25CF Ativo",
-                FontSize = 10,
+                FontSize = 9.5,
                 FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(Color.FromRgb(5, 150, 105))
             };
@@ -811,32 +819,32 @@ namespace GotinhaAgua
                 Background = new SolidColorBrush(Color.FromRgb(236, 253, 245)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(167, 243, 208)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(7),
-                Padding = new Thickness(8, 2, 8, 2),
-                Margin = new Thickness(10, 0, 0, 0),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 1, 6, 1),
+                Margin = new Thickness(8, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = _txtStatusPill
             };
-            Border statusPill = _statusPill;
-            appBrand.Children.Add(statusPill);
+            appBrand.Children.Add(_statusPill);
+            Grid.SetColumn(appBrand, 0);
             titleBar.Children.Add(appBrand);
 
-                                    StackPanel windowButtons = new StackPanel
+            // Botões de Janela na extrema direita (Minimizar, Maximizar, Fechar)
+            StackPanel windowButtons = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 0, 8, 0)
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0)
             };
 
             SolidColorBrush corIconeBarra = new SolidColorBrush(Color.FromRgb(3, 105, 161));
 
             _btnMin = new Button
-
             {
                 Content = CriarIconeMinimizar(corIconeBarra),
                 ToolTip = "Minimizar",
-                Width = 44,
-                Height = 32,
+                Width = 38,
+                Height = 30,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 FocusVisualStyle = null,
@@ -850,8 +858,8 @@ namespace GotinhaAgua
             {
                 Content = CriarIconeMaximizar(corIconeBarra, WindowState == WindowState.Maximized),
                 ToolTip = (WindowState == WindowState.Maximized ? "Restaurar" : "Maximizar"),
-                Width = 44,
-                Height = 32,
+                Width = 38,
+                Height = 30,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 FocusVisualStyle = null,
@@ -862,12 +870,11 @@ namespace GotinhaAgua
             _btnMax.Click += delegate { AlternarMaximizar(); };
 
             _btnClose = new Button
-
             {
                 Content = CriarIconeFechar(corIconeBarra),
                 ToolTip = "Minimizar para a bandeja",
-                Width = 44,
-                Height = 32,
+                Width = 38,
+                Height = 30,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 FocusVisualStyle = null,
@@ -896,22 +903,46 @@ namespace GotinhaAgua
                 }
             };
 
+            windowButtons.Children.Add(_btnMin);
+            windowButtons.Children.Add(_btnMax);
+            windowButtons.Children.Add(_btnClose);
+            Grid.SetColumn(windowButtons, 1);
+            titleBar.Children.Add(windowButtons);
+
+            Grid.SetRow(titleBar, 0);
+            layoutInterno.Children.Add(titleBar);
+
+            // 1.5 Nova Barra de Ações Dedicada e Espaçosa (Sem aperto!)
+            Grid actionToolbar = new Grid
+            {
+                Margin = new Thickness(14, 2, 14, 6)
+            };
+            actionToolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            actionToolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
             _btnToggleHistorico = new Button
             {
-                Content = "\uD83D\uDCCA Hist\u00F3rico",
-                ToolTip = "Ver Hist\u00F3rico e Estat\u00EDsticas",
-                FontSize = 11,
+                Content = "\uD83D\uDCCA Ver Hist\u00F3rico",
+                ToolTip = "Alternar para o Hist\u00F3rico e Estat\u00EDsticas",
+                FontSize = 11.5,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Background = new SolidColorBrush(Color.FromRgb(224, 242, 254)),
+                Background = new SolidColorBrush(Color.FromArgb(220, 224, 242, 254)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(8, 3, 8, 3),
-                Margin = new Thickness(0, 0, 4, 0),
-                Cursor = Cursors.Hand
+                BorderThickness = new Thickness(1.2),
+                Padding = new Thickness(12, 6, 12, 6),
+                Cursor = Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center
             };
             _btnToggleHistorico.Click += delegate { AlternarVisualizacaoHistorico(); };
-            windowButtons.Children.Add(_btnToggleHistorico);
+            Grid.SetColumn(_btnToggleHistorico, 0);
+            actionToolbar.Children.Add(_btnToggleHistorico);
+
+            StackPanel toolsRight = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
 
             _txtHeaderTitle = _txtBrandTitle;
             _btnSom = CriarBotaoToolbarCard(CriarIconeSom(_dados.SomAtivado), _dados.SomAtivado ? "Som ativado" : "Som silenciado", delegate { AlternarSom(); }, false);
@@ -919,19 +950,23 @@ namespace GotinhaAgua
             _btnTema = CriarBotaoToolbarCard(CriarIconeTema(_dados.ModoEscuro), _dados.ModoEscuro ? "Ativar Modo Claro" : "Ativar Modo Escuro", delegate { AlternarModoEscuro(); }, false);
             _btnConfig = CriarBotaoToolbarCard(CriarIconeEngrenagem(), "Configurar Meta e Prefer\u00EAncias", delegate { AbrirJanelaConfiguracoes(); }, true);
 
-            windowButtons.Children.Add(_btnSom);
-            windowButtons.Children.Add(_btnNotif);
-            windowButtons.Children.Add(_btnTema);
-            windowButtons.Children.Add(_btnConfig);
-            windowButtons.Children.Add(_btnMin);
-            windowButtons.Children.Add(_btnClose);
-            titleBar.Children.Add(windowButtons);
+            _btnSom.Margin = new Thickness(4, 0, 0, 0);
+            _btnNotif.Margin = new Thickness(4, 0, 0, 0);
+            _btnTema.Margin = new Thickness(4, 0, 0, 0);
+            _btnConfig.Margin = new Thickness(4, 0, 0, 0);
 
-            Grid.SetRow(titleBar, 0);
-            layoutInterno.Children.Add(titleBar);
+            toolsRight.Children.Add(_btnSom);
+            toolsRight.Children.Add(_btnNotif);
+            toolsRight.Children.Add(_btnTema);
+            toolsRight.Children.Add(_btnConfig);
+            Grid.SetColumn(toolsRight, 1);
+            actionToolbar.Children.Add(toolsRight);
 
-            // 2. Área de Conteúdo Centralizada e Unificada
-            _gridConteudo = new Grid { Margin = new Thickness(12, 0, 12, 12) };
+            Grid.SetRow(actionToolbar, 1);
+            layoutInterno.Children.Add(actionToolbar);
+
+            // 2. Área de Conteúdo Centralizada e Unificada (Row 2)
+            _gridConteudo = new Grid { Margin = new Thickness(14, 0, 14, 14) };
 
             _viewGotinha = CriarViewGotinha();
             _gridConteudo.Children.Add(_viewGotinha);
@@ -939,7 +974,7 @@ namespace GotinhaAgua
             _viewHistorico = CriarViewHistorico();
             _gridConteudo.Children.Add(_viewHistorico);
 
-            Grid.SetRow(_gridConteudo, 1);
+            Grid.SetRow(_gridConteudo, 2);
             layoutInterno.Children.Add(_gridConteudo);
 
             _janelaBorda.Child = layoutInterno;
@@ -1351,8 +1386,8 @@ namespace GotinhaAgua
         {
             Canvas canvas = new Canvas
             {
-                Width = 120,
-                Height = 124,
+                Width = 124,
+                Height = 126,
                 Cursor = Cursors.Hand
             };
 
@@ -1361,7 +1396,7 @@ namespace GotinhaAgua
             {
                 try
                 {
-                    Border imgBorder = new Border
+                    _imgBorderMascote = new Border
                     {
                         Width = 114,
                         Height = 114,
@@ -1369,8 +1404,6 @@ namespace GotinhaAgua
                         ClipToBounds = true,
                         BorderBrush = new SolidColorBrush(Color.FromRgb(125, 211, 252)),
                         BorderThickness = new Thickness(2),
-                        RenderTransformOrigin = new Point(0.5, 0.5),
-                        RenderTransform = new ScaleTransform(1.0, 1.0),
                         Effect = new DropShadowEffect
                         {
                             BlurRadius = 24,
@@ -1393,42 +1426,48 @@ namespace GotinhaAgua
                     bmp.EndInit();
                     img.Source = bmp;
 
-                    imgBorder.Child = img;
-                    Canvas.SetLeft(imgBorder, 3);
-                    Canvas.SetTop(imgBorder, 6);
-                    canvas.Children.Add(imgBorder);
+                    _imgBorderMascote.Child = img;
 
-                    imgBorder.MouseEnter += delegate
+                    // Grupo de transformações para respiração, flutuação e pulo da Gotinha
+                    TransformGroup tg = new TransformGroup();
+                    _stMascote = new ScaleTransform(1.0, 1.0);
+                    _rtMascote = new RotateTransform(0.0);
+                    _ttMascote = new TranslateTransform(0.0, 0.0);
+                    tg.Children.Add(_stMascote);
+                    tg.Children.Add(_rtMascote);
+                    tg.Children.Add(_ttMascote);
+
+                    _imgBorderMascote.RenderTransformOrigin = new Point(0.5, 0.5);
+                    _imgBorderMascote.RenderTransform = tg;
+
+                    Canvas.SetLeft(_imgBorderMascote, 5);
+                    Canvas.SetTop(_imgBorderMascote, 6);
+                    canvas.Children.Add(_imgBorderMascote);
+
+                    // Efeito suave de hover na Gotinha
+                    _imgBorderMascote.MouseEnter += delegate
                     {
-                        ScaleTransform st = imgBorder.RenderTransform as ScaleTransform;
-                        if (st != null)
+                        DoubleAnimation sa = new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(160))
                         {
-                            DoubleAnimation sa = new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(160))
-                            {
-                                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                            };
-                            st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
-                            st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
-                        }
+                            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                        };
+                        _stMascote.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
+                        _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                     };
-                    imgBorder.MouseLeave += delegate
+                    _imgBorderMascote.MouseLeave += delegate
                     {
-                        ScaleTransform st = imgBorder.RenderTransform as ScaleTransform;
-                        if (st != null)
+                        DoubleAnimation sa = new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(180))
                         {
-                            DoubleAnimation sa = new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(180))
-                            {
-                                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                            };
-                            st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
-                            st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
-                        }
+                            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                        };
+                        _stMascote.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
+                        _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
                     };
 
                     _coroaGotinha = new System.Windows.Shapes.Polygon
                     {
                         Points = new PointCollection(new Point[] {
-                            new Point(42, 14), new Point(50, 2), new Point(60, 8), new Point(70, 2), new Point(78, 14)
+                            new Point(44, 14), new Point(52, 2), new Point(62, 8), new Point(72, 2), new Point(80, 14)
                         }),
                         Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
                         Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
@@ -1438,12 +1477,16 @@ namespace GotinhaAgua
                     canvas.Children.Add(_coroaGotinha);
 
                     canvas.MouseLeftButtonDown += delegate { InteragirComGotinha(); };
+
+                    // Inicia animação fluida e suave de flutuar na água
+                    IniciarAnimacaoFlutuarGotinha();
+
                     return canvas;
                 }
                 catch { }
             }
 
-            // Fallback vetorial gracioso
+            // Fallback vetorial
             System.Windows.Shapes.Path corpo = new System.Windows.Shapes.Path
             {
                 Data = Geometry.Parse("M 60 14 C 60 14 18 72 18 92 C 18 116 36 124 60 124 C 84 124 102 116 102 92 C 102 72 60 14 60 14 Z"),
@@ -1496,6 +1539,96 @@ namespace GotinhaAgua
 
             canvas.MouseLeftButtonDown += delegate { InteragirComGotinha(); };
             return canvas;
+        }
+
+        private void IniciarAnimacaoFlutuarGotinha()
+        {
+            if (_ttMascote == null || _stMascote == null) return;
+
+            DoubleAnimation animFloat = new DoubleAnimation(0.0, -5.0, TimeSpan.FromMilliseconds(1900))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            _ttMascote.BeginAnimation(TranslateTransform.YProperty, animFloat);
+
+            DoubleAnimation animBreath = new DoubleAnimation(1.0, 1.025, TimeSpan.FromMilliseconds(1900))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, animBreath);
+        }
+
+        private void ExecutarAnimacaoPuloGotinha()
+        {
+            if (_stMascote == null || _ttMascote == null) return;
+
+            // Animação elástica estilo geléia / pulo comemorativo
+            DoubleAnimationUsingKeyFrames animScaleX = new DoubleAnimationUsingKeyFrames();
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(1.16, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(85))));
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(0.88, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(220))));
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(1.04, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(340))));
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(460))));
+            _stMascote.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleX);
+
+            DoubleAnimationUsingKeyFrames animScaleY = new DoubleAnimationUsingKeyFrames();
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(0.84, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(85))));
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(1.18, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(220))));
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(0.96, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(340))));
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(460))));
+            _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleY);
+
+            DoubleAnimationUsingKeyFrames animY = new DoubleAnimationUsingKeyFrames();
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(4.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(85))));
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(-16.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(220))));
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(-2.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(340))));
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(460))));
+            animY.Completed += delegate { IniciarAnimacaoFlutuarGotinha(); };
+            _ttMascote.BeginAnimation(TranslateTransform.YProperty, animY);
+
+            if (_rtMascote != null)
+            {
+                DoubleAnimationUsingKeyFrames animRot = new DoubleAnimationUsingKeyFrames();
+                animRot.KeyFrames.Add(new SplineDoubleKeyFrame(-4.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(120))));
+                animRot.KeyFrames.Add(new SplineDoubleKeyFrame(4.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(260))));
+                animRot.KeyFrames.Add(new SplineDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(400))));
+                _rtMascote.BeginAnimation(RotateTransform.AngleProperty, animRot);
+            }
+
+            CriarParticulaMascote("\u2728", 25, 30);
+            CriarParticulaMascote("\uD83D\uDCA7", 95, 25);
+            CriarParticulaMascote("\uD83D\uDC96", 60, 15);
+        }
+
+        private void CriarParticulaMascote(string emoji, double x, double y)
+        {
+            if (_canvasMascote == null) return;
+            TextBlock p = new TextBlock
+            {
+                Text = emoji,
+                FontSize = 14,
+                IsHitTestVisible = false,
+                Opacity = 1.0
+            };
+            Canvas.SetLeft(p, x);
+            Canvas.SetTop(p, y);
+            _canvasMascote.Children.Add(p);
+
+            DoubleAnimation animSubir = new DoubleAnimation(y, y - 30, TimeSpan.FromMilliseconds(650))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            DoubleAnimation animFade = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(650));
+            animFade.Completed += delegate
+            {
+                try { _canvasMascote.Children.Remove(p); } catch { }
+            };
+
+            p.BeginAnimation(Canvas.TopProperty, animSubir);
+            p.BeginAnimation(UIElement.OpacityProperty, animFade);
         }
 
         // --- Card 3: Lembrete e Timer ---
@@ -1937,7 +2070,7 @@ namespace GotinhaAgua
                 SalvarDados();
                 AtualizarInterface();
                 ExibirSnackBar("Registro desfeito com sucesso.");
-                if (_dados.SomAtivado) GeradorDeSom.TocarGota();
+                if (_dados.SomAtivado) GeradorDeSom.TocarGota(); ExecutarAnimacaoPuloGotinha();
             }
         }
 
@@ -2312,21 +2445,32 @@ namespace GotinhaAgua
             base.OnClosed(e);
         }
 
-                private void InteragirComGotinha()
+                        private void InteragirComGotinha()
         {
             string[] falas = new string[] {
                 "Hihi! N\u00E3o esque\u00E7a de beber mais um golinho! \uD83D\uDCA7",
                 "Estou aqui para cuidar da sua sa\u00FAde enquanto voc\u00EA usa o PC! \uD83E\uDD70",
                 "Pele bonita, foco afiado e mente leve precisam de \u00E1gua! \u2728",
-                "Voc\u00EA \u00E9 incr\u00EDvel! Vamos bater essa meta juntas! \uD83D\uDC96"
+                "Voc\u00EA \u00E9 incr\u00EDvel! Vamos bater essa meta juntas! \uD83D\uDC96",
+                "Glup glup! Cada gole deixa seu corpo mais feliz! \uD83D\uDCA6",
+                "Cuidar de voc\u00EA \u00E9 a minha miss\u00E3o favorita! \u2728\uD83D\uDC99"
             };
             Random rnd = new Random();
-            _txtMensagemGotinha.Text = falas[rnd.Next(falas.Length)];
-            if (_dados.SomAtivado) GeradorDeSom.TocarGota();
-            ExibirSnackBar("Gotinha mandou um abra\u00E7o carinhoso! \uD83D\uDCA7");
+            if (_txtMensagemGotinha != null)
+            {
+                _txtMensagemGotinha.Text = falas[rnd.Next(falas.Length)];
+                if (_speechBubble != null)
+                {
+                    DoubleAnimation popAnim = new DoubleAnimation(0.4, 1.0, TimeSpan.FromMilliseconds(220));
+                    _speechBubble.BeginAnimation(UIElement.OpacityProperty, popAnim);
+                }
+            }
+            if (_dados.SomAtivado) GeradorDeSom.TocarGota(); ExecutarAnimacaoPuloGotinha();
+            ExecutarAnimacaoPuloGotinha();
+            ExibirSnackBar("Gotinha ficou muito feliz com o seu carinho! \uD83D\uDCA7\u2728");
         }
 
-                private void AtualizarVisualBtnSom()
+        private void AtualizarVisualBtnSom()
         {
             if (_btnSom != null)
             {
@@ -2349,7 +2493,7 @@ namespace GotinhaAgua
             _dados.SomAtivado = !_dados.SomAtivado;
             AtualizarVisualBtnSom();
             SalvarDados();
-            if (_dados.SomAtivado) GeradorDeSom.TocarGota();
+            if (_dados.SomAtivado) GeradorDeSom.TocarGota(); ExecutarAnimacaoPuloGotinha();
             ExibirSnackBar(_dados.SomAtivado ? "Som ativado." : "Som silenciado.");
         }
 
