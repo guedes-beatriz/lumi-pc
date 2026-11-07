@@ -760,33 +760,28 @@ namespace GotinhaAgua
                 Margin = new Thickness(14, 0, 0, 0)
             };
 
-            Border iconBadge = new Border
+            Image imgBrandIcon = new Image
             {
-                Width = 24,
-                Height = 24,
-                CornerRadius = new CornerRadius(12),
-                Background = new LinearGradientBrush(
-                    Color.FromRgb(56, 189, 248),
-                    Color.FromRgb(2, 132, 199),
-                    135.0
-                ),
+                Width = 26,
+                Height = 26,
                 Margin = new Thickness(0, 0, 6, 0),
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 6,
-                    ShadowDepth = 1,
-                    Opacity = 0.35
-                },
-                Child = new TextBlock
-                {
-                    Text = "\uD83D\uDCA7",
-                    FontSize = 11.5,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                }
+                Stretch = Stretch.Uniform
             };
-            appBrand.Children.Add(iconBadge);
+            string brandMascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
+            if (File.Exists(brandMascotPath))
+            {
+                try
+                {
+                    BitmapImage bmpBrand = new BitmapImage();
+                    bmpBrand.BeginInit();
+                    bmpBrand.UriSource = new Uri(brandMascotPath, UriKind.Absolute);
+                    bmpBrand.CacheOption = BitmapCacheOption.OnLoad;
+                    bmpBrand.EndInit();
+                    imgBrandIcon.Source = bmpBrand;
+                }
+                catch { }
+            }
+            appBrand.Children.Add(imgBrandIcon);
 
             _txtBrandTitle = new TextBlock
             {
