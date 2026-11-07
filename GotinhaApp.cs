@@ -11,6 +11,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -548,6 +549,12 @@ namespace GotinhaAgua
         private TextBlock _txtMlUnit;
         private Border _barTrack;
         private TextBlock _txtTimerLabel;
+        private Border _badgeIconeTimer;
+        private TextBlock _txtIconeTimer;
+        private Border _trackTimerProgress;
+        private Border _fillTimerProgress;
+        private ColumnDefinition _colTimerAtivo;
+        private ColumnDefinition _colTimerRestante;
         private Button _btnTestarLembrete;
         private TextBlock _txtLembrarACada;
         private TextBlock _txtTituloRegistrar;
@@ -1633,90 +1640,210 @@ namespace GotinhaAgua
 
             StackPanel sp = new StackPanel();
 
+            // Topo do Timer Zen: Badge Icon + Infos do Timer + Botoes de Acao
             Grid topoGrid = new Grid();
             topoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             topoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             topoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            TextBlock iconeRelogio = new TextBlock
+            // Badge Zen com icone suave e respiracao
+            _badgeIconeTimer = new Border
             {
-                Text = "\u23F0",
-                FontSize = 24,
+                Width = 44,
+                Height = 44,
+                CornerRadius = new CornerRadius(14),
+                Background = _dados.ModoEscuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new LinearGradientBrush(Color.FromRgb(224, 242, 254), Color.FromRgb(186, 230, 253), 45),
+                BorderBrush = _dados.ModoEscuro ? new SolidColorBrush(Color.FromArgb(80, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(125, 211, 252)),
+                BorderThickness = new Thickness(1.2),
+                Margin = new Thickness(0, 0, 10, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0)
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = new ScaleTransform(1.0, 1.0)
             };
-            Grid.SetColumn(iconeRelogio, 0);
-            topoGrid.Children.Add(iconeRelogio);
 
+            DoubleAnimation animRespiro = new DoubleAnimation
+            {
+                From = 0.96,
+                To = 1.04,
+                Duration = TimeSpan.FromSeconds(2.5),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            _badgeIconeTimer.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, animRespiro);
+            _badgeIconeTimer.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, animRespiro);
+
+            _txtIconeTimer = new TextBlock
+            {
+                Text = "\u23F3",
+                FontSize = 20,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _badgeIconeTimer.Child = _txtIconeTimer;
+            Grid.SetColumn(_badgeIconeTimer, 0);
+            topoGrid.Children.Add(_badgeIconeTimer);
+
+            // Textos: Rotulo e Display Numerico Zen
             StackPanel timerTextos = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             _txtTimerLabel = new TextBlock
             {
-                Text = "PR\u00D3XIMO LEMBRETE",
-                FontSize = 10,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184))
+                Text = "Pr\u00F3ximo gole de \u00E1gua em",
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))
             };
             timerTextos.Children.Add(_txtTimerLabel);
+
             _txtTimerDisplay = new TextBlock
             {
                 Text = "30:00",
-                FontSize = 22,
+                FontSize = 26,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42))
+                Margin = new Thickness(0, 1, 0, 0),
+                Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199))
             };
             timerTextos.Children.Add(_txtTimerDisplay);
             Grid.SetColumn(timerTextos, 1);
             topoGrid.Children.Add(timerTextos);
 
-            // AÃ§Ãµes do Timer
+            // Acoes do Timer: Pausar e Testar em pilulas harmonicas
             StackPanel btnRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             _btnPausarTimer = CriarBotaoPill("\u23F8 Pausar", false, delegate { AlternarPausaTimer(); });
             _btnTestarLembrete = CriarBotaoPill("\uD83D\uDD14 Testar", true, delegate { DispararLembrete(); });
-            Button btnTestar = _btnTestarLembrete;
             btnRow.Children.Add(_btnPausarTimer);
-            btnRow.Children.Add(btnTestar);
+            btnRow.Children.Add(_btnTestarLembrete);
             Grid.SetColumn(btnRow, 2);
             topoGrid.Children.Add(btnRow);
 
             sp.Children.Add(topoGrid);
 
-            // Seletor de Intervalos
+            // Barra / Capsula Fluida de Progresso Zen do Lembrete
+            _trackTimerProgress = new Border
+            {
+                Height = 6,
+                CornerRadius = new CornerRadius(3),
+                Background = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254)),
+                BorderBrush = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
+                ClipToBounds = true,
+                Margin = new Thickness(0, 10, 0, 10)
+            };
+            Grid barGrid = new Grid();
+            _colTimerAtivo = new ColumnDefinition { Width = new GridLength(0.001, GridUnitType.Star) };
+            _colTimerRestante = new ColumnDefinition { Width = new GridLength(100, GridUnitType.Star) };
+            barGrid.ColumnDefinitions.Add(_colTimerAtivo);
+            barGrid.ColumnDefinitions.Add(_colTimerRestante);
+
+            _fillTimerProgress = new Border
+            {
+                CornerRadius = new CornerRadius(3),
+                Background = new LinearGradientBrush(
+                    Color.FromRgb(56, 189, 248),
+                    Color.FromRgb(2, 132, 199),
+                    0.0
+                )
+            };
+            Grid.SetColumn(_fillTimerProgress, 0);
+            barGrid.Children.Add(_fillTimerProgress);
+            _trackTimerProgress.Child = barGrid;
+            sp.Children.Add(_trackTimerProgress);
+
+            // Seletor de Intervalos Zen (Pilulas arredondadas com microinteracao)
             StackPanel intervalRow = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Margin = new Thickness(0, 12, 0, 0)
-                       };
+                Margin = new Thickness(0, 2, 0, 0)
+            };
             _txtLembrarACada = new TextBlock
             {
                 Text = "Lembrar a cada:",
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                FontWeight = FontWeights.SemiBold,
+                Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0)
             };
             intervalRow.Children.Add(_txtLembrarACada);
 
-            int[] mins = new int[] { 15, 30, 45, 60            };
+            _botoesIntervalo.Clear();
+            int[] mins = new int[] { 15, 30, 45, 60 };
             foreach (int m in mins)
             {
+                bool ativo = (m == _dados.IntervaloMinutos);
                 Button btnM = new Button
                 {
                     Content = m + "m",
                     Tag = m,
                     FontSize = 11,
                     FontWeight = FontWeights.Bold,
-                    Padding = new Thickness(10, 4, 10, 4),
+                    Padding = new Thickness(12, 5, 12, 5),
                     Margin = new Thickness(3, 0, 3, 0),
                     Cursor = Cursors.Hand,
-                    Background = (m == _dados.IntervaloMinutos) ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
-                    Foreground = (m == _dados.IntervaloMinutos) ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
-                    BorderThickness = new Thickness(1)
-                           };
+                    RenderTransformOrigin = new Point(0.5, 0.5),
+                    RenderTransform = new ScaleTransform(1.0, 1.0)
+                };
+                AplicarEstiloPill(btnM, 13);
+
+                if (ativo)
+                {
+                    btnM.Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 90);
+                    btnM.Foreground = Brushes.White;
+                    btnM.BorderBrush = Brushes.Transparent;
+                    btnM.Effect = new DropShadowEffect
+                    {
+                        Color = Color.FromRgb(2, 132, 199),
+                        BlurRadius = 8,
+                        Opacity = 0.35,
+                        ShadowDepth = 2
+                    };
+                }
+                else
+                {
+                    btnM.Background = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                    btnM.Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                    btnM.BorderBrush = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                    btnM.BorderThickness = new Thickness(1);
+                    btnM.Effect = null;
+                }
+
+                btnM.MouseEnter += delegate(object s, MouseEventArgs e)
+                {
+                    Button b = (Button)s;
+                    if (b.RenderTransform is ScaleTransform)
+                    {
+                        ScaleTransform st = (ScaleTransform)b.RenderTransform;
+                        st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.0, 1.06, TimeSpan.FromMilliseconds(120)));
+                        st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.0, 1.06, TimeSpan.FromMilliseconds(120)));
+                    }
+                };
+                btnM.MouseLeave += delegate(object s, MouseEventArgs e)
+                {
+                    Button b = (Button)s;
+                    if (b.RenderTransform is ScaleTransform)
+                    {
+                        ScaleTransform st = (ScaleTransform)b.RenderTransform;
+                        st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.06, 1.0, TimeSpan.FromMilliseconds(120)));
+                        st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.06, 1.0, TimeSpan.FromMilliseconds(120)));
+                    }
+                };
+
                 btnM.Click += delegate(object s, RoutedEventArgs e)
                 {
-                    DefinirIntervalo((int)((Button)s).Tag);
-                           };
+                    Button b = (Button)s;
+                    if (b.RenderTransform is ScaleTransform)
+                    {
+                        ScaleTransform st = (ScaleTransform)b.RenderTransform;
+                        DoubleAnimation bounceX = new DoubleAnimation(0.92, 1.0, TimeSpan.FromMilliseconds(200));
+                        DoubleAnimation bounceY = new DoubleAnimation(0.92, 1.0, TimeSpan.FromMilliseconds(200));
+                        bounceX.EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 };
+                        bounceY.EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 };
+                        st.BeginAnimation(ScaleTransform.ScaleXProperty, bounceX);
+                        st.BeginAnimation(ScaleTransform.ScaleYProperty, bounceY);
+                    }
+                    DefinirIntervalo((int)b.Tag);
+                };
+
                 _botoesIntervalo.Add(btnM);
                 intervalRow.Children.Add(btnM);
             }
@@ -2328,14 +2455,139 @@ namespace GotinhaAgua
         {
             int min = _segundosRestantes / 60;
             int seg = _segundosRestantes % 60;
-            _txtTimerDisplay.Text = string.Format("{0:D2}:{1:D2}", min, seg);
+            if (_txtTimerDisplay != null)
+            {
+                _txtTimerDisplay.Text = string.Format("{0:D2}:{1:D2}", min, seg);
+            }
+
+            if (_colTimerAtivo != null && _colTimerRestante != null)
+            {
+                int total = Math.Max(1, _dados.IntervaloMinutos * 60);
+                int decorrido = Math.Max(0, total - _segundosRestantes);
+                double frac = Math.Max(0.001, Math.Min(1.0, (double)decorrido / total));
+                _colTimerAtivo.Width = new GridLength(frac, GridUnitType.Star);
+                _colTimerRestante.Width = new GridLength(Math.Max(0.001, 1.0 - frac), GridUnitType.Star);
+            }
+        }
+
+        private void AtualizarEstiloTimer()
+        {
+            bool escuro = _dados.ModoEscuro;
+            if (_timerPausado)
+            {
+                if (_btnPausarTimer != null)
+                {
+                    _btnPausarTimer.Content = "\u25B6 Continuar";
+                    _btnPausarTimer.Background = escuro ? new SolidColorBrush(Color.FromRgb(120, 53, 15)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                    _btnPausarTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(217, 119, 6)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
+                    _btnPausarTimer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(180, 83, 9));
+                }
+                if (_badgeIconeTimer != null)
+                {
+                    _badgeIconeTimer.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new LinearGradientBrush(Color.FromRgb(254, 243, 199), Color.FromRgb(253, 230, 138), 45);
+                    _badgeIconeTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(245, 158, 11));
+                }
+                if (_txtIconeTimer != null)
+                {
+                    _txtIconeTimer.Text = "\uD83D\uDCA4";
+                }
+                if (_txtTimerLabel != null)
+                {
+                    _txtTimerLabel.Text = "Lembretes em pausa para descanso \uD83D\uDCA4";
+                    _txtTimerLabel.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(217, 119, 6));
+                }
+                if (_fillTimerProgress != null)
+                {
+                    _fillTimerProgress.Background = new SolidColorBrush(Color.FromRgb(245, 158, 11));
+                }
+            }
+            else
+            {
+                if (_btnPausarTimer != null)
+                {
+                    _btnPausarTimer.Content = "\u23F8 Pausar";
+                    _btnPausarTimer.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                    _btnPausarTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                    _btnPausarTimer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                }
+                if (_badgeIconeTimer != null)
+                {
+                    _badgeIconeTimer.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new LinearGradientBrush(Color.FromRgb(224, 242, 254), Color.FromRgb(186, 230, 253), 45);
+                    _badgeIconeTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(80, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(125, 211, 252));
+                }
+                if (_txtIconeTimer != null)
+                {
+                    _txtIconeTimer.Text = "\u23F3";
+                }
+                if (_txtTimerLabel != null)
+                {
+                    _txtTimerLabel.Text = "Pr\u00F3ximo gole de \u00E1gua em";
+                    _txtTimerLabel.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                }
+                if (_fillTimerProgress != null)
+                {
+                    _fillTimerProgress.Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 0.0);
+                }
+            }
+        }
+
+        private void AtualizarBotoesIntervalo()
+        {
+            bool escuro = _dados.ModoEscuro;
+            foreach (var b in _botoesIntervalo)
+            {
+                int m = (int)b.Tag;
+                bool ativo = (m == _dados.IntervaloMinutos);
+                if (ativo)
+                {
+                    b.Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 90);
+                    b.Foreground = Brushes.White;
+                    b.BorderBrush = Brushes.Transparent;
+                    b.Effect = new DropShadowEffect
+                    {
+                        Color = Color.FromRgb(2, 132, 199),
+                        BlurRadius = 8,
+                        Opacity = 0.35,
+                        ShadowDepth = 2
+                    };
+                }
+                else
+                {
+                    b.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                    b.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                    b.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                    b.Effect = null;
+                }
+            }
+        }
+
+        private void AtualizarFalaGotinha(string msg)
+        {
+            if (_txtMensagemGotinha != null)
+            {
+                _txtMensagemGotinha.Text = msg;
+            }
         }
 
         private void AlternarPausaTimer()
         {
             _timerPausado = !_timerPausado;
-            _btnPausarTimer.Content = _timerPausado ? "▶️ Retomar" : "⏸️ Pausar";
-            ExibirSnackBar(_timerPausado ? "Lembretes pausados." : "Lembretes retomados.");
+            AtualizarEstiloTimer();
+            if (_timerPausado)
+            {
+                ExibirSnackBar("Lembretes pausados.");
+                AtualizarFalaGotinha("Pode descansar! Eu guardo seu tempo aqui \uD83D\uDCA4");
+            }
+            else
+            {
+                ExibirSnackBar("Lembretes retomados.");
+                AtualizarFalaGotinha("De volta ao ritmo! Pronta para mais um gole? \u2728");
+                ExecutarAnimacaoPuloGotinha();
+                if (_dados.SomAtivado)
+                {
+                    GeradorDeSom.TocarGota();
+                }
+            }
         }
 
         private void DefinirIntervalo(int minutos)
@@ -2344,12 +2596,22 @@ namespace GotinhaAgua
             _segundosRestantes = minutos * 60;
             SalvarDados();
             AtualizarDisplayTimer();
+            AtualizarBotoesIntervalo();
 
-            foreach (var b in _botoesIntervalo)
+            string fala = "";
+            switch (minutos)
             {
-                int m = (int)b.Tag;
-                b.Background = (m == _dados.IntervaloMinutos) ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
-                b.Foreground = (m == _dados.IntervaloMinutos) ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                case 15: fala = "Intervalo de 15 minutinhos ativado! Super hidratada hoje! \uD83C\uDF0A"; break;
+                case 30: fala = "Perfeito! Vou te avisar a cada 30 minutos com carinho! \uD83D\uDCA7"; break;
+                case 45: fala = "45 minutos configurado! Ritmo zen e produtivo! \uD83E\uDDD8"; break;
+                case 60: fala = "Lembrete a cada 1 hora ativado! Te chamo certinho! \u2728"; break;
+                default: fala = "Intervalo de " + minutos + " minutos configurado! \uD83D\uDCA7"; break;
+            }
+            AtualizarFalaGotinha(fala);
+            ExecutarAnimacaoPuloGotinha();
+            if (_dados.SomAtivado)
+            {
+                GeradorDeSom.TocarGota();
             }
             ExibirSnackBar("Intervalo definido para " + minutos + " minutos!");
         }
@@ -2361,15 +2623,18 @@ namespace GotinhaAgua
                 GeradorDeSom.TocarSinoLembrete();
             }
 
-            // Exibir Notificação Nativa do Windows (na Central de Ações e na Bandeja)
+            // Exibir Notificacao Nativa do Windows (na Central de Acoes e na Bandeja)
             if (_dados.NotificacoesAtivadas)
             {
                 NotificadorWindows.EnviarNotificacao(
-                    "Gotinha - Hora de Beber Água! 💧",
-                    "Faça uma pausa rápida para um gole d'água agora mesmo e cuide do seu corpo!",
+                    "Gotinha - Hora de Beber \u00C1gua! \uD83D\uDCA7",
+                    "Fa\u00E7a uma pausa r\u00E1pida para um gole d'\u00E1gua agora mesmo e cuide do seu corpo!",
                     _trayIcon
                 );
             }
+
+            AtualizarFalaGotinha("Ding-dong! Hora de tomar um belo gole d'\u00E1gua! \uD83D\uDCA7\u2728");
+            ExecutarAnimacaoPuloGotinha();
 
             // Exibir popup modal interativa se a janela estiver visível
             if (WindowState != WindowState.Minimized && IsVisible)
@@ -2898,32 +3163,23 @@ namespace GotinhaAgua
                 _copoContainer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(56, 189, 248));
             }
 
-            // 6. Card Lembrete
-            if (_txtTimerLabel != null) _txtTimerLabel.Foreground = corSub;
-            if (_txtTimerDisplay != null) _txtTimerDisplay.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-            if (_txtLembrarACada != null) _txtLembrarACada.Foreground = corSub;
+            // 6. Card Lembrete Zen
+            AtualizarEstiloTimer();
+            AtualizarBotoesIntervalo();
             if (_btnTestarLembrete != null)
             {
-                _btnTestarLembrete.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
-                _btnTestarLembrete.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                _btnTestarLembrete.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                _btnTestarLembrete.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
+                _btnTestarLembrete.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+                _btnTestarLembrete.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105));
             }
-            foreach (var b in _botoesIntervalo)
+            if (_trackTimerProgress != null)
             {
-                int m = (int)b.Tag;
-                bool ativo = (m == _dados.IntervaloMinutos);
-                if (ativo)
-                {
-                    b.Background = new SolidColorBrush(Color.FromRgb(2, 132, 199));
-                    b.Foreground = Brushes.White;
-                    b.BorderBrush = Brushes.Transparent;
-                }
-                else
-                {
-                    b.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
-                    b.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
-                    b.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                }
+                _trackTimerProgress.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                _trackTimerProgress.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+            if (_txtLembrarACada != null)
+            {
+                _txtLembrarACada.Foreground = corSub;
             }
 
             // 7. Card Registrar Água
@@ -3021,6 +3277,27 @@ namespace GotinhaAgua
             return btn;
         }
 
+        private void AplicarEstiloPill(Button btn, double cornerRadius)
+        {
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.Name = "pillBorder";
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(cornerRadius));
+            borderFactory.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderThicknessProperty, new Binding("BorderThickness") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.PaddingProperty, new Binding("Padding") { RelativeSource = RelativeSource.TemplatedParent });
+
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            presenter.SetValue(ContentPresenter.RecognizesAccessKeyProperty, true);
+            borderFactory.AppendChild(presenter);
+
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+        }
+
         private Button CriarBotaoPill(string texto, bool secondary, RoutedEventHandler handler)
         {
             Button btn = new Button
@@ -3028,16 +3305,18 @@ namespace GotinhaAgua
                 Content = texto,
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = secondary ? new SolidColorBrush(Color.FromRgb(3, 105, 161)) : Brushes.White,
-                Background = secondary ? new SolidColorBrush(Color.FromRgb(240, 249, 255)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Padding = new Thickness(10, 5, 10, 5),
+                Foreground = secondary ? new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                Background = secondary ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                Padding = new Thickness(12, 6, 12, 6),
                 Margin = new Thickness(4, 0, 0, 0),
-                BorderBrush = secondary ? new SolidColorBrush(Color.FromRgb(186, 230, 253)) : Brushes.Transparent,
-                BorderThickness = new Thickness(secondary ? 1 : 0),
+                BorderBrush = secondary ? new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand,
                 RenderTransformOrigin = new Point(0.5, 0.5),
                 RenderTransform = new ScaleTransform(1.0, 1.0)
-                       };
+            };
+            AplicarEstiloPill(btn, 12);
+
             btn.MouseEnter += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
@@ -3046,7 +3325,7 @@ namespace GotinhaAgua
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(150)));
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.0, 1.05, TimeSpan.FromMilliseconds(150)));
                 }
-                       };
+            };
             btn.MouseLeave += delegate
             {
                 if (btn.RenderTransform is ScaleTransform)
@@ -3055,11 +3334,21 @@ namespace GotinhaAgua
                     st.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(150)));
                     st.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(1.05, 1.0, TimeSpan.FromMilliseconds(150)));
                 }
-                       };
-            btn.Click += handler;
+            };
+            btn.Click += delegate(object s, RoutedEventArgs e)
+            {
+                if (btn.RenderTransform is ScaleTransform)
+                {
+                    ScaleTransform st = (ScaleTransform)btn.RenderTransform;
+                    DoubleAnimation bounce = new DoubleAnimation(0.94, 1.0, TimeSpan.FromMilliseconds(150));
+                    bounce.EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 };
+                    st.BeginAnimation(ScaleTransform.ScaleXProperty, bounce);
+                    st.BeginAnimation(ScaleTransform.ScaleYProperty, bounce);
+                }
+                handler(s, e);
+            };
             return btn;
         }
-
 
     }
 
