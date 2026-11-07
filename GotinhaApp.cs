@@ -909,22 +909,17 @@ namespace GotinhaAgua
             _gridConteudo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) }); // espaÃ§o
             _gridConteudo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(54, GridUnitType.Star) });
 
-            // --- Coluna Esquerda ---
+            // --- Coluna Esquerda: Hero Card Unificado da Gotinha + Temporizador ---
             Grid colunaEsq = new Grid();
-            colunaEsq.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             colunaEsq.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             colunaEsq.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-            UIElement cardHeader = CriarCardHeader();
-            Grid.SetRow(cardHeader, 0);
-            colunaEsq.Children.Add(cardHeader);
-
-            UIElement cardProgresso = CriarCardProgresso();
-            Grid.SetRow(cardProgresso, 1);
-            colunaEsq.Children.Add(cardProgresso);
+            UIElement cardHero = CriarCardHero();
+            Grid.SetRow(cardHero, 0);
+            colunaEsq.Children.Add(cardHero);
 
             UIElement cardLembrete = CriarCardLembrete();
-            Grid.SetRow(cardLembrete, 2);
+            Grid.SetRow(cardLembrete, 1);
             colunaEsq.Children.Add(cardLembrete);
 
             Grid.SetColumn(colunaEsq, 0);
@@ -1078,385 +1073,116 @@ namespace GotinhaAgua
             _containerPrincipal.Children.Add(_overlayLoading);
         }
 
-        // --- Card 1: Header, Mascote & Controles ---
-                private UIElement CriarCardHeader()
+        // --- Hero Card: Gotinha Protagonista & Progresso Integrado ---
+        private UIElement CriarCardHero()
         {
             Border card = CriarCardBase();
+            card.Padding = new Thickness(14, 12, 14, 14);
 
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(85) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            StackPanel mainStack = new StackPanel();
 
-            // Mascote com animaÃ§Ã£o interativa
-            _canvasMascote = CriarMascoteCanvas();
-            Grid.SetColumn(_canvasMascote, 0);
-            grid.Children.Add(_canvasMascote);
+            // 1. Barra Superior: Marca Gotinha + Badge de Amiga + Toolbar de Ações
+            Grid topBar = new Grid();
+            topBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            topBar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Painel direito: Topo (TÃ­tulo + PRO + Toolbar) e RodapÃ© (BalÃ£o de Fala)
-            Grid rightGrid = new Grid { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
-            rightGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            rightGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            // Linha superior: TÃ­tulo Gotinha + Badge PRO + Toolbar horizontal
-            Grid topRow = new Grid();
-            topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            topRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            StackPanel titleRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            StackPanel brandSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             _txtHeaderTitle = new TextBlock
             {
                 Text = "Gotinha",
                 FontSize = 19,
                 FontWeight = FontWeights.ExtraBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199))
+                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                VerticalAlignment = VerticalAlignment.Center
             };
-            TextBlock title = _txtHeaderTitle;
-            Border badge = new Border
+            brandSp.Children.Add(_txtHeaderTitle);
+
+            Border badgeAmiga = new Border
             {
-                Background = new LinearGradientBrush(
-                    Color.FromRgb(56, 189, 248),
-                    Color.FromRgb(2, 132, 199),
-                    135.0
-                ),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(7, 2, 7, 2),
+                Background = new SolidColorBrush(Color.FromArgb(200, 224, 242, 254)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(8, 2, 8, 2),
                 Margin = new Thickness(8, 0, 0, 0),
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 6,
-                    ShadowDepth = 1,
-                    Opacity = 0.25
-                },
+                VerticalAlignment = VerticalAlignment.Center,
                 Child = new TextBlock
                 {
-                    Text = "PRO",
-                    FontSize = 9.5,
-                    FontWeight = FontWeights.ExtraBold,
-                    Foreground = Brushes.White
+                    Text = "\u2728 Sua Companheira",
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199))
                 }
             };
-            titleRow.Children.Add(title);
-            titleRow.Children.Add(badge);
-            Grid.SetColumn(titleRow, 0);
-            topRow.Children.Add(titleRow);
+            brandSp.Children.Add(badgeAmiga);
+            Grid.SetColumn(brandSp, 0);
+            topBar.Children.Add(brandSp);
 
-            // Toolbar horizontal moderna com Som, NotificaÃ§Ãµes e ConfiguraÃ§Ãµes
-                                    StackPanel toolbarSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            // Toolbar com botões redondinhos elegantes
+            StackPanel toolbarSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             _btnSom = CriarBotaoToolbarCard(CriarIconeSom(_dados.SomAtivado), _dados.SomAtivado ? "Som ativado" : "Som silenciado", delegate { AlternarSom(); }, false);
             _btnNotif = CriarBotaoToolbarCard(CriarIconeNotif(_dados.NotificacoesAtivadas), _dados.NotificacoesAtivadas ? "Notifica\u00E7\u00F5es ativadas" : "Notifica\u00E7\u00F5es desativadas", delegate { AlternarNotificacoes(); }, false);
             _btnTema = CriarBotaoToolbarCard(CriarIconeTema(_dados.ModoEscuro), _dados.ModoEscuro ? "Ativar Modo Claro" : "Ativar Modo Escuro", delegate { AlternarModoEscuro(); }, false);
             _btnConfig = CriarBotaoToolbarCard(CriarIconeEngrenagem(), "Configurar Meta e Prefer\u00EAncias", delegate { AbrirJanelaConfiguracoes(); }, true);
-            Button btnConfig = _btnConfig;
 
             toolbarSp.Children.Add(_btnSom);
             toolbarSp.Children.Add(_btnNotif);
             toolbarSp.Children.Add(_btnTema);
             toolbarSp.Children.Add(_btnConfig);
             Grid.SetColumn(toolbarSp, 1);
-            topRow.Children.Add(toolbarSp);
+            topBar.Children.Add(toolbarSp);
 
-            Grid.SetRow(topRow, 0);
-            rightGrid.Children.Add(topRow);
+            mainStack.Children.Add(topBar);
 
-            // BalÃ£o de fala moderno para a mensagem da Gotinha
+            // 2. Área Central: Gotinha Grande e Fofa + Balão de Fala + Volume Atual
+            Grid heroBody = new Grid { Margin = new Thickness(0, 10, 0, 10) };
+            heroBody.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(104) });
+            heroBody.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            _canvasMascote = CriarMascoteCanvas();
+            Grid.SetColumn(_canvasMascote, 0);
+            heroBody.Children.Add(_canvasMascote);
+
+            StackPanel heroRight = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
+
+            // Balão de fala moderno e acolhedor
             _speechBubble = new Border
             {
                 Background = new SolidColorBrush(Color.FromArgb(235, 240, 249, 255)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(11),
-                Padding = new Thickness(10, 6, 10, 6),
-                Margin = new Thickness(0, 6, 0, 0)
-            };
-            Border speechBubble = _speechBubble;
-
-            _txtMensagemGotinha = new TextBlock
-            {
-                Text = "Oi! Vamos nos manter hidratadas hoje? \uD83D\uDCA7",
-                FontSize = 11,
-                Foreground = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
-                TextWrapping = TextWrapping.Wrap
-            };
-            speechBubble.Child = _txtMensagemGotinha;
-
-            Grid.SetRow(speechBubble, 1);
-            rightGrid.Children.Add(speechBubble);
-
-            Grid.SetColumn(rightGrid, 1);
-            grid.Children.Add(rightGrid);
-
-            card.Child = grid;
-            return card;
-        }
-
-        private Canvas CriarMascoteCanvas()
-        {
-            Canvas canvas = new Canvas
-            {
-                Width = 80,
-                Height = 85,
-                Cursor = Cursors.Hand
-                       };
-
-            string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
-            if (File.Exists(mascotPath))
-            {
-                try
-                {
-                    Border imgBorder = new Border
-                    {
-                        Width = 76,
-                        Height = 76,
-                        CornerRadius = new CornerRadius(20),
-                        ClipToBounds = true,
-                        BorderBrush = new SolidColorBrush(Color.FromRgb(125, 211, 252)),
-                        BorderThickness = new Thickness(1.5),
-                RenderTransformOrigin = new Point(0.5, 0.5),
-                RenderTransform = new ScaleTransform(1.0, 1.0),
-                        Effect = new DropShadowEffect
-                        {
-                            BlurRadius = 16,
-                            ShadowDepth = 3,
-                            Opacity = 0.455,
-                            Color = Color.FromRgb(2, 132, 199)
-                        }
-                               };
-
-                    Image img = new Image
-                    {
-                        Width = 76,
-                        Height = 76,
-                        Stretch = Stretch.UniformToFill
-                               };
-                    BitmapImage bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.UriSource = new Uri(mascotPath, UriKind.Absolute);
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.EndInit();
-                    img.Source = bmp;
-
-                    imgBorder.Child = img;
-                    Canvas.SetLeft(imgBorder, 2);
-                    Canvas.SetTop(imgBorder, 4);
-                    canvas.Children.Add(imgBorder);
-
-                    _coroaGotinha = new System.Windows.Shapes.Polygon
-                    {
-                        Points = new PointCollection(new Point[] {
-                            new Point(28, 12), new Point(33, 2), new Point(40, 8), new Point(47, 2), new Point(52, 12)
-                        }),
-                        Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
-                        Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
-                        StrokeThickness = 1.5,
-                        Visibility = Visibility.Collapsed
-                               };
-                    canvas.Children.Add(_coroaGotinha);
-
-                    canvas.MouseLeftButtonDown += delegate { InteragirComGotinha();            };
-                    return canvas;
-                }
-                catch { }
-            }
-
-            System.Windows.Shapes.Path corpo = new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse("M 40 10 C 40 10 10 50 10 65 C 10 82 23 88 40 88 C 57 88 70 82 70 65 C 70 50 40 10 40 10 Z"),
-                Fill = new LinearGradientBrush(
-                    Color.FromRgb(56, 189, 248),
-                    Color.FromRgb(2, 132, 199),
-                    90
-                ),
-                Effect = new DropShadowEffect
-                {
-                    BlurRadius = 12,
-                    ShadowDepth = 3,
-                    Opacity = 0.28,
-                    Color = Color.FromRgb(2, 132, 199)
-                }
-                       };
-            canvas.Children.Add(corpo);
-
-            // Brilho
-            Ellipse brilho = new Ellipse
-            {
-                Width = 10,
-                Height = 22,
-                Fill = new SolidColorBrush(Color.FromArgb(190, 255, 255, 255)),
-                RenderTransform = new RotateTransform(-20)
-                       };
-            Canvas.SetLeft(brilho, 22);
-            Canvas.SetTop(brilho, 50);
-            canvas.Children.Add(brilho);
-
-            // Bochechas rosadas
-            Ellipse bochechaL = new Ellipse { Width = 10, Height = 10, Fill = new SolidColorBrush(Color.FromArgb(130, 255, 118, 156))            };
-            Canvas.SetLeft(bochechaL, 22);
-            Canvas.SetTop(bochechaL, 66);
-            canvas.Children.Add(bochechaL);
-
-            Ellipse bochechaR = new Ellipse { Width = 10, Height = 10, Fill = new SolidColorBrush(Color.FromArgb(130, 255, 118, 156))            };
-            Canvas.SetLeft(bochechaR, 48);
-            Canvas.SetTop(bochechaR, 66);
-            canvas.Children.Add(bochechaR);
-
-            // Olhos animados
-            _olhoEsquerdo = new Ellipse { Width = 6, Height = 8, Fill = new SolidColorBrush(Color.FromRgb(30, 41, 59))            };
-            Canvas.SetLeft(_olhoEsquerdo, 28);
-            Canvas.SetTop(_olhoEsquerdo, 58);
-            canvas.Children.Add(_olhoEsquerdo);
-
-            _olhoDireito = new Ellipse { Width = 6, Height = 8, Fill = new SolidColorBrush(Color.FromRgb(30, 41, 59))            };
-            Canvas.SetLeft(_olhoDireito, 46);
-            Canvas.SetTop(_olhoDireito, 58);
-            canvas.Children.Add(_olhoDireito);
-
-            // Boca expressiva
-            _pathBocaGotinha = new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse("M 35 68 Q 40 74 45 68"),
-                Stroke = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
-                StrokeThickness = 2.5,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round
-                       };
-            canvas.Children.Add(_pathBocaGotinha);
-
-            // Coroa de campeã
-            _coroaGotinha = new System.Windows.Shapes.Polygon
-            {
-                Points = new PointCollection(new Point[] {
-                    new Point(28, 20), new Point(33, 8), new Point(40, 16), new Point(47, 8), new Point(52, 20)
-                }),
-                Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
-                Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
-                StrokeThickness = 1.5,
-                Visibility = Visibility.Collapsed
-                       };
-            canvas.Children.Add(_coroaGotinha);
-
-            canvas.MouseLeftButtonDown += delegate { InteragirComGotinha();            };
-
-            return canvas;
-        }
-
-        // --- Card 2: Progresso, Copo d'água & Barra ---
-                private UIElement CriarCardProgresso()
-        {
-            Border card = CriarCardBase();
-
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            // Copo de Ãgua estilizado com efeito de vidro cristalino
-            _copoContainer = new Border
-            {
-                Width = 78,
-                Height = 118,
-                BorderBrush = new LinearGradientBrush(
-                    Color.FromRgb(186, 230, 253),
-                    Color.FromRgb(125, 211, 252),
-                    135.0
-                ),
-                BorderThickness = new Thickness(2.5, 0.8, 2.5, 2.5),
-                CornerRadius = new CornerRadius(0, 0, 24, 24),
-                Background = new LinearGradientBrush(
-                    Color.FromArgb(16, 255, 255, 255),
-                    Color.FromArgb(36, 224, 242, 254),
-                    135.0
-                ),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                ClipToBounds = true,
-                RenderTransformOrigin = new Point(0.5, 0.5),
-                RenderTransform = new ScaleTransform(1.0, 1.0),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(10, 7, 10, 7),
+                Margin = new Thickness(0, 0, 0, 8),
                 Effect = new DropShadowEffect
                 {
                     Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 14,
-                    ShadowDepth = 2,
-                    Opacity = 0.12
+                    BlurRadius = 8,
+                    ShadowDepth = 1,
+                    Opacity = 0.08
                 }
             };
-
-            Grid copoGrid = new Grid();
-
-            // Ãgua interna com gradiente multi-stop fluido
-            _bordaAguaCopo = new Border
+            _txtMensagemGotinha = new TextBlock
             {
-                VerticalAlignment = VerticalAlignment.Bottom,
-                Height = 0,
-                Background = new LinearGradientBrush(
-                    new GradientStopCollection
-                    {
-                        new GradientStop(Color.FromRgb(56, 189, 248), 0.0),
-                        new GradientStop(Color.FromRgb(2, 132, 199), 0.5),
-                        new GradientStop(Color.FromRgb(3, 105, 161), 1.0)
-                    },
-                    135.0
-                ),
-                CornerRadius = new CornerRadius(0, 0, 20, 20)
+                Text = "Oi! Vamos cuidar da sua hidrata\u00E7\u00E3o hoje? \uD83D\uDCA7",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Medium,
+                Foreground = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                TextWrapping = TextWrapping.Wrap
             };
-            copoGrid.Children.Add(_bordaAguaCopo);
+            _speechBubble.Child = _txtMensagemGotinha;
+            heroRight.Children.Add(_speechBubble);
 
-            // Reflexo de luz vertical do vidro
-            Border brilhoVidro = new Border
-            {
-                Width = 4,
-                CornerRadius = new CornerRadius(2),
-                Background = new SolidColorBrush(Color.FromArgb(90, 255, 255, 255)),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = new Thickness(6, 8, 0, 14)
-            };
-            copoGrid.Children.Add(brilhoVidro);
+            // Linha do Volume e Porcentagem
+            Grid volGrid = new Grid();
+            volGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            volGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            // Marcadores gravados no vidro
-            Canvas marcasCanvas = new Canvas { IsHitTestVisible = false };
-
-            Line l100 = new Line { X1 = 58, Y1 = 12, X2 = 72, Y2 = 12, Stroke = new SolidColorBrush(Color.FromArgb(150, 2, 132, 199)), StrokeThickness = 1 };
-            marcasCanvas.Children.Add(l100);
-            TextBlock t100 = new TextBlock { Text = "100%", FontSize = 7.5, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromArgb(170, 2, 132, 199)) };
-            Canvas.SetLeft(t100, 36); Canvas.SetTop(t100, 7);
-            marcasCanvas.Children.Add(t100);
-
-            Line l75 = new Line { X1 = 60, Y1 = 37, X2 = 72, Y2 = 37, Stroke = new SolidColorBrush(Color.FromArgb(150, 2, 132, 199)), StrokeThickness = 1 };
-            marcasCanvas.Children.Add(l75);
-            TextBlock t75 = new TextBlock { Text = "75%", FontSize = 7.5, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromArgb(170, 2, 132, 199)) };
-            Canvas.SetLeft(t75, 42); Canvas.SetTop(t75, 32);
-            marcasCanvas.Children.Add(t75);
-
-            Line l50 = new Line { X1 = 60, Y1 = 63, X2 = 72, Y2 = 63, Stroke = new SolidColorBrush(Color.FromArgb(150, 2, 132, 199)), StrokeThickness = 1 };
-            marcasCanvas.Children.Add(l50);
-            TextBlock t50 = new TextBlock { Text = "50%", FontSize = 7.5, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromArgb(170, 2, 132, 199)) };
-            Canvas.SetLeft(t50, 42); Canvas.SetTop(t50, 58);
-            marcasCanvas.Children.Add(t50);
-
-            Line l25 = new Line { X1 = 60, Y1 = 89, X2 = 72, Y2 = 89, Stroke = new SolidColorBrush(Color.FromArgb(150, 2, 132, 199)), StrokeThickness = 1 };
-            marcasCanvas.Children.Add(l25);
-            TextBlock t25 = new TextBlock { Text = "25%", FontSize = 7.5, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(Color.FromArgb(170, 2, 132, 199)) };
-            Canvas.SetLeft(t25, 42); Canvas.SetTop(t25, 84);
-            marcasCanvas.Children.Add(t25);
-
-            copoGrid.Children.Add(marcasCanvas);
-
-            _copoContainer.Child = copoGrid;
-            Grid.SetColumn(_copoContainer, 0);
-            grid.Children.Add(_copoContainer);
-
-            // EstatÃ­sticas Modernas no Estilo Health Dashboard
-            StackPanel stats = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(14, 0, 0, 0) };
-
-            // Linha 1: Volume Atual em destaque + Badge de Porcentagem
-            Grid rowVol = new Grid();
-            rowVol.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            rowVol.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            StackPanel mlRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom };
+            StackPanel mlStack = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom };
             _txtMlAtual = new TextBlock
             {
                 Text = "0",
-                FontSize = 36,
+                FontSize = 34,
                 FontWeight = FontWeights.ExtraBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199))
             };
@@ -1467,13 +1193,12 @@ namespace GotinhaAgua
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 VerticalAlignment = VerticalAlignment.Bottom,
-                Margin = new Thickness(2, 0, 0, 6)
+                Margin = new Thickness(2, 0, 0, 5)
             };
-            TextBlock unit = _txtMlUnit;
-            mlRow.Children.Add(_txtMlAtual);
-            mlRow.Children.Add(unit);
-            Grid.SetColumn(mlRow, 0);
-            rowVol.Children.Add(mlRow);
+            mlStack.Children.Add(_txtMlAtual);
+            mlStack.Children.Add(_txtMlUnit);
+            Grid.SetColumn(mlStack, 0);
+            volGrid.Children.Add(mlStack);
 
             _badgePorcentagem = new Border
             {
@@ -1494,33 +1219,36 @@ namespace GotinhaAgua
             };
             _badgePorcentagem.Child = _txtPorcentagem;
             Grid.SetColumn(_badgePorcentagem, 1);
-            rowVol.Children.Add(_badgePorcentagem);
+            volGrid.Children.Add(_badgePorcentagem);
 
-            stats.Children.Add(rowVol);
+            heroRight.Children.Add(volGrid);
 
-            // Linha 2: Meta total
-                        _txtMetaStatus = new TextBlock
+            _txtMetaStatus = new TextBlock
             {
                 Text = "Meta di\u00E1ria: 2000 ml",
-                FontSize = 12,
+                FontSize = 11.5,
                 Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 FontWeight = FontWeights.Medium,
-                Margin = new Thickness(0, 2, 0, 6)
+                Margin = new Thickness(0, 2, 0, 0)
             };
-            stats.Children.Add(_txtMetaStatus);
+            heroRight.Children.Add(_txtMetaStatus);
 
-            // Linha 3: Barra de Progresso Moderna com cantos arredondados e gradiente
+            Grid.SetColumn(heroRight, 1);
+            heroBody.Children.Add(heroRight);
+
+            mainStack.Children.Add(heroBody);
+
+            // 3. Barra de Progresso Fluida com Gradiente de Água
             _barTrack = new Border
             {
-                Height = 10,
-                CornerRadius = new CornerRadius(5),
+                Height = 11,
+                CornerRadius = new CornerRadius(5.5),
                 Background = new SolidColorBrush(Color.FromRgb(224, 242, 254)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
                 BorderThickness = new Thickness(1),
                 ClipToBounds = true,
-                Margin = new Thickness(0, 0, 0, 8)
+                Margin = new Thickness(0, 2, 0, 8)
             };
-            Border barTrack = _barTrack;
             Grid barGrid = new Grid();
             _colProgressoAtivo = new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) };
             _colProgressoRestante = new ColumnDefinition { Width = new GridLength(100, GridUnitType.Star) };
@@ -1529,7 +1257,7 @@ namespace GotinhaAgua
 
             Border barFill = new Border
             {
-                CornerRadius = new CornerRadius(5),
+                CornerRadius = new CornerRadius(5.5),
                 Background = new LinearGradientBrush(
                     Color.FromRgb(56, 189, 248),
                     Color.FromRgb(2, 132, 199),
@@ -1538,17 +1266,17 @@ namespace GotinhaAgua
             };
             Grid.SetColumn(barFill, 0);
             barGrid.Children.Add(barFill);
-            barTrack.Child = barGrid;
-            stats.Children.Add(barTrack);
+            _barTrack.Child = barGrid;
+            mainStack.Children.Add(_barTrack);
 
             _progressBarMeta = new ProgressBar
             {
                 Height = 0,
                 Visibility = Visibility.Collapsed
             };
-            stats.Children.Add(_progressBarMeta);
+            mainStack.Children.Add(_progressBarMeta);
 
-            // Linha 4: Card de Status da Meta Restante
+            // 4. Pílula de Incentivo da Meta
             _cardStatusFalta = new Border
             {
                 Background = new SolidColorBrush(Color.FromArgb(220, 240, 249, 255)),
@@ -1559,20 +1287,175 @@ namespace GotinhaAgua
             };
             _txtFaltaMl = new TextBlock
             {
-                Text = "\uD83D\uDCA7 Faltam 2000 ml para hoje!",
+                Text = "\uD83D\uDCA7 Faltam 2000 ml para a sua meta di\u00E1ria!",
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
                 TextWrapping = TextWrapping.Wrap
             };
             _cardStatusFalta.Child = _txtFaltaMl;
-            stats.Children.Add(_cardStatusFalta);
+            mainStack.Children.Add(_cardStatusFalta);
 
-            Grid.SetColumn(stats, 1);
-            grid.Children.Add(stats);
+            // Copo em background para compatibilidade de animação
+            _copoContainer = new Border { Visibility = Visibility.Collapsed };
+            _bordaAguaCopo = new Border { Height = 0 };
+            _copoContainer.Child = _bordaAguaCopo;
+            mainStack.Children.Add(_copoContainer);
 
-            card.Child = grid;
+            card.Child = mainStack;
             return card;
+        }
+
+        private Canvas CriarMascoteCanvas()
+        {
+            Canvas canvas = new Canvas
+            {
+                Width = 98,
+                Height = 100,
+                Cursor = Cursors.Hand
+            };
+
+            string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
+            if (File.Exists(mascotPath))
+            {
+                try
+                {
+                    Border imgBorder = new Border
+                    {
+                        Width = 92,
+                        Height = 92,
+                        CornerRadius = new CornerRadius(24),
+                        ClipToBounds = true,
+                        BorderBrush = new SolidColorBrush(Color.FromRgb(125, 211, 252)),
+                        BorderThickness = new Thickness(2),
+                        RenderTransformOrigin = new Point(0.5, 0.5),
+                        RenderTransform = new ScaleTransform(1.0, 1.0),
+                        Effect = new DropShadowEffect
+                        {
+                            BlurRadius = 20,
+                            ShadowDepth = 3,
+                            Opacity = 0.38,
+                            Color = Color.FromRgb(2, 132, 199)
+                        }
+                    };
+
+                    Image img = new Image
+                    {
+                        Width = 92,
+                        Height = 92,
+                        Stretch = Stretch.UniformToFill
+                    };
+                    BitmapImage bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource = new Uri(mascotPath, UriKind.Absolute);
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.EndInit();
+                    img.Source = bmp;
+
+                    imgBorder.Child = img;
+                    Canvas.SetLeft(imgBorder, 3);
+                    Canvas.SetTop(imgBorder, 5);
+                    canvas.Children.Add(imgBorder);
+
+                    // Efeito suave de hover na Gotinha
+                    imgBorder.MouseEnter += delegate
+                    {
+                        ScaleTransform st = imgBorder.RenderTransform as ScaleTransform;
+                        if (st != null)
+                        {
+                            DoubleAnimation sa = new DoubleAnimation(1.0, 1.06, TimeSpan.FromMilliseconds(160))
+                            {
+                                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                            };
+                            st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
+                            st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
+                        }
+                    };
+                    imgBorder.MouseLeave += delegate
+                    {
+                        ScaleTransform st = imgBorder.RenderTransform as ScaleTransform;
+                        if (st != null)
+                        {
+                            DoubleAnimation sa = new DoubleAnimation(1.06, 1.0, TimeSpan.FromMilliseconds(180))
+                            {
+                                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                            };
+                            st.BeginAnimation(ScaleTransform.ScaleXProperty, sa);
+                            st.BeginAnimation(ScaleTransform.ScaleYProperty, sa);
+                        }
+                    };
+
+                    _coroaGotinha = new System.Windows.Shapes.Polygon
+                    {
+                        Points = new PointCollection(new Point[] {
+                            new Point(34, 14), new Point(40, 2), new Point(48, 8), new Point(56, 2), new Point(62, 14)
+                        }),
+                        Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
+                        Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
+                        StrokeThickness = 1.5,
+                        Visibility = Visibility.Collapsed
+                    };
+                    canvas.Children.Add(_coroaGotinha);
+
+                    canvas.MouseLeftButtonDown += delegate { InteragirComGotinha(); };
+                    return canvas;
+                }
+                catch { }
+            }
+
+            // Fallback vetorial gracioso caso imagem não exista
+            System.Windows.Shapes.Path corpo = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse("M 48 12 C 48 12 14 58 14 74 C 14 94 28 100 48 100 C 68 100 82 94 82 74 C 82 58 48 12 48 12 Z"),
+                Fill = new LinearGradientBrush(
+                    Color.FromRgb(56, 189, 248),
+                    Color.FromRgb(2, 132, 199),
+                    90
+                ),
+                Effect = new DropShadowEffect
+                {
+                    BlurRadius = 16,
+                    ShadowDepth = 3,
+                    Opacity = 0.32,
+                    Color = Color.FromRgb(2, 132, 199)
+                }
+            };
+            canvas.Children.Add(corpo);
+
+            _olhoEsquerdo = new Ellipse { Width = 7, Height = 9, Fill = new SolidColorBrush(Color.FromRgb(30, 41, 59)) };
+            Canvas.SetLeft(_olhoEsquerdo, 34);
+            Canvas.SetTop(_olhoEsquerdo, 66);
+            canvas.Children.Add(_olhoEsquerdo);
+
+            _olhoDireito = new Ellipse { Width = 7, Height = 9, Fill = new SolidColorBrush(Color.FromRgb(30, 41, 59)) };
+            Canvas.SetLeft(_olhoDireito, 55);
+            Canvas.SetTop(_olhoDireito, 66);
+            canvas.Children.Add(_olhoDireito);
+
+            _pathBocaGotinha = new System.Windows.Shapes.Path
+            {
+                Data = Geometry.Parse("M 42 77 Q 48 84 54 77"),
+                Stroke = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                StrokeThickness = 2.5,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round
+            };
+            canvas.Children.Add(_pathBocaGotinha);
+
+            _coroaGotinha = new System.Windows.Shapes.Polygon
+            {
+                Points = new PointCollection(new Point[] {
+                    new Point(34, 22), new Point(40, 10), new Point(48, 17), new Point(56, 10), new Point(62, 22)
+                }),
+                Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
+                Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
+                StrokeThickness = 1.5,
+                Visibility = Visibility.Collapsed
+            };
+            canvas.Children.Add(_coroaGotinha);
+
+            canvas.MouseLeftButtonDown += delegate { InteragirComGotinha(); };
+            return canvas;
         }
 
         // --- Card 3: Lembrete e Timer ---
