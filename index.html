@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lembrete de Água 💧 Gotinha</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header com Mascote Gotinha -->
+    <header class="app-header">
+      <div class="mascot-wrapper" id="mascotContainer">
+        <!-- SVG Gotinha Animada -->
+        <svg class="mascot-svg" id="gotinhaSvg" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#72d6fc" />
+              <stop offset="60%" stop-color="#38b6ff" />
+              <stop offset="100%" stop-color="#0284c7" />
+            </linearGradient>
+            <linearGradient id="waterHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
+            </linearGradient>
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#38b6ff" flood-opacity="0.3" />
+            </filter>
+          </defs>
+
+          <!-- Corpinho Gotinha -->
+          <path id="mascotBody" class="mascot-body" filter="url(#softGlow)" fill="url(#waterGrad)"
+                d="M 100 22 C 100 22 25 125 25 168 C 25 208 58 230 100 230 C 142 230 175 208 175 168 C 175 125 100 22 100 22 Z" />
+
+          <!-- Brilho reflexo -->
+          <ellipse cx="62" cy="140" rx="14" ry="32" transform="rotate(-25 62 140)" fill="url(#waterHighlight)" />
+          <circle cx="80" cy="188" r="5" fill="#ffffff" opacity="0.6" />
+
+          <!-- Bochechas rosadinhas -->
+          <circle id="cheekLeft" cx="62" cy="172" r="12" fill="#ff769c" opacity="0.45" />
+          <circle id="cheekRight" cx="138" cy="172" r="12" fill="#ff769c" opacity="0.45" />
+
+          <!-- Olhinhos -->
+          <g id="mascotEyes" class="mascot-eyes">
+            <!-- Olho Esquerdo -->
+            <ellipse id="eyeL" cx="76" cy="155" rx="7.5" ry="9" fill="#1e293b" />
+            <circle id="eyeSparkleL1" cx="73" cy="151" r="3" fill="#ffffff" />
+            <circle id="eyeSparkleL2" cx="78" cy="157" r="1.5" fill="#ffffff" />
+
+            <!-- Olho Direito -->
+            <ellipse id="eyeR" cx="124" cy="155" rx="7.5" ry="9" fill="#1e293b" />
+            <circle id="eyeSparkleR1" cx="121" cy="151" r="3" fill="#ffffff" />
+            <circle id="eyeSparkleR2" cx="126" cy="157" r="1.5" fill="#ffffff" />
+          </g>
+
+          <!-- Boquinha Sorridente -->
+          <path id="mascotMouth" class="mascot-mouth" d="M 90 170 Q 100 182 110 170" fill="none" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" />
+
+          <!-- Acessório Coroinha (Meta Atingida) -->
+          <g id="mascotCrown" class="mascot-crown hidden">
+            <polygon points="70,42 82,18 100,32 118,18 130,42" fill="#fbbf24" stroke="#d97706" stroke-width="2" />
+            <circle cx="82" cy="18" r="3" fill="#ef4444" />
+            <circle cx="100" cy="32" r="3" fill="#3b82f6" />
+            <circle cx="118" cy="18" r="3" fill="#10b981" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="header-text">
+        <h1 class="app-title">Gotinha <span class="badge-title">Hidratação</span></h1>
+        <p class="mascot-bubble" id="mascotMessage">Oi! Vamos nos manter hidratadas hoje? 💧</p>
+      </div>
+
+      <div class="header-controls">
+        <button id="btnSoundToggle" class="icon-btn" title="Ativar/Desativar Sons" aria-label="Som">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="btnSettingsToggle" class="icon-btn" title="Configurações e Meta" aria-label="Configurações">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <!-- Card de Progresso Principal -->
+    <section class="progress-card">
+      <div class="visual-container">
+        <!-- Copo de Água com Animação de Onda -->
+        <div class="water-glass">
+          <div class="glass-inner">
+            <div class="water-fill" id="waterFill" style="height: 0%;">
+              <div class="wave wave1"></div>
+              <div class="wave wave2"></div>
+              <div class="bubbles">
+                <span class="bubble b1"></span>
+                <span class="bubble b2"></span>
+                <span class="bubble b3"></span>
+                <span class="bubble b4"></span>
+              </div>
+            </div>
+            <div class="glass-reflection"></div>
+            <div class="glass-measurement-marks">
+              <span>75%</span>
+              <span>50%</span>
+              <span>25%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estatísticas Numéricas -->
+        <div class="stats-info">
+          <div class="stat-main">
+            <span class="current-ml" id="currentIntake">0</span>
+            <span class="ml-unit">ml</span>
+          </div>
+          <div class="stat-target">
+            de <span id="targetIntake">2000</span> ml (<span id="percentageText">0%</span>)
+          </div>
+
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+          </div>
+
+          <div class="quick-status" id="quickStatus">
+            Faltam <strong>2000 ml</strong> para a sua meta! ✨
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card de Lembrete & Timer -->
+    <section class="reminder-card">
+      <div class="reminder-header">
+        <div class="reminder-title-box">
+          <span class="reminder-icon">⏰</span>
+          <div>
+            <div class="reminder-label">Próximo Gole</div>
+            <div class="reminder-timer" id="timerDisplay">30:00</div>
+          </div>
+        </div>
+        <div class="reminder-actions">
+          <button id="btnTimerToggle" class="pill-btn primary" title="Pausar ou Retomar Lembrete">
+            <span id="timerToggleIcon">⏸️</span> Pausar
+          </button>
+          <button id="btnTestReminder" class="pill-btn secondary" title="Testar Som e Lembrete Agora">
+            🔔 Testar
+          </button>
+        </div>
+      </div>
+
+      <div class="reminder-config-quick">
+        <span class="subtext">Lembrar a cada:</span>
+        <div class="interval-chips" id="intervalChips">
+          <button class="chip" data-min="15">15m</button>
+          <button class="chip active" data-min="30">30m</button>
+          <button class="chip" data-min="45">45m</button>
+          <button class="chip" data-min="60">60m</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Botões de Adicionar Água -->
+    <section class="quick-add-section">
+      <div class="section-title-row">
+        <h2>Registrar Água</h2>
+        <button id="btnUndo" class="text-link-btn" title="Desfazer último gole">↩ Desfazer</button>
+      </div>
+
+      <div class="buttons-grid">
+        <button class="drink-btn" data-amount="150" title="Adicionar 150ml">
+          <span class="btn-emoji">☕</span>
+          <span class="btn-name">Gole</span>
+          <span class="btn-ml">+150 ml</span>
+        </button>
+
+        <button class="drink-btn popular" data-amount="250" title="Adicionar 250ml">
+          <div class="popular-tag">Favorito</div>
+          <span class="btn-emoji">🥛</span>
+          <span class="btn-name">Copo</span>
+          <span class="btn-ml">+250 ml</span>
+        </button>
+
+        <button class="drink-btn" data-amount="350" title="Adicionar 350ml">
+          <span class="btn-emoji">🥤</span>
+          <span class="btn-name">Grande</span>
+          <span class="btn-ml">+350 ml</span>
+        </button>
+
+        <button class="drink-btn" data-amount="500" title="Adicionar 500ml">
+          <span class="btn-emoji">🍶</span>
+          <span class="btn-name">Garrafa</span>
+          <span class="btn-ml">+500 ml</span>
+        </button>
+      </div>
+
+      <!-- Quantidade Personalizada -->
+      <form id="customAmountForm" class="custom-amount-bar">
+        <input type="number" id="customAmountInput" placeholder="Outro valor em ml (ex: 200)" min="10" max="3000" step="10">
+        <button type="submit" class="pill-btn primary">+ Adicionar</button>
+      </form>
+    </section>
+
+    <!-- Histórico de Hoje e da Semana -->
+    <section class="history-section">
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="today">Hoje (<span id="drinksCount">0</span>)</button>
+        <button class="tab-btn" data-tab="week">Últimos 7 dias</button>
+      </div>
+
+      <!-- Aba: Hoje -->
+      <div class="tab-content active" id="tabToday">
+        <div class="history-list" id="historyList">
+          <div class="empty-state">
+            <span>🌱</span>
+            <p>Nenhum gole registrado ainda hoje.<br>Beba seu primeiro copo para começar!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba: Semana -->
+      <div class="tab-content" id="tabWeek">
+        <div class="week-chart" id="weekChart">
+          <!-- Gerado dinamicamente via JS -->
+        </div>
+        <div class="week-summary" id="weekSummary">
+          Média diária dos últimos 7 dias: <strong>0 ml</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dica Saudável do Dia -->
+    <footer class="app-footer">
+      <div class="tip-card" id="healthTip">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text" id="tipText">Beber água melhora a concentração, alivia dores de cabeça e dá mais energia no PC!</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal de Configurações -->
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙️ Configurações</h3>
+        <button class="close-modal-btn" id="btnCloseSettings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <label for="inputTarget">Sua Meta Diária (ml):</label>
+          <div class="input-with-action">
+            <input type="number" id="inputTarget" min="500" max="6000" step="50" value="2000">
+            <span class="input-suffix">ml</span>
+          </div>
+          <p class="helper-text">Padrão recomendado: 2000 ml a 2500 ml por dia.</p>
+        </div>
+
+        <div class="setting-group">
+          <label>Calcular Meta por Peso Corporal:</label>
+          <div class="calc-box">
+            <input type="number" id="inputWeight" placeholder="Seu peso (ex: 60) kg" min="30" max="250">
+            <button id="btnCalcTarget" type="button" class="pill-btn secondary">Calcular (35ml/kg)</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Notificações no Windows:</label>
+          <div class="toggle-row">
+            <span>Notificações da Área de Trabalho</span>
+            <button id="btnToggleNotifications" class="pill-btn primary">Ativar</button>
+          </div>
+          <p class="helper-text" id="notificationStatusText">Permite que o aplicativo avise mesmo com a janela minimizada.</p>
+        </div>
+
+        <div class="setting-group danger-zone">
+          <label>Reiniciar Dados de Hoje:</label>
+          <button id="btnResetToday" class="pill-btn danger">Zerar contador de hoje</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnSaveSettings" class="pill-btn primary full-width">Salvar Configurações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Alerta de Lembrete ("Hora do Gole!") -->
+  <div class="modal-overlay hidden" id="reminderAlertModal">
+    <div class="modal-card reminder-alert-card">
+      <div class="reminder-mascot-jump">
+        <span class="bounce-drop">💧</span>
+      </div>
+      <h2>Hora de Beber Água!</h2>
+      <p class="alert-desc">Seus olhos e sua mente precisam de uma pausa. Hidrate-se agora mesmo!</p>
+      
+      <div class="reminder-quick-actions">
+        <button class="pill-btn primary big-action" id="btnAlertDrink250">
+          🥛 Tomei um Copo (+250 ml)
+        </button>
+        <button class="pill-btn secondary" id="btnAlertDrink350">
+          🥤 Copo Grande (+350 ml)
+        </button>
+        <button class="pill-btn text-only" id="btnAlertSnooze">
+          ⏳ Adiar por 5 minutos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de Notificação e Feedback Flutuante -->
+  <div id="toastFeedback" class="toast-feedback hidden" aria-live="polite"></div>
+
+  <!-- Canvas para Confete de Celebração da Meta -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <script src="app.js"></script>
+</body>
+</html>

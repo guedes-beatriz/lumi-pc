@@ -1,0 +1,14 @@
+# Binaries and build outputs
+*.exe
+*.obj
+*.pdb
+*.log
+*.tmp
+*.bak
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
