@@ -1,4 +1,4 @@
-﻿using System.Windows.Media.Imaging;
+using System.Windows.Media.Imaging;
 using System.Web.Script.Serialization;
 using System;
 using System.Runtime.InteropServices; // DPI awareness
@@ -575,7 +575,22 @@ namespace GotinhaAgua
         private Ellipse _olhoDireito;
         private StackPanel _painelHistorico;
         private StackPanel _painelGraficoSemanal;
-        private TabControl _tabHistorico;
+        private Button _btnTabHoje;
+        private Button _btnTabSemana;
+        private UIElement _containerTabHoje;
+        private UIElement _containerTabSemana;
+        private Border _pillsSegmentedContainer;
+        private TextBlock _txtTituloHistorico;
+        private TextBlock _txtSubtituloHistorico;
+        private Button _btnVoltarHistorico;
+        private TextBlock _txtStatsHojeVal;
+        private TextBlock _txtStatsHojeSub;
+        private TextBlock _txtStatsMediaVal;
+        private TextBlock _txtStatsMetasVal;
+        private Border _cardStatsHoje;
+        private Border _cardStatsMedia;
+        private Border _cardStatsMetas;
+        private int _abaHistoricoAtiva = 0;
 
         // Elementos de Feedback & Overlay
         private Grid _containerPrincipal;
@@ -1183,36 +1198,36 @@ namespace GotinhaAgua
             gridHist.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             gridHist.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-            Grid topHist = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            // Header do Historico: Titulo amigavel + Botao Voltar em pilula
+            Grid topHist = new Grid { Margin = new Thickness(2, 0, 2, 10) };
             topHist.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             topHist.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            TextBlock titulo = new TextBlock
+            StackPanel titleStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            _txtTituloHistorico = new TextBlock
             {
                 Text = "\uD83D\uDCCA Hist\u00F3rico de Hidrata\u00E7\u00E3o",
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                VerticalAlignment = VerticalAlignment.Center
+                Foreground = _dados.ModoEscuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199))
             };
-            Grid.SetColumn(titulo, 0);
-            topHist.Children.Add(titulo);
+            titleStack.Children.Add(_txtTituloHistorico);
 
-            Button btnVoltar = new Button
+            _txtSubtituloHistorico = new TextBlock
             {
-                Content = "\u2190 Voltar para Gotinha",
-                FontSize = 11.5,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Background = new SolidColorBrush(Color.FromRgb(224, 242, 254)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(10, 4, 10, 4),
-                Cursor = Cursors.Hand
+                Text = "Acompanhe seus goles e conquistas di\u00E1rias \u2728",
+                FontSize = 11,
+                Foreground = _dados.ModoEscuro ? (Brush)new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Margin = new Thickness(0, 2, 0, 0)
             };
-            btnVoltar.Click += delegate { AlternarVisualizacaoHistorico(); };
-            Grid.SetColumn(btnVoltar, 1);
-            topHist.Children.Add(btnVoltar);
+            titleStack.Children.Add(_txtSubtituloHistorico);
+            Grid.SetColumn(titleStack, 0);
+            topHist.Children.Add(titleStack);
+
+            _btnVoltarHistorico = CriarBotaoPill("\u2190 Voltar \u00E0 Gotinha", true, delegate { AlternarVisualizacaoHistorico(); });
+            _btnVoltarHistorico.Padding = new Thickness(12, 6, 12, 6);
+            Grid.SetColumn(_btnVoltarHistorico, 1);
+            topHist.Children.Add(_btnVoltarHistorico);
 
             Grid.SetRow(topHist, 0);
             gridHist.Children.Add(topHist);
@@ -1229,28 +1244,55 @@ namespace GotinhaAgua
         {
             if (_viewGotinha == null || _viewHistorico == null) return;
 
-            if (_viewHistorico.Visibility == Visibility.Visible)
+            bool mostrandoHistorico = (_viewHistorico.Visibility == Visibility.Visible);
+
+            UIElement sair = mostrandoHistorico ? _viewHistorico : _viewGotinha;
+            UIElement entrar = mostrandoHistorico ? _viewGotinha : _viewHistorico;
+
+            if (_btnToggleHistorico != null)
             {
-                _viewHistorico.Visibility = Visibility.Collapsed;
-                _viewGotinha.Visibility = Visibility.Visible;
-                if (_btnToggleHistorico != null)
-                {
-                    _btnToggleHistorico.Content = "\uD83D\uDCCA Hist\u00F3rico";
-                    _btnToggleHistorico.ToolTip = "Ver Hist\u00F3rico e Estat\u00EDsticas";
-                }
+                _btnToggleHistorico.Content = mostrandoHistorico ? "\uD83D\uDCCA Ver Hist\u00F3rico" : "\uD83D\uDCA7 Ver Gotinha";
+                _btnToggleHistorico.ToolTip = mostrandoHistorico ? "Ver Hist\u00F3rico e Estat\u00EDsticas" : "Voltar para a Gotinha";
             }
-            else
+
+            if (!mostrandoHistorico)
             {
-                _viewGotinha.Visibility = Visibility.Collapsed;
-                _viewHistorico.Visibility = Visibility.Visible;
-                if (_btnToggleHistorico != null)
-                {
-                    _btnToggleHistorico.Content = "\uD83D\uDCA7 Gotinha";
-                    _btnToggleHistorico.ToolTip = "Voltar para a Gotinha";
-                }
+                AtualizarEstatisticasHistorico();
                 AtualizarGraficoSemanal();
                 AtualizarListaHoje(ObterDiaHoje());
             }
+
+            // Animacao de transicao suave (Fade + Slide)
+            DoubleAnimation fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(160))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+            };
+            fadeOut.Completed += delegate
+            {
+                sair.Visibility = Visibility.Collapsed;
+                entrar.Opacity = 0.0;
+                entrar.Visibility = Visibility.Visible;
+
+                if (entrar.RenderTransform == null || !(entrar.RenderTransform is TranslateTransform))
+                {
+                    entrar.RenderTransform = new TranslateTransform(0, 10);
+                }
+                TranslateTransform tt = (TranslateTransform)entrar.RenderTransform;
+                tt.Y = 10;
+
+                DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(220))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                DoubleAnimation slideIn = new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(220))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                entrar.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                tt.BeginAnimation(TranslateTransform.YProperty, slideIn);
+            };
+            sair.BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
 
         private UIElement CriarCardProgressoCentral()
@@ -2037,52 +2079,279 @@ namespace GotinhaAgua
         }
 
         // --- Card 5: Histórico de Hoje e Semana ---
+        private Border CriarCardMiniStat(string titulo, out TextBlock txtValor, out TextBlock txtSub, string icone)
+        {
+            bool escuro = _dados.ModoEscuro;
+            Border b = new Border
+            {
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(8, 7, 8, 7),
+                Margin = new Thickness(3, 0, 3, 0)
+            };
+
+            StackPanel sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+
+            StackPanel topRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+            topRow.Children.Add(new TextBlock
+            {
+                Text = icone + " ",
+                FontSize = 10,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            topRow.Children.Add(new TextBlock
+            {
+                Text = titulo,
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            sp.Children.Add(topRow);
+
+            txtValor = new TextBlock
+            {
+                Text = "--",
+                FontSize = 15,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 1, 0, 0)
+            };
+            sp.Children.Add(txtValor);
+
+            txtSub = new TextBlock
+            {
+                Text = "",
+                FontSize = 9.5,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            sp.Children.Add(txtSub);
+
+            b.Child = sp;
+            return b;
+        }
+
+        private void SelecionarAbaHistorico(int aba)
+        {
+            _abaHistoricoAtiva = aba;
+            bool escuro = _dados.ModoEscuro;
+
+            if (_btnTabHoje == null || _btnTabSemana == null) return;
+
+            if (aba == 0)
+            {
+                // Aba Hoje Ativa
+                _btnTabHoje.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(2, 132, 199)) : Brushes.White;
+                _btnTabHoje.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnTabHoje.BorderThickness = new Thickness(0);
+                _btnTabHoje.Effect = new DropShadowEffect
+                {
+                    Color = Color.FromRgb(2, 132, 199),
+                    BlurRadius = 8,
+                    Opacity = 0.18,
+                    ShadowDepth = 1.5
+                };
+
+                _btnTabSemana.Background = Brushes.Transparent;
+                _btnTabSemana.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                _btnTabSemana.BorderThickness = new Thickness(0);
+                _btnTabSemana.Effect = null;
+
+                if (_containerTabSemana != null) _containerTabSemana.Visibility = Visibility.Collapsed;
+                if (_containerTabHoje != null)
+                {
+                    _containerTabHoje.Visibility = Visibility.Visible;
+                    DoubleAnimation fadeIn = new DoubleAnimation(0.2, 1.0, TimeSpan.FromMilliseconds(200))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    _containerTabHoje.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                }
+                AtualizarListaHoje(ObterDiaHoje());
+            }
+            else
+            {
+                // Aba Semana Ativa
+                _btnTabSemana.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(2, 132, 199)) : Brushes.White;
+                _btnTabSemana.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnTabSemana.BorderThickness = new Thickness(0);
+                _btnTabSemana.Effect = new DropShadowEffect
+                {
+                    Color = Color.FromRgb(2, 132, 199),
+                    BlurRadius = 8,
+                    Opacity = 0.18,
+                    ShadowDepth = 1.5
+                };
+
+                _btnTabHoje.Background = Brushes.Transparent;
+                _btnTabHoje.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                _btnTabHoje.BorderThickness = new Thickness(0);
+                _btnTabHoje.Effect = null;
+
+                if (_containerTabHoje != null) _containerTabHoje.Visibility = Visibility.Collapsed;
+                if (_containerTabSemana != null)
+                {
+                    _containerTabSemana.Visibility = Visibility.Visible;
+                    DoubleAnimation fadeIn = new DoubleAnimation(0.2, 1.0, TimeSpan.FromMilliseconds(200))
+                    {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    _containerTabSemana.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                }
+                AtualizarGraficoSemanal();
+            }
+
+            AtualizarEstatisticasHistorico();
+        }
+
+        private void AtualizarEstatisticasHistorico()
+        {
+            DadosDia diaHoje = ObterDiaHoje();
+            int totalHoje = diaHoje.TotalMl;
+            int meta = Math.Max(1, _dados.MetaDiaria);
+            int pctHoje = (totalHoje * 100) / meta;
+
+            if (_txtStatsHojeVal != null) _txtStatsHojeVal.Text = totalHoje + " ml";
+            if (_txtStatsHojeSub != null) _txtStatsHojeSub.Text = pctHoje + "% da meta";
+
+            int soma7 = 0;
+            int metasBatidas = 0;
+            DateTime hj = DateTime.Today;
+            for (int i = 0; i < 7; i++)
+            {
+                DateTime d = hj.AddDays(-i);
+                string dStr = d.ToString("yyyy-MM-dd");
+                DadosDia diaSalvo = _dados.Dias.Find(delegate(DadosDia x) { return x.Data == dStr; });
+                if (diaSalvo != null)
+                {
+                    soma7 += diaSalvo.TotalMl;
+                    if (diaSalvo.TotalMl >= _dados.MetaDiaria) metasBatidas++;
+                }
+            }
+
+            double media = soma7 / 7.0;
+            if (_txtStatsMediaVal != null)
+            {
+                _txtStatsMediaVal.Text = (media >= 1000) ? (media / 1000.0).ToString("0.1") + " L" : Math.Round(media) + " ml";
+            }
+            if (_txtStatsMetasVal != null)
+            {
+                _txtStatsMetasVal.Text = metasBatidas + " de 7";
+            }
+        }
+
         private UIElement CriarCardHistorico()
         {
             Border card = CriarCardBase();
+            card.Padding = new Thickness(14, 12, 14, 12);
 
-            _tabHistorico = new TabControl
+            Grid mainGrid = new Grid();
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Row 0: Stats Resumo
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Row 1: Segmented Pill Switch
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Row 2: Conteudo das Abas
+
+            // Row 0: 3 Cards de Resumo Rapido
+            Grid statsGrid = new Grid { Margin = new Thickness(0, 0, 0, 10) };
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            _cardStatsHoje = CriarCardMiniStat("Total Hoje", out _txtStatsHojeVal, out _txtStatsHojeSub, "\uD83D\uDCA7");
+            Grid.SetColumn(_cardStatsHoje, 0);
+            statsGrid.Children.Add(_cardStatsHoje);
+
+            TextBlock subMedia;
+            _cardStatsMedia = CriarCardMiniStat("M\u00E9dia 7d", out _txtStatsMediaVal, out subMedia, "\uD83D\uDCC8");
+            subMedia.Text = "por dia";
+            Grid.SetColumn(_cardStatsMedia, 1);
+            statsGrid.Children.Add(_cardStatsMedia);
+
+            TextBlock subMetas;
+            _cardStatsMetas = CriarCardMiniStat("Dias na Meta", out _txtStatsMetasVal, out subMetas, "\u2B50");
+            subMetas.Text = "de 7 dias";
+            Grid.SetColumn(_cardStatsMetas, 2);
+            statsGrid.Children.Add(_cardStatsMetas);
+
+            Grid.SetRow(statsGrid, 0);
+            mainGrid.Children.Add(statsGrid);
+
+            // Row 1: Segmented Pill Switch
+            _pillsSegmentedContainer = new Border
             {
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0)
-                       };
+                Height = 36,
+                CornerRadius = new CornerRadius(14),
+                Background = _dados.ModoEscuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254)),
+                Padding = new Thickness(3),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            Grid pillsGrid = new Grid();
+            pillsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            pillsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            // Aba 1: Hoje
-            TabItem tabHoje = new TabItem { Header = "Hoje"            };
-            ScrollViewer scrollHoje = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto            };
-            _painelHistorico = new StackPanel { Margin = new Thickness(0, 8, 0, 0)            };
+            _btnTabHoje = new Button
+            {
+                Content = "\uD83D\uDCA7 Registros de Hoje",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            AplicarEstiloPill(_btnTabHoje, 11);
+            _btnTabHoje.Click += delegate { SelecionarAbaHistorico(0); };
+            Grid.SetColumn(_btnTabHoje, 0);
+            pillsGrid.Children.Add(_btnTabHoje);
+
+            _btnTabSemana = new Button
+            {
+                Content = "\uD83D\uDCCA Gr\u00E1fico 7 Dias",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            AplicarEstiloPill(_btnTabSemana, 11);
+            _btnTabSemana.Click += delegate { SelecionarAbaHistorico(1); };
+            Grid.SetColumn(_btnTabSemana, 1);
+            pillsGrid.Children.Add(_btnTabSemana);
+
+            _pillsSegmentedContainer.Child = pillsGrid;
+            Grid.SetRow(_pillsSegmentedContainer, 1);
+            mainGrid.Children.Add(_pillsSegmentedContainer);
+
+            // Row 2: Conteudo das Abas
+            Grid tabContentGrid = new Grid();
+
+            // Painel Hoje: ScrollViewer com lista de registros
+            ScrollViewer scrollHoje = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
+            _painelHistorico = new StackPanel { Margin = new Thickness(0, 2, 0, 4) };
             scrollHoje.Content = _painelHistorico;
-            tabHoje.Content = scrollHoje;
-            _tabHistorico.Items.Add(tabHoje);
+            _containerTabHoje = scrollHoje;
+            tabContentGrid.Children.Add(_containerTabHoje);
 
-            // Aba 2: Últimos 7 dias
-            TabItem tabSemana = new TabItem { Header = "Últimos 7 dias"            };
-            _painelGraficoSemanal = new StackPanel { Margin = new Thickness(0, 8, 0, 0)            };
-            tabSemana.Content = _painelGraficoSemanal;
-            _tabHistorico.Items.Add(tabSemana);
-
-            _tabHistorico.SelectionChanged += delegate
+            // Painel Semana: Grafico semanal + Legenda
+            ScrollViewer scrollSemana = new ScrollViewer
             {
-                if (_tabHistorico.SelectedItem is TabItem)
-                {
-                    TabItem ti = (TabItem)_tabHistorico.SelectedItem;
-                    if (ti.Content is UIElement)
-                    {
-                        UIElement contentElem = (UIElement)ti.Content;
-                        DoubleAnimation tabFade = new DoubleAnimation(0.2, 1.0, TimeSpan.FromMilliseconds(220))
-                        {
-                            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                                   };
-                        contentElem.BeginAnimation(UIElement.OpacityProperty, tabFade);
-                    }
-                }
-                if (_tabHistorico.SelectedIndex == 1)
-                {
-                    AtualizarGraficoSemanal();
-                }
-                       };
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
+            _painelGraficoSemanal = new StackPanel { Margin = new Thickness(0, 2, 0, 4) };
+            scrollSemana.Content = _painelGraficoSemanal;
+            _containerTabSemana = scrollSemana;
+            tabContentGrid.Children.Add(_containerTabSemana);
 
-            card.Child = _tabHistorico;
+            Grid.SetRow(tabContentGrid, 2);
+            mainGrid.Children.Add(tabContentGrid);
+
+            // Inicializa na aba 0 (Hoje)
+            SelecionarAbaHistorico(0);
+
+            card.Child = mainGrid;
             return card;
         }
 
@@ -2294,55 +2563,243 @@ namespace GotinhaAgua
         private void AtualizarListaHoje(DadosDia dia)
         {
             _painelHistorico.Children.Clear();
+            bool escuro = _dados.ModoEscuro;
+
             if (dia.Registros.Count == 0)
             {
-                _painelHistorico.Children.Add(new TextBlock
+                Border emptyCard = new Border
                 {
-                    Text = "Nenhum gole registrado ainda hoje.\nBeba um copo para come\u00E7ar! \uD83C\uDF31",
-                    FontSize = 11,
-                    Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)),
-                    TextAlignment = TextAlignment.Center,
-                    Margin = new Thickness(0, 10, 0, 10)
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                    BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(14),
+                    Padding = new Thickness(16, 20, 16, 20),
+                    Margin = new Thickness(0, 8, 0, 8)
+                };
+
+                StackPanel spEmpty = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+
+                Border iconCircle = new Border
+                {
+                    Width = 46,
+                    Height = 46,
+                    CornerRadius = new CornerRadius(23),
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new LinearGradientBrush(Color.FromRgb(224, 242, 254), Color.FromRgb(186, 230, 253), 45),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+                iconCircle.Child = new TextBlock
+                {
+                    Text = "\uD83C\uDF31",
+                    FontSize = 22,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                spEmpty.Children.Add(iconCircle);
+
+                spEmpty.Children.Add(new TextBlock
+                {
+                    Text = "Nenhum gole registrado ainda hoje",
+                    FontSize = 13,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = escuro ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                    HorizontalAlignment = HorizontalAlignment.Center
                 });
+
+                spEmpty.Children.Add(new TextBlock
+                {
+                    Text = "Que tal tomar seu primeiro copo de \u00E1gua agora mesmo?\nSeu corpo e a Gotinha agradecem! \u2728",
+                    FontSize = 11,
+                    Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                    TextAlignment = TextAlignment.Center,
+                    Margin = new Thickness(0, 4, 0, 12)
+                });
+
+                Button btnBeberAgora = CriarBotaoPill("\uD83E\uDD64 Beber Copo (250 ml)", false, delegate
+                {
+                    AdicionarAgua(250, "Copo");
+                });
+                btnBeberAgora.HorizontalAlignment = HorizontalAlignment.Center;
+                spEmpty.Children.Add(btnBeberAgora);
+
+                emptyCard.Child = spEmpty;
+                _painelHistorico.Children.Add(emptyCard);
                 return;
             }
 
+            // Cabecalho dos registros
+            Grid headerRow = new Grid { Margin = new Thickness(2, 4, 2, 8) };
+            headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            TextBlock txtContador = new TextBlock
+            {
+                Text = "Goles registrados hoje (" + dia.Registros.Count + ")",
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))
+            };
+            Grid.SetColumn(txtContador, 0);
+            headerRow.Children.Add(txtContador);
+
+            TextBlock txtTotalHoje = new TextBlock
+            {
+                Text = dia.TotalMl + " ml no total",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199))
+            };
+            Grid.SetColumn(txtTotalHoje, 1);
+            headerRow.Children.Add(txtTotalHoje);
+
+            _painelHistorico.Children.Add(headerRow);
+
+            int index = 0;
             foreach (var r in dia.Registros)
             {
                 Border item = new Border
                 {
-                    Background = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
-                    CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(10, 6, 10, 6),
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                    CornerRadius = new CornerRadius(10),
+                    Padding = new Thickness(10, 8, 12, 8),
                     Margin = new Thickness(0, 3, 0, 3),
-                    BorderThickness = new Thickness(2, 0, 0, 0),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248))
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                    Cursor = Cursors.Hand,
+                    RenderTransformOrigin = new Point(0.5, 0.5),
+                    RenderTransform = new TranslateTransform(0, 0)
                 };
 
                 Grid g = new Grid();
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-                StackPanel left = new StackPanel { Orientation = Orientation.Horizontal };
-                left.Children.Add(new TextBlock { Text = "+" + r.Quantidade + " ml", FontWeight = FontWeights.Bold, Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)), FontSize = 12 });
-                left.Children.Add(new TextBlock { Text = "  " + r.Tipo, Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)), FontSize = 11 });
-                Grid.SetColumn(left, 0);
-                g.Children.Add(left);
+                // Icone e Badge Colorida
+                string iconeStr = "\uD83D\uDCA7";
+                Brush badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                if (r.Quantidade <= 150)
+                {
+                    iconeStr = "\u2615";
+                    badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(69, 26, 3)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                }
+                else if (r.Quantidade <= 250)
+                {
+                    iconeStr = "\uD83E\uDD64";
+                    badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                }
+                else if (r.Quantidade <= 350)
+                {
+                    iconeStr = "\uD83E\uDD63";
+                    badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(19, 78, 74)) : new SolidColorBrush(Color.FromRgb(224, 247, 250));
+                }
+                else if (r.Quantidade <= 500)
+                {
+                    iconeStr = "\uD83C\uDF76";
+                    badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(6, 78, 59)) : new SolidColorBrush(Color.FromRgb(209, 250, 229));
+                }
 
-                TextBlock hora = new TextBlock { Text = r.Hora, Foreground = _dados.ModoEscuro ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)), FontSize = 11 };
-                Grid.SetColumn(hora, 1);
-                g.Children.Add(hora);
+                Border badgeIcon = new Border
+                {
+                    Width = 34,
+                    Height = 34,
+                    CornerRadius = new CornerRadius(10),
+                    Background = badgeBg,
+                    Margin = new Thickness(0, 0, 10, 0)
+                };
+                badgeIcon.Child = new TextBlock
+                {
+                    Text = iconeStr,
+                    FontSize = 16,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetColumn(badgeIcon, 0);
+                g.Children.Add(badgeIcon);
+
+                // Informacoes do Gole (Quantidade e Tipo)
+                StackPanel infoStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                infoStack.Children.Add(new TextBlock
+                {
+                    Text = "+" + r.Quantidade + " ml",
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 13,
+                    Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199))
+                });
+                infoStack.Children.Add(new TextBlock
+                {
+                    Text = r.Tipo,
+                    FontSize = 10.5,
+                    Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))
+                });
+                Grid.SetColumn(infoStack, 1);
+                g.Children.Add(infoStack);
+
+                // Horario em pilula delicada
+                Border pillHora = new Border
+                {
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(7, 3, 7, 3),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                pillHora.Child = new TextBlock
+                {
+                    Text = "\u23F0 " + r.Hora,
+                    FontSize = 10.5,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))
+                };
+                Grid.SetColumn(pillHora, 2);
+                g.Children.Add(pillHora);
+
+                // Hover sutil
+                item.MouseEnter += delegate
+                {
+                    item.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                };
+                item.MouseLeave += delegate
+                {
+                    item.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                };
+
+                // Entrada suave escalonada
+                TranslateTransform ttItem = (TranslateTransform)item.RenderTransform;
+                ttItem.Y = 6;
+                item.Opacity = 0.0;
+
+                DoubleAnimation animOp = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(220))
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(Math.Min(index * 35, 350)),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                DoubleAnimation animY = new DoubleAnimation(6, 0, TimeSpan.FromMilliseconds(220))
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(Math.Min(index * 35, 350)),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                item.BeginAnimation(UIElement.OpacityProperty, animOp);
+                ttItem.BeginAnimation(TranslateTransform.YProperty, animY);
 
                 item.Child = g;
                 _painelHistorico.Children.Add(item);
+                index++;
             }
         }
 
         private void AtualizarGraficoSemanal()
         {
             _painelGraficoSemanal.Children.Clear();
+            bool escuro = _dados.ModoEscuro;
 
-            UniformGrid colunas = new UniformGrid { Columns = 7, Height = 120, Margin = new Thickness(0, 4, 0, 4)            };
+            // Grid das 7 Colunas
+            UniformGrid colunas = new UniformGrid
+            {
+                Columns = 7,
+                Height = 175,
+                Margin = new Thickness(0, 6, 0, 8)
+            };
+
             DateTime hoje = DateTime.Today;
             int maxVal = Math.Max(_dados.MetaDiaria, 2000);
 
@@ -2352,49 +2809,169 @@ namespace GotinhaAgua
                 string dataStr = d.ToString("yyyy-MM-dd");
                 DadosDia diaSalvo = _dados.Dias.Find(delegate(DadosDia x) { return x.Data == dataStr; });
                 int ml = (diaSalvo != null) ? diaSalvo.TotalMl : 0;
+                bool metaAtingida = (ml >= _dados.MetaDiaria);
 
-                StackPanel col = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Center            };
-
-                col.Children.Add(new TextBlock
+                StackPanel col = new StackPanel
                 {
-                    Text = ml > 0 ? (ml / 1000.0).ToString("0.0") + "L" : "0",
-                    FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)),
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+
+                // Tooltip amigavel e completo
+                col.ToolTip = string.Format(
+                    "{0:dddd, dd/MM}\nVolume: {1} ml ({2}% da meta){3}",
+                    d, ml, (ml * 100) / Math.Max(1, _dados.MetaDiaria),
+                    metaAtingida ? "\n\u2B50 Parab\u00E9ns! Meta Batida!" : ""
+                );
+
+                // Estrela se bateu a meta
+                TextBlock starIcon = new TextBlock
+                {
+                    Text = metaAtingida ? "\u2B50" : " ",
+                    FontSize = 10,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Margin = new Thickness(0, 0, 0, 2)
-                });
+                };
+                col.Children.Add(starIcon);
 
-                double alturaBarra = Math.Min(80.0, (ml / (double)maxVal) * 80.0);
+                // Volume em cima da barra
+                string volTexto;
+                if (ml <= 0) volTexto = "0";
+                else if (ml >= 1000) volTexto = (ml / 1000.0).ToString("0.1") + "L";
+                else volTexto = ml.ToString();
+
+                TextBlock txtVol = new TextBlock
+                {
+                    Text = volTexto,
+                    FontSize = 9.5,
+                    FontWeight = metaAtingida ? FontWeights.Bold : FontWeights.Normal,
+                    Foreground = metaAtingida ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : (escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 3)
+                };
+                col.Children.Add(txtVol);
+
+                // Capsula Track (Fundo da Barra)
+                Border trackBarra = new Border
+                {
+                    Width = 26,
+                    Height = 110,
+                    CornerRadius = new CornerRadius(13),
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                    BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                    BorderThickness = new Thickness(1),
+                    ClipToBounds = true
+                };
+
+                Grid trackGrid = new Grid { VerticalAlignment = VerticalAlignment.Bottom };
+
+                double alturaCalculada = Math.Min(110.0, (ml / (double)maxVal) * 110.0);
+
                 Border barra = new Border
                 {
-                    Width = 18,
+                    Width = 26,
                     Height = 0,
-                    Background = (ml >= _dados.MetaDiaria) ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(56, 189, 248)),
-                    CornerRadius = new CornerRadius(4, 4, 0, 0)
-                           };
-                col.Children.Add(barra);
+                    CornerRadius = new CornerRadius(13),
+                    VerticalAlignment = VerticalAlignment.Bottom
+                };
 
-                string nomeDia = (i == 0) ? "Hoje" : d.ToString("ddd");
-                col.Children.Add(new TextBlock
+                if (metaAtingida)
+                {
+                    barra.Background = new LinearGradientBrush(
+                        Color.FromRgb(52, 211, 153),
+                        Color.FromRgb(16, 185, 129),
+                        90
+                    );
+                }
+                else if (ml > 0)
+                {
+                    barra.Background = new LinearGradientBrush(
+                        Color.FromRgb(56, 189, 248),
+                        Color.FromRgb(2, 132, 199),
+                        90
+                    );
+                }
+                else
+                {
+                    barra.Background = Brushes.Transparent;
+                }
+
+                trackGrid.Children.Add(barra);
+                trackBarra.Child = trackGrid;
+                col.Children.Add(trackBarra);
+
+                // Label do Dia
+                string[] diasAbrev = new string[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S\u00E1b" };
+                string nomeDia = (i == 0) ? "Hoje" : diasAbrev[(int)d.DayOfWeek];
+
+                StackPanel diaStack = new StackPanel
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 5, 0, 0)
+                };
+                TextBlock txtDia = new TextBlock
                 {
                     Text = nomeDia,
-                    FontSize = 10,
+                    FontSize = 10.5,
                     FontWeight = (i == 0) ? FontWeights.Bold : FontWeights.Normal,
-                    Foreground = (i == 0) ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(0, 4, 0, 0)
-                });
+                    Foreground = (i == 0) ? (escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199))) : (escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139))),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                diaStack.Children.Add(txtDia);
 
-                DoubleAnimation animBarra = new DoubleAnimation(0, Math.Max(4, alturaBarra), TimeSpan.FromMilliseconds(420))
+                if (i == 0)
                 {
-                    BeginTime = TimeSpan.FromMilliseconds((6 - i) * 45),
+                    // Pontinho indicador de hoje
+                    diaStack.Children.Add(new Ellipse
+                    {
+                        Width = 4,
+                        Height = 4,
+                        Fill = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 1, 0, 0)
+                    });
+                }
+                col.Children.Add(diaStack);
+
+                // Animacao de crescimento suave
+                DoubleAnimation animBarra = new DoubleAnimation(0, Math.Max(ml > 0 ? 8 : 0, alturaCalculada), TimeSpan.FromMilliseconds(520))
+                {
+                    BeginTime = TimeSpan.FromMilliseconds((6 - i) * 55),
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                           };
+                };
                 barra.BeginAnimation(FrameworkElement.HeightProperty, animBarra);
+
                 colunas.Children.Add(col);
             }
 
             _painelGraficoSemanal.Children.Add(colunas);
+
+            // Legenda do Grafico
+            Border cardLegenda = new Border
+            {
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(12, 7, 12, 7),
+                Margin = new Thickness(4, 6, 4, 2)
+            };
+
+            WrapPanel wpLegenda = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center };
+
+            // Item 1: Meta batida
+            wpLegenda.Children.Add(new Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+            wpLegenda.Children.Add(new TextBlock { Text = "Meta Batida", FontSize = 10, FontWeight = FontWeights.SemiBold, Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) });
+
+            // Item 2: Em progresso
+            wpLegenda.Children.Add(new Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush(Color.FromRgb(2, 132, 199)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+            wpLegenda.Children.Add(new TextBlock { Text = "Em Progresso", FontSize = 10, FontWeight = FontWeights.SemiBold, Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) });
+
+            // Item 3: Meta configurada
+            wpLegenda.Children.Add(new TextBlock { Text = "\uD83C\uDFAF Meta: " + _dados.MetaDiaria + " ml/dia", FontSize = 10, FontWeight = FontWeights.Bold, Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)), VerticalAlignment = VerticalAlignment.Center });
+
+            cardLegenda.Child = wpLegenda;
+            _painelGraficoSemanal.Children.Add(cardLegenda);
         }
 
         // ==========================================
@@ -3222,16 +3799,40 @@ namespace GotinhaAgua
                 _txtCustomAgua.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
             }
 
-            // 8. Card Histórico
-            if (_tabHistorico != null)
+            // 8. View Histórico Zen
+            if (_txtTituloHistorico != null)
+                _txtTituloHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            if (_txtSubtituloHistorico != null)
+                _txtSubtituloHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            if (_btnVoltarHistorico != null)
             {
-                foreach (var item in _tabHistorico.Items)
-                {
-                    if (item is TabItem)
-                    {
-                        ((TabItem)item).Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-                    }
-                }
+                _btnVoltarHistorico.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _btnVoltarHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnVoltarHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+            if (_pillsSegmentedContainer != null)
+            {
+                _pillsSegmentedContainer.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+            }
+            if (_cardStatsHoje != null)
+            {
+                _cardStatsHoje.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _cardStatsHoje.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+            if (_cardStatsMedia != null)
+            {
+                _cardStatsMedia.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _cardStatsMedia.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+            if (_cardStatsMetas != null)
+            {
+                _cardStatsMetas.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _cardStatsMetas.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+
+            if (_btnTabHoje != null && _btnTabSemana != null)
+            {
+                SelecionarAbaHistorico(_abaHistoricoAtiva);
             }
         }
 
