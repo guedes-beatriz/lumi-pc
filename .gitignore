@@ -1,14 +1,18 @@
-# Binaries and build outputs
-*.exe
+# Binários intermediários e arquivos temporários
 *.obj
 *.pdb
 *.log
 *.tmp
 *.bak
+patch_*.exe
+fix_*.exe
 
-# OS generated files
+# Arquivos gerados pelo sistema operacional
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
+# Manter o executável portátil principal para download e teste direto
+!Gotinha.exe
