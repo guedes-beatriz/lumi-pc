@@ -1386,8 +1386,8 @@ namespace GotinhaAgua
         {
             Canvas canvas = new Canvas
             {
-                Width = 124,
-                Height = 126,
+                Width = 140,
+                Height = 142,
                 Cursor = Cursors.Hand
             };
 
@@ -1398,26 +1398,26 @@ namespace GotinhaAgua
                 {
                     _imgBorderMascote = new Border
                     {
-                        Width = 114,
-                        Height = 114,
-                        CornerRadius = new CornerRadius(30),
-                        ClipToBounds = true,
-                        BorderBrush = new SolidColorBrush(Color.FromRgb(125, 211, 252)),
-                        BorderThickness = new Thickness(2),
+                        Width = 136,
+                        Height = 136,
+                        CornerRadius = new CornerRadius(0),
+                        ClipToBounds = false,
+                        Background = Brushes.Transparent,
+                        BorderThickness = new Thickness(0),
                         Effect = new DropShadowEffect
                         {
-                            BlurRadius = 24,
+                            BlurRadius = 18,
                             ShadowDepth = 3,
-                            Opacity = 0.40,
+                            Opacity = 0.22,
                             Color = Color.FromRgb(2, 132, 199)
                         }
                     };
 
                     Image img = new Image
                     {
-                        Width = 114,
-                        Height = 114,
-                        Stretch = Stretch.UniformToFill
+                        Width = 136,
+                        Height = 136,
+                        Stretch = Stretch.Uniform
                     };
                     BitmapImage bmp = new BitmapImage();
                     bmp.BeginInit();
@@ -1467,7 +1467,7 @@ namespace GotinhaAgua
                     _coroaGotinha = new System.Windows.Shapes.Polygon
                     {
                         Points = new PointCollection(new Point[] {
-                            new Point(44, 14), new Point(52, 2), new Point(62, 8), new Point(72, 2), new Point(80, 14)
+                            new Point(60, 18), new Point(68, 4), new Point(78, 11), new Point(88, 4), new Point(96, 18)
                         }),
                         Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
                         Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
