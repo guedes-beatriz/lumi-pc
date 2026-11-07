@@ -604,6 +604,8 @@ namespace GotinhaAgua
         private UIElement _viewGotinha;
         private UIElement _viewHistorico;
         private Button _btnToggleHistorico;
+        private Button _btnModoWidget;
+        private WidgetWindow _widgetWindow;
         private Border _cardStatusFalta;
         private Border _badgePorcentagem;
         private ColumnDefinition _colProgressoAtivo;
@@ -937,6 +939,12 @@ namespace GotinhaAgua
             actionToolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             actionToolbar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
+            StackPanel toolsLeft = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
             _btnToggleHistorico = new Button
             {
                 Content = "\uD83D\uDCCA Ver Hist\u00F3rico",
@@ -965,8 +973,41 @@ namespace GotinhaAgua
                 _btnToggleHistorico.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
             };
             _btnToggleHistorico.Click += delegate { AlternarVisualizacaoHistorico(); };
-            Grid.SetColumn(_btnToggleHistorico, 0);
-            actionToolbar.Children.Add(_btnToggleHistorico);
+            toolsLeft.Children.Add(_btnToggleHistorico);
+
+            _btnModoWidget = new Button
+            {
+                Content = "\uD83D\uDCCC Modo Widget",
+                ToolTip = "Colocar no canto da tela como um mini widget flutuante",
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                Background = new SolidColorBrush(Color.FromArgb(220, 224, 242, 254)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1.2),
+                Padding = new Thickness(12, 6, 12, 6),
+                Margin = new Thickness(6, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            AplicarEstiloPill(_btnModoWidget, 12);
+            _btnModoWidget.MouseEnter += delegate
+            {
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                _btnModoWidget.Background = isDark ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnModoWidget.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+            };
+            _btnModoWidget.MouseLeave += delegate
+            {
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                _btnModoWidget.Background = isDark ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
+                _btnModoWidget.BorderBrush = isDark ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            };
+            _btnModoWidget.Click += delegate { AtivarModoWidget(); };
+            toolsLeft.Children.Add(_btnModoWidget);
+
+            Grid.SetColumn(toolsLeft, 0);
+            actionToolbar.Children.Add(toolsLeft);
 
             StackPanel toolsRight = new StackPanel
             {
@@ -2025,6 +2066,14 @@ namespace GotinhaAgua
                     ExibirSnackBar("Digite um n\u00FAmero v\u00E1lido em ml (ex: 200, 350).");
                 }
             });
+            _txtCustomAgua.KeyDown += delegate(object s, KeyEventArgs e)
+            {
+                if (e.Key == Key.Enter)
+                {
+                    btnAddCustom.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    e.Handled = true;
+                }
+            };
             btnAddCustom.Padding = new Thickness(14, 8, 14, 8);
             btnAddCustom.Margin = new Thickness(8, 0, 0, 0);
             Grid.SetColumn(btnAddCustom, 1);
@@ -2765,6 +2814,11 @@ namespace GotinhaAgua
             }
 
             AtualizarListaHoje(diaAtual);
+
+            if (_widgetWindow != null)
+            {
+                _widgetWindow.AtualizarDadosWidget();
+            }
         }
 
         private void AtualizarListaHoje(DadosDia dia)
@@ -3252,6 +3306,11 @@ namespace GotinhaAgua
                 _colTimerAtivo.Width = new GridLength(frac, GridUnitType.Star);
                 _colTimerRestante.Width = new GridLength(Math.Max(0.001, 1.0 - frac), GridUnitType.Star);
             }
+
+            if (_widgetWindow != null)
+            {
+                _widgetWindow.AtualizarTimerWidget(string.Format("{0:D2}:{1:D2}", min, seg), _timerPausado);
+            }
         }
 
         private void AtualizarEstiloTimer()
@@ -3420,6 +3479,12 @@ namespace GotinhaAgua
             AtualizarFalaGotinha("Ding-dong! Hora de tomar um belo gole d'\u00E1gua! \uD83D\uDCA7\u2728");
             ExecutarAnimacaoPuloGotinha();
 
+            if (_widgetWindow != null && _widgetWindow.IsVisible)
+            {
+                _widgetWindow.AlertarLembreteWidget();
+                return;
+            }
+
             // Exibir popup modal interativa se a janela estiver visível
             if (WindowState != WindowState.Minimized && IsVisible)
             {
@@ -3427,6 +3492,35 @@ namespace GotinhaAgua
                 alerta.Owner = this;
                 alerta.ShowDialog();
             }
+        }
+
+        public void AtivarModoWidget()
+        {
+            if (_widgetWindow == null)
+            {
+                _widgetWindow = new WidgetWindow(this);
+            }
+            _widgetWindow.AplicarTemaWidget();
+            _widgetWindow.AtualizarDadosWidget();
+            AtualizarDisplayTimer();
+
+            Hide();
+            _widgetWindow.MostrarNoCanto();
+        }
+
+        public void SairModoWidget()
+        {
+            if (_widgetWindow != null && _widgetWindow.IsVisible)
+            {
+                _widgetWindow.Hide();
+            }
+            Show();
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowState = WindowState.Normal;
+            }
+            Activate();
+            AtualizarInterface();
         }
 
         // ==========================================
@@ -3457,18 +3551,24 @@ namespace GotinhaAgua
             _trayIcon.Visible = true;
 
             Forms.ContextMenuStrip menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Abrir Gotinha 💧", null, delegate { Show(); WindowState = WindowState.Normal; Activate(); });
+            menu.Items.Add("Abrir Gotinha 💧", null, delegate { SairModoWidget(); });
+            menu.Items.Add("Modo Widget (Canto da Tela) 📌", null, delegate { AtivarModoWidget(); });
             menu.Items.Add("Beber Copo (+250ml)", null, delegate { AdicionarAgua(250, "Copo (🥛)"); });
             menu.Items.Add("Testar Notificação Nativa", null, delegate { DispararLembrete(); });
             menu.Items.Add("-");
             menu.Items.Add("Sair", null, delegate { _trayIcon.Visible = false; Application.Current.Shutdown(); });
 
             _trayIcon.ContextMenuStrip = menu;
-            _trayIcon.DoubleClick += delegate { Show(); WindowState = WindowState.Normal; Activate();            };
+            _trayIcon.DoubleClick += delegate { SairModoWidget(); };
         }
 
         protected override void OnClosed(EventArgs e)
         {
+            if (_widgetWindow != null)
+            {
+                try { _widgetWindow.Close(); } catch { }
+                _widgetWindow = null;
+            }
             if (_timerLembrete != null)
             {
                 _timerLembrete.Stop();
@@ -3554,6 +3654,7 @@ namespace GotinhaAgua
             ConfigWindow cfg = new ConfigWindow(_dados, delegate
             {
                 SalvarDados();
+                AplicarTema();
                 AtualizarInterface();
                 AtualizarVisualBtnSom();
                 AtualizarVisualBtnNotif();
@@ -3565,7 +3666,7 @@ namespace GotinhaAgua
         // ==========================================
         // Persistência em JSON e Estados
         // ==========================================
-        private DadosDia ObterDiaHoje()
+        public DadosDia ObterDiaHoje()
         {
             string hoje = DateTime.Today.ToString("yyyy-MM-dd");
             DadosDia dia = _dados.Dias.Find(delegate(DadosDia x) { return x.Data == hoje; });
@@ -3946,6 +4047,16 @@ namespace GotinhaAgua
                 _btnToggleHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
                 _btnToggleHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
+            if (_btnModoWidget != null)
+            {
+                _btnModoWidget.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
+                _btnModoWidget.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnModoWidget.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+            if (_widgetWindow != null)
+            {
+                _widgetWindow.AplicarTemaWidget();
+            }
 
             // 5. Card Progresso
             if (_txtMlAtual != null) _txtMlAtual.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
@@ -4139,6 +4250,833 @@ namespace GotinhaAgua
             return btn;
         }
 
+    }
+
+    // ==========================================
+    // Modo Widget Flutuante (Opção A - Card Compacto no Canto da Tela)
+    // ==========================================
+    public class WidgetWindow : Window
+    {
+        private MainWindow _main;
+        private Border _cardExterno;
+        private Border _pillTimer;
+        private TextBlock _txtTimer;
+        private Button _btnPin;
+        private Button _btnExpandir;
+        private Canvas _canvasMascote;
+        private Border _imgBorderMascote;
+        private ScaleTransform _stMascote;
+        private TranslateTransform _ttMascote;
+        private RotateTransform _rtMascote;
+        private System.Windows.Shapes.Polygon _coroaGotinha;
+        private TextBlock _txtStatusGotinha;
+        private TextBlock _txtMlProgresso;
+        private Border _badgePct;
+        private TextBlock _txtPct;
+        private Border _barTrack;
+        private Border _barFill;
+        private ColumnDefinition _colAtivo;
+        private ColumnDefinition _colRestante;
+        private Border _boxInputMl;
+        private TextBox _txtInputMl;
+        private TextBlock _txtPlaceholderMl;
+        private Button _btnBeber;
+        private bool _posicaoInicialDefinida = false;
+
+        public WidgetWindow(MainWindow main)
+        {
+            _main = main;
+
+            Title = "Gotinha Widget \uD83D\uDCA7";
+            Width = 396;
+            Height = 142;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
+            ResizeMode = ResizeMode.NoResize;
+            Topmost = true;
+            ShowInTaskbar = true;
+
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
+            TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
+            TextOptions.SetTextRenderingMode(this, TextRenderingMode.ClearType);
+            RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
+
+            string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+            if (File.Exists(icoPath))
+            {
+                try
+                {
+                    Icon = BitmapFrame.Create(new Uri(icoPath, UriKind.Absolute));
+                }
+                catch { }
+            }
+
+            ConstruirWidgetUI();
+            AplicarTemaWidget();
+            AtualizarDadosWidget();
+        }
+
+        private void ConstruirWidgetUI()
+        {
+            Grid root = new Grid();
+
+            _cardExterno = new Border
+            {
+                Margin = new Thickness(10),
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(1.5),
+                Padding = new Thickness(10, 10, 14, 10),
+                Opacity = 0.92,
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = new TranslateTransform(0, 0),
+                Effect = new DropShadowEffect
+                {
+                    BlurRadius = 22,
+                    ShadowDepth = 4,
+                    Opacity = 0.28,
+                    Color = Color.FromRgb(2, 132, 199)
+                }
+            };
+
+            // Opacidade inteligente ao passar o mouse
+            _cardExterno.MouseEnter += delegate
+            {
+                DoubleAnimation animOp = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(160));
+                _cardExterno.BeginAnimation(UIElement.OpacityProperty, animOp);
+            };
+            _cardExterno.MouseLeave += delegate
+            {
+                if (_txtInputMl != null && _txtInputMl.IsKeyboardFocused) return;
+                DoubleAnimation animOp = new DoubleAnimation(0.90, TimeSpan.FromMilliseconds(220));
+                _cardExterno.BeginAnimation(UIElement.OpacityProperty, animOp);
+            };
+
+            // Arrastar para qualquer canto + Snap magnético nas bordas + Duplo clique para expandir
+            _cardExterno.MouseLeftButtonDown += delegate(object s, MouseButtonEventArgs e)
+            {
+                if (e.ClickCount == 2)
+                {
+                    _main.SairModoWidget();
+                    e.Handled = true;
+                    return;
+                }
+                try
+                {
+                    DragMove();
+                    AjustarSnapCanto();
+                }
+                catch { }
+            };
+
+            // Layout Horizontal: Coluna 0 = Mascote Gotinha | Coluna 1 = Infos + Progresso + Input ml
+            Grid layoutHorizontal = new Grid();
+            layoutHorizontal.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            layoutHorizontal.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // --- COLUNA 0: Mini Gotinha à esquerda ---
+            _canvasMascote = CriarMiniMascoteCanvas();
+            Border mascoteHolder = new Border
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0),
+                Child = _canvasMascote
+            };
+            Grid.SetColumn(mascoteHolder, 0);
+            layoutHorizontal.Children.Add(mascoteHolder);
+
+            // --- COLUNA 1: Painel direito (Header + Barra + Status + Input ml) ---
+            Grid rightPanel = new Grid { VerticalAlignment = VerticalAlignment.Center };
+            rightPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 0: Volume + % + Timer + Pin/Expandir
+            rightPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 1: Barra de Progresso
+            rightPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 2: Frase de status
+            rightPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 3: Input de ml + Botão Beber
+
+            // Row 0: Topo (Volume + Badge % + Timer na esquerda | Pin + Expandir na direita)
+            Grid header = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel infoLeft = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            _txtMlProgresso = new TextBlock
+            {
+                Text = "0 / 2000 ml",
+                FontSize = 13,
+                FontWeight = FontWeights.ExtraBold,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            infoLeft.Children.Add(_txtMlProgresso);
+
+            _badgePct = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 1, 6, 1),
+                Margin = new Thickness(6, 0, 5, 0),
+                BorderThickness = new Thickness(1),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _txtPct = new TextBlock
+            {
+                Text = "0%",
+                FontSize = 9.5,
+                FontWeight = FontWeights.Bold
+            };
+            _badgePct.Child = _txtPct;
+            infoLeft.Children.Add(_badgePct);
+
+            _pillTimer = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 1, 6, 1),
+                BorderThickness = new Thickness(1),
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = "Tempo para o pr\u00F3ximo lembrete (arraste o card para mover)"
+            };
+            _txtTimer = new TextBlock
+            {
+                Text = "\u23F3 30:00",
+                FontSize = 9.5,
+                FontWeight = FontWeights.Bold
+            };
+            _pillTimer.Child = _txtTimer;
+            infoLeft.Children.Add(_pillTimer);
+
+            Grid.SetColumn(infoLeft, 0);
+            header.Children.Add(infoLeft);
+
+            StackPanel topBtns = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+
+            _btnPin = new Button
+            {
+                Content = "\uD83D\uDCCC",
+                FontSize = 10,
+                Width = 24,
+                Height = 22,
+                Margin = new Thickness(0, 0, 4, 0),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null,
+                ToolTip = "Sempre vis\u00EDvel no topo (Ativado)"
+            };
+            AplicarPillWidget(_btnPin, 7);
+            _btnPin.Click += delegate
+            {
+                Topmost = !Topmost;
+                _btnPin.ToolTip = Topmost ? "Sempre vis\u00EDvel no topo (Ativado)" : "Sempre vis\u00EDvel no topo (Desativado)";
+                AplicarTemaWidget();
+            };
+            topBtns.Children.Add(_btnPin);
+
+            _btnExpandir = new Button
+            {
+                Content = "\u2922",
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Width = 24,
+                Height = 22,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null,
+                ToolTip = "Voltar para a janela completa"
+            };
+            AplicarPillWidget(_btnExpandir, 7);
+            _btnExpandir.Click += delegate { _main.SairModoWidget(); };
+            topBtns.Children.Add(_btnExpandir);
+
+            Grid.SetColumn(topBtns, 1);
+            header.Children.Add(topBtns);
+
+            Grid.SetRow(header, 0);
+            rightPanel.Children.Add(header);
+
+            // Row 1: Barra de Progresso Horizontal
+            _barTrack = new Border
+            {
+                Height = 7,
+                CornerRadius = new CornerRadius(3.5),
+                BorderThickness = new Thickness(1),
+                ClipToBounds = true,
+                Margin = new Thickness(0, 1, 0, 3)
+            };
+            Grid barGrid = new Grid();
+            _colAtivo = new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) };
+            _colRestante = new ColumnDefinition { Width = new GridLength(100, GridUnitType.Star) };
+            barGrid.ColumnDefinitions.Add(_colAtivo);
+            barGrid.ColumnDefinitions.Add(_colRestante);
+
+            _barFill = new Border
+            {
+                CornerRadius = new CornerRadius(3.5),
+                Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 0.0)
+            };
+            Grid.SetColumn(_barFill, 0);
+            barGrid.Children.Add(_barFill);
+            _barTrack.Child = barGrid;
+
+            Grid.SetRow(_barTrack, 1);
+            rightPanel.Children.Add(_barTrack);
+
+            // Row 2: Texto de status/incentivo da Gotinha
+            _txtStatusGotinha = new TextBlock
+            {
+                Text = "Hidrate-se com carinho! \u2728",
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Margin = new Thickness(1, 0, 0, 5)
+            };
+            Grid.SetRow(_txtStatusGotinha, 2);
+            rightPanel.Children.Add(_txtStatusGotinha);
+
+            // Row 3: Entrada escrita de ml + Botão "+ Beber"
+            Grid inputGrid = new Grid();
+            inputGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            inputGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            _boxInputMl = new Border
+            {
+                CornerRadius = new CornerRadius(9),
+                BorderThickness = new Thickness(1.2),
+                Padding = new Thickness(8, 1, 8, 1),
+                Height = 28
+            };
+
+            Grid overlayInput = new Grid();
+            _txtPlaceholderMl = new TextBlock
+            {
+                Text = "Quantos ml tomou? (ex: 250)",
+                FontSize = 10.5,
+                VerticalAlignment = VerticalAlignment.Center,
+                IsHitTestVisible = false,
+                Margin = new Thickness(2, 0, 0, 0)
+            };
+            overlayInput.Children.Add(_txtPlaceholderMl);
+
+            _txtInputMl = new TextBox
+            {
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                BorderThickness = new Thickness(0),
+                Background = Brushes.Transparent,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                MaxLength = 4,
+                ToolTip = "Digite quantos ml voc\u00EA bebeu e pressione Enter"
+            };
+            _txtInputMl.TextChanged += delegate
+            {
+                _txtPlaceholderMl.Visibility = string.IsNullOrEmpty(_txtInputMl.Text) ? Visibility.Visible : Visibility.Collapsed;
+            };
+            _txtInputMl.PreviewTextInput += delegate(object s, TextCompositionEventArgs e)
+            {
+                for (int i = 0; i < e.Text.Length; i++)
+                {
+                    if (!char.IsDigit(e.Text[i]))
+                    {
+                        e.Handled = true;
+                        return;
+                    }
+                }
+            };
+            _txtInputMl.GotFocus += delegate
+            {
+                _cardExterno.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(120)));
+            };
+            _txtInputMl.KeyDown += delegate(object s, KeyEventArgs e)
+            {
+                if (e.Key == Key.Enter)
+                {
+                    RegistrarMlDigitado();
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    _txtInputMl.Text = "";
+                    Keyboard.ClearFocus();
+                    e.Handled = true;
+                }
+            };
+            overlayInput.Children.Add(_txtInputMl);
+            _boxInputMl.Child = overlayInput;
+
+            Grid.SetColumn(_boxInputMl, 0);
+            inputGrid.Children.Add(_boxInputMl);
+
+            _btnBeber = new Button
+            {
+                Content = "+ Beber",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 90.0),
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(12, 0, 12, 0),
+                Height = 28,
+                Margin = new Thickness(6, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null,
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = new ScaleTransform(1.0, 1.0),
+                ToolTip = "Registrar quantidade digitada"
+            };
+            AplicarPillWidget(_btnBeber, 9);
+            _btnBeber.Click += delegate
+            {
+                if (_btnBeber.RenderTransform is ScaleTransform)
+                {
+                    ScaleTransform st = (ScaleTransform)_btnBeber.RenderTransform;
+                    DoubleAnimation bounce = new DoubleAnimation(0.92, 1.0, TimeSpan.FromMilliseconds(160))
+                    {
+                        EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 }
+                    };
+                    st.BeginAnimation(ScaleTransform.ScaleXProperty, bounce);
+                    st.BeginAnimation(ScaleTransform.ScaleYProperty, bounce);
+                }
+                RegistrarMlDigitado();
+            };
+            Grid.SetColumn(_btnBeber, 1);
+            inputGrid.Children.Add(_btnBeber);
+
+            Grid.SetRow(inputGrid, 3);
+            rightPanel.Children.Add(inputGrid);
+
+            Grid.SetColumn(rightPanel, 1);
+            layoutHorizontal.Children.Add(rightPanel);
+
+            _cardExterno.Child = layoutHorizontal;
+            root.Children.Add(_cardExterno);
+            Content = root;
+        }
+
+        private Canvas CriarMiniMascoteCanvas()
+        {
+            Canvas canvas = new Canvas
+            {
+                Width = 84,
+                Height = 82,
+                Cursor = Cursors.Hand,
+                ToolTip = "Clique na Gotinha para receber um carinho (ou duplo clique no card para expandir)"
+            };
+
+            string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
+            if (File.Exists(mascotPath))
+            {
+                try
+                {
+                    _imgBorderMascote = new Border
+                    {
+                        Width = 76,
+                        Height = 76,
+                        Background = Brushes.Transparent,
+                        Effect = new DropShadowEffect
+                        {
+                            BlurRadius = 12,
+                            ShadowDepth = 2,
+                            Opacity = 0.24,
+                            Color = Color.FromRgb(2, 132, 199)
+                        }
+                    };
+
+                    Image img = new Image
+                    {
+                        Width = 76,
+                        Height = 76,
+                        Stretch = Stretch.Uniform
+                    };
+                    BitmapImage bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource = new Uri(mascotPath, UriKind.Absolute);
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.EndInit();
+                    img.Source = bmp;
+                    _imgBorderMascote.Child = img;
+
+                    TransformGroup tg = new TransformGroup();
+                    _stMascote = new ScaleTransform(1.0, 1.0);
+                    _rtMascote = new RotateTransform(0.0);
+                    _ttMascote = new TranslateTransform(0.0, 0.0);
+                    tg.Children.Add(_stMascote);
+                    tg.Children.Add(_rtMascote);
+                    tg.Children.Add(_ttMascote);
+
+                    _imgBorderMascote.RenderTransformOrigin = new Point(0.5, 0.5);
+                    _imgBorderMascote.RenderTransform = tg;
+
+                    Canvas.SetLeft(_imgBorderMascote, 4);
+                    Canvas.SetTop(_imgBorderMascote, 4);
+                    canvas.Children.Add(_imgBorderMascote);
+
+                    _coroaGotinha = new System.Windows.Shapes.Polygon
+                    {
+                        Points = new PointCollection(new Point[] {
+                            new Point(32, 11), new Point(37, 2), new Point(42, 7), new Point(47, 2), new Point(52, 11)
+                        }),
+                        Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)),
+                        Stroke = new SolidColorBrush(Color.FromRgb(217, 119, 6)),
+                        StrokeThickness = 1.2,
+                        Visibility = Visibility.Collapsed
+                    };
+                    canvas.Children.Add(_coroaGotinha);
+
+                    IniciarFlutuarMiniMascote();
+                }
+                catch { }
+            }
+
+            canvas.MouseLeftButtonDown += delegate(object s, MouseButtonEventArgs e)
+            {
+                if (e.ClickCount == 1)
+                {
+                    string[] mimos = new string[] {
+                        "Cada gole conta! \uD83D\uDCA7\u2728",
+                        "Estou cuidando de voc\u00EA! \uD83D\uDC99",
+                        "Beba \u00E1gua e brilhe! \uD83C\uDF1F",
+                        "Hora de um golinho? \uD83E\uDD64"
+                    };
+                    Random rnd = new Random();
+                    _txtStatusGotinha.Text = mimos[rnd.Next(mimos.Length)];
+                    ExecutarPuloMascoteWidget();
+                    if (_main._dados != null && _main._dados.SomAtivado)
+                    {
+                        GeradorDeSom.TocarGota();
+                    }
+                }
+            };
+
+            return canvas;
+        }
+
+        private void IniciarFlutuarMiniMascote()
+        {
+            if (_ttMascote == null || _stMascote == null) return;
+
+            DoubleAnimation animFloat = new DoubleAnimation(0.0, -4.0, TimeSpan.FromMilliseconds(1800))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            _ttMascote.BeginAnimation(TranslateTransform.YProperty, animFloat);
+
+            DoubleAnimation animBreath = new DoubleAnimation(1.0, 1.03, TimeSpan.FromMilliseconds(1800))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, animBreath);
+        }
+
+        public void ExecutarPuloMascoteWidget()
+        {
+            if (_stMascote == null || _ttMascote == null) return;
+
+            DoubleAnimationUsingKeyFrames animScaleX = new DoubleAnimationUsingKeyFrames();
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(1.16, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(80))));
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(0.88, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200))));
+            animScaleX.KeyFrames.Add(new SplineDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(380))));
+            _stMascote.BeginAnimation(ScaleTransform.ScaleXProperty, animScaleX);
+
+            DoubleAnimationUsingKeyFrames animScaleY = new DoubleAnimationUsingKeyFrames();
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(0.84, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(80))));
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(1.18, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200))));
+            animScaleY.KeyFrames.Add(new SplineDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(380))));
+            _stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleY);
+
+            DoubleAnimationUsingKeyFrames animY = new DoubleAnimationUsingKeyFrames();
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(3.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(80))));
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(-12.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200))));
+            animY.KeyFrames.Add(new SplineDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(380))));
+            animY.Completed += delegate { IniciarFlutuarMiniMascote(); };
+            _ttMascote.BeginAnimation(TranslateTransform.YProperty, animY);
+
+            CriarParticulaWidget("\u2728", 10, 18);
+            CriarParticulaWidget("\uD83D\uDCA7", 62, 14);
+        }
+
+        private void CriarParticulaWidget(string emoji, double x, double y)
+        {
+            if (_canvasMascote == null) return;
+            TextBlock p = new TextBlock
+            {
+                Text = emoji,
+                FontSize = 11,
+                IsHitTestVisible = false
+            };
+            Canvas.SetLeft(p, x);
+            Canvas.SetTop(p, y);
+            _canvasMascote.Children.Add(p);
+
+            DoubleAnimation animSubir = new DoubleAnimation(y, y - 22, TimeSpan.FromMilliseconds(550))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            DoubleAnimation animFade = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(550));
+            animFade.Completed += delegate
+            {
+                try { _canvasMascote.Children.Remove(p); } catch { }
+            };
+            p.BeginAnimation(Canvas.TopProperty, animSubir);
+            p.BeginAnimation(UIElement.OpacityProperty, animFade);
+        }
+
+        private void RegistrarMlDigitado()
+        {
+            if (_txtInputMl == null) return;
+            int val;
+            if (int.TryParse(_txtInputMl.Text.Trim(), out val) && val > 0 && val <= 3000)
+            {
+                _txtInputMl.Text = "";
+                _main.AdicionarAgua(val, "Widget (" + val + " ml) \uD83D\uDCA7");
+                _txtStatusGotinha.Text = "+" + val + " ml registrados! \uD83D\uDCA7\u2728";
+                ExecutarPuloMascoteWidget();
+            }
+            else
+            {
+                _txtStatusGotinha.Text = "Digite os ml (ex: 250) \uD83D\uDCA7";
+                _txtInputMl.Focus();
+            }
+        }
+
+        public void MostrarNoCanto()
+        {
+            if (!_posicaoInicialDefinida)
+            {
+                Rect area = SystemParameters.WorkArea;
+                Left = area.Right - Width - 12;
+                Top = area.Bottom - Height - 12;
+                _posicaoInicialDefinida = true;
+            }
+
+            Show();
+            Activate();
+
+            if (_cardExterno != null && _cardExterno.RenderTransform is TranslateTransform)
+            {
+                TranslateTransform tt = (TranslateTransform)_cardExterno.RenderTransform;
+                DoubleAnimation slide = new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(260))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                tt.BeginAnimation(TranslateTransform.YProperty, slide);
+            }
+        }
+
+        private void AjustarSnapCanto()
+        {
+            Rect area = SystemParameters.WorkArea;
+            double snapDist = 24.0;
+            double margem = 10.0;
+
+            if (Math.Abs(Left - area.Left) < snapDist) Left = area.Left + margem;
+            else if (Math.Abs((Left + Width) - area.Right) < snapDist) Left = area.Right - Width - margem;
+
+            if (Math.Abs(Top - area.Top) < snapDist) Top = area.Top + margem;
+            else if (Math.Abs((Top + Height) - area.Bottom) < snapDist) Top = area.Bottom - Height - margem;
+        }
+
+        public void AtualizarDadosWidget()
+        {
+            if (_main == null || _main._dados == null) return;
+            DadosDia dia = _main.ObterDiaHoje();
+            int ml = dia.TotalMl;
+            int meta = Math.Max(1, _main._dados.MetaDiaria);
+            int pct = Math.Min(100, (int)Math.Round(((double)ml / meta) * 100));
+            bool escuro = _main._dados.ModoEscuro;
+
+            if (_txtMlProgresso != null)
+            {
+                _txtMlProgresso.Text = ml + " / " + meta + " ml";
+            }
+            if (_txtPct != null)
+            {
+                _txtPct.Text = (pct >= 100) ? "\uD83C\uDF89 " + pct + "%" : pct + "%";
+            }
+
+            int pctAtivo = Math.Max(0, Math.Min(100, pct));
+            if (_colAtivo != null && _colRestante != null)
+            {
+                _colAtivo.Width = new GridLength(pctAtivo, GridUnitType.Star);
+                _colRestante.Width = new GridLength(100 - pctAtivo, GridUnitType.Star);
+            }
+
+            if (_barFill != null)
+            {
+                if (pct >= 100)
+                {
+                    _barFill.Background = new LinearGradientBrush(Color.FromRgb(52, 211, 153), Color.FromRgb(16, 185, 129), 0.0);
+                }
+                else
+                {
+                    _barFill.Background = new LinearGradientBrush(Color.FromRgb(56, 189, 248), Color.FromRgb(2, 132, 199), 0.0);
+                }
+            }
+
+            if (_badgePct != null && _txtPct != null)
+            {
+                if (pct >= 100)
+                {
+                    _badgePct.Background = escuro ? new SolidColorBrush(Color.FromRgb(6, 46, 26)) : new SolidColorBrush(Color.FromRgb(240, 253, 244));
+                    _badgePct.BorderBrush = new SolidColorBrush(Color.FromRgb(16, 185, 129));
+                    _txtPct.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(22, 101, 52));
+                }
+                else
+                {
+                    _badgePct.Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 47, 74)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                    _badgePct.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                    _txtPct.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                }
+            }
+
+            if (_coroaGotinha != null)
+            {
+                _coroaGotinha.Visibility = (pct >= 100) ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (_txtStatusGotinha != null)
+            {
+                if (pct >= 100) _txtStatusGotinha.Text = "Meta batida! Parab\u00E9ns! \uD83D\uDC51";
+                else if (ml == 0) _txtStatusGotinha.Text = "Qual o primeiro gole de hoje? \uD83D\uDCA7";
+                else _txtStatusGotinha.Text = "Faltam " + Math.Max(0, meta - ml) + " ml p/ a meta!";
+            }
+        }
+
+        public void AtualizarTimerWidget(string tempoStr, bool pausado)
+        {
+            if (_txtTimer == null) return;
+            if (pausado)
+            {
+                _txtTimer.Text = "\uD83D\uDCA4 Pausa";
+            }
+            else
+            {
+                _txtTimer.Text = "\u23F3 " + tempoStr;
+            }
+        }
+
+        public void AlertarLembreteWidget()
+        {
+            if (_txtStatusGotinha != null)
+            {
+                _txtStatusGotinha.Text = "Hora de beber \u00E1gua! \uD83D\uDCA7\uD83D\uDD14";
+            }
+            ExecutarPuloMascoteWidget();
+        }
+
+        public void AplicarTemaWidget()
+        {
+            bool escuro = (_main != null && _main._dados != null && _main._dados.ModoEscuro);
+
+            if (_cardExterno != null)
+            {
+                if (escuro)
+                {
+                    LinearGradientBrush bg = new LinearGradientBrush(
+                        Color.FromRgb(15, 23, 42),
+                        Color.FromRgb(23, 32, 54),
+                        135.0
+                    );
+                    _cardExterno.Background = bg;
+                    _cardExterno.BorderBrush = new SolidColorBrush(Color.FromArgb(150, 56, 189, 248));
+                }
+                else
+                {
+                    LinearGradientBrush bg = new LinearGradientBrush(
+                        Color.FromRgb(240, 249, 255),
+                        Color.FromRgb(255, 255, 255),
+                        135.0
+                    );
+                    _cardExterno.Background = bg;
+                    _cardExterno.BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                }
+            }
+
+            if (_pillTimer != null && _txtTimer != null)
+            {
+                _pillTimer.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                _pillTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _txtTimer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+            }
+
+            if (_btnPin != null)
+            {
+                if (Topmost)
+                {
+                    _btnPin.Background = escuro ? new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                    _btnPin.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+                    _btnPin.Opacity = 1.0;
+                }
+                else
+                {
+                    _btnPin.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249));
+                    _btnPin.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+                    _btnPin.Opacity = 0.65;
+                }
+            }
+
+            if (_btnExpandir != null)
+            {
+                _btnExpandir.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _btnExpandir.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnExpandir.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+
+            if (_txtStatusGotinha != null)
+            {
+                _txtStatusGotinha.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105));
+            }
+
+            if (_txtMlProgresso != null)
+            {
+                _txtMlProgresso.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+            }
+
+            if (_barTrack != null)
+            {
+                _barTrack.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                _barTrack.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+
+            if (_boxInputMl != null)
+            {
+                _boxInputMl.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.White;
+                _boxInputMl.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            }
+            if (_txtInputMl != null)
+            {
+                _txtInputMl.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+                _txtInputMl.CaretBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+            if (_txtPlaceholderMl != null)
+            {
+                _txtPlaceholderMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(100, 116, 139)) : new SolidColorBrush(Color.FromRgb(148, 163, 184));
+            }
+        }
+
+        private static void AplicarPillWidget(Button btn, double cornerRadius)
+        {
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(cornerRadius));
+            borderFactory.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderThicknessProperty, new Binding("BorderThickness") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.PaddingProperty, new Binding("Padding") { RelativeSource = RelativeSource.TemplatedParent });
+
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borderFactory.AppendChild(presenter);
+
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+        }
     }
 
     // ==========================================
