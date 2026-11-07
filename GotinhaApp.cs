@@ -659,10 +659,10 @@ namespace GotinhaAgua
         private void ConfigurarJanela()
         {
             Title = "Gotinha - Lembrete de \u00C1gua \uD83D\uDCA7";
-            Width = 460;
-            Height = 700;
-            MinWidth = 420;
-            MinHeight = 620;
+            Width = 520;
+            Height = 840;
+            MinWidth = 480;
+            MinHeight = 720;
             MaxHeight = SystemParameters.WorkArea.Height;
             MaxWidth = SystemParameters.WorkArea.Width;
             ResizeMode = ResizeMode.CanResize;
@@ -1111,7 +1111,7 @@ namespace GotinhaAgua
         {
             ScrollViewer scroll = new ScrollViewer
             {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 FocusVisualStyle = null
             };
