@@ -2,7 +2,7 @@
 LUMI - LEMBRETE DE ÁGUA (WINDOWS)
 =====================================================
 
-Oie! Que bom ter você testando a Lumi!
+Oie! Que bom ter você usando a Lumi!
 
 COMO INICIAR:
 1. Extraia todos os arquivos desta pasta zip (Lumi.exe, mascote.png, app.ico).
@@ -14,12 +14,12 @@ DICA PARA O DIA A DIA:
   Clique com o botão direito em "Lumi.exe" -> "Enviar para" -> "Área de trabalho (criar atalho)".
 
 RECURSOS PRINCIPAIS:
-- Clique na Lumi para receber frases carinhosas e vê-la pular de alegria.
+- Mascote interativa com reações a cada gole e frases de incentivo.
 - Modo Widget Flutuante horizontal para fixar a Lumi no canto da tela enquanto você trabalha ou estuda.
-- Registre goles com os botões coloridos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
-- Temporizador Zen com contagem regressiva para te lembrar de beber água.
-- Veja seu histórico do dia e o gráfico semanal com metas atingidas.
-- Alterne entre o Modo Claro e o Modo Escuro.
-- Configure sua meta diária ou calcule pelo seu peso corporal.
+- Registre goles com os botões rápidos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
+- Temporizador com contagem regressiva e lembretes para manter o ritmo de hidratação.
+- Acompanhamento do histórico do dia e gráfico semanal de metas.
+- Modos Claro e Escuro para conforto visual em qualquer momento.
+- Configuração de meta diária personalizada ou calculada por peso corporal.
 
 Feito com carinho! Beba água e cuide-se.

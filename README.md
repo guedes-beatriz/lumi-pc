@@ -20,68 +20,66 @@
 
 ---
 
-## Como Baixar e Testar (Para Amigos)
+## Como Baixar e Usar
 
-Não é necessário instalar programas pesados nem ter conhecimentos técnicos para usar a Lumi.
+A Lumi foi pensada para ser simples e acessível para qualquer pessoa usar no dia a dia, sem necessidade de instaladores pesados ou cadastros.
 
-### Opção 1: Baixar o Pacote Portátil Pronto (Recomendado)
-1. Baixe o arquivo zip direto aqui pelo GitHub: **[`dist/Lumi-v2.0-Portable.zip`](dist/Lumi-v2.0-Portable.zip)** (ou clique no botão verde **Code** ➔ **Download ZIP** no topo do repositório).
+### Opção 1: Versão Portátil Pronta (Recomendado)
+1. Baixe o pacote pronto diretamente aqui pelo GitHub: **[`dist/Lumi-v2.0-Portable.zip`](dist/Lumi-v2.0-Portable.zip)** (ou clique no botão verde **Code** ➔ **Download ZIP** no topo da página).
 2. Extraia o arquivo zip em qualquer pasta do seu computador (como sua Área de Trabalho ou Documentos).
-3. Dê **dois cliques em `Lumi.exe`** e pronto! O app abrirá com uma animação de boas-vindas.
-4. **Dica:** Clique com o botão direito em `Lumi.exe` ➔ *Enviar para* ➔ *Área de trabalho (criar atalho)* para abrir com 1 clique sempre que ligar o PC.
+3. Dê **dois cliques em `Lumi.exe`** para iniciar o aplicativo.
+4. **Dica:** Clique com o botão direito em `Lumi.exe` ➔ *Enviar para* ➔ *Área de trabalho (criar atalho)* para ter acesso rápido sempre que ligar o computador.
 
-### Opção 2: Compilar do Código-Fonte
-Se você clonou o repositório e deseja compilar o executável:
-- Dê um duplo clique em **`compilar.bat`**.
-- O Windows usará o compilador nativo C# (`csc.exe`) e gerará o `Lumi.exe` em menos de 2 segundos.
+### Opção 2: Compilar a partir do Código-Fonte
+Se preferir compilar diretamente do código-fonte:
+- Execute o script **`compilar.bat`** com um duplo clique.
+- O compilador nativo C# do Windows (`csc.exe`) gerará o executável `Lumi.exe` em poucos segundos, sem precisar de ferramentas adicionais.
 
 ---
 
-## Principais Recursos
+## Funcionalidades e Recursos
 
-### Mascote Interativa e Expressiva
-- **Animações fluidas:** A Lumi pisca, flutua suavemente e pula a cada gole registrado.
-- **Frases motivacionais:** Clique na Lumi para receber lembretes carinhosos e motivacionais.
-- **Celebração:** Ao atingir 100% da sua meta diária, a Lumi ganha uma coroa dourada e comemora com você.
+A Lumi combina acompanhamento de saúde com uma interface gentil e personalizável, pensada para quem passa muito tempo em frente ao computador e quer manter o hábito de beber água de forma natural.
+
+### Mascote Interativa
+A Lumi é uma companheira de bem-estar que reage à sua evolução ao longo do dia:
+- Animações fluidas de respiração, flutuação e pulos a cada registro de água.
+- Mensagens de incentivo carinhosas ao interagir com ela.
+- Celebração visual quando você alcança 100% da sua meta diária.
 
 ### Modo Widget Flutuante (Canto da Tela)
-- **Layout horizontal compacto:** Coloque a Lumi no canto da tela enquanto trabalha, estuda ou joga.
-- **Sempre no Topo (`📌`):** Opção para manter o widget sempre visível sobre outras janelas e arrastar livremente com alinhamento magnético nas bordas.
-- **Registro rápido em `ml`:** Digite quantos `ml` você tomou diretamente no widget e pressione `Enter` ou clique em `+ Beber`.
+Acompanhe sua hidratação sem interromper suas atividades:
+- Design horizontal compacto e moderno, ideal para se posicionar no canto da tela.
+- Opção para fixar sempre visível sobre outras janelas com alinhamento magnético nas bordas da tela.
+- Campo direto para digitar quantos ml consumiu e registrar com a tecla Enter, sem precisar abrir a janela principal.
 
-### Cards de Bebidas
-- Cores pastéis e identificação rápida:
-  - **Gole:** +150 ml
-  - **Copo:** +250 ml *(com destaque e brilho suave)*
-  - **Grande:** +350 ml
-  - **Garrafa:** +500 ml
-  - **Personalizado:** digite qualquer quantidade em ml.
-- **Clique tátil com efeito de mola:** Transição suave e responsiva ao registrar água.
-- **Pílula de Desfazer:** Registrou por engano? Desfaça com um clique ou com o atalho `Ctrl + Z`.
+### Registro Fácil e Adaptável de Água
+Adapte o app à sua rotina e ao recipiente que você costuma usar:
+- Botões rápidos com volumes pré-definidos: **Gole (150 ml)**, **Copo (250 ml)**, **Grande (350 ml)** e **Garrafa (500 ml)**.
+- Campo para inserção de qualquer volume personalizado em ml.
+- Botão e atalho de desfazer caso registre algum valor por engano.
 
-### Temporizador Zen
-- Cápsula fluida com gradiente que se preenche com o passar do tempo.
-- Pílulas táteis para ajustar o intervalo de lembrete com facilidade: **`15m`**, **`30m`**, **`45m`**, **`60m`**.
-- Botão de pausa para momentos de descanso ou reuniões.
+### Lembretes Inteligentes e Temporizador
+Nunca mais esqueça de beber água durante o trabalho ou estudo:
+- Intervalos programáveis de **15**, **30**, **45** ou **60 minutos**.
+- Notificações nativas na Central de Ações do Windows.
+- Efeitos sonoros suaves para avisos discretos e agradáveis.
+- Modo pausa para momentos de reuniões, descanso ou foco profundo.
 
-### Histórico e Gráfico Semanal
-- **Abas em pílula segmentada:** Alterne com suavidade entre **Registros de Hoje** e **Gráfico 7 Dias**.
-- **Cards de resumo:** Veja seu consumo total de hoje, média diária e quantidade de dias com meta batida na semana.
-- **Gráfico de barras:** Barras que crescem com animação suave, com indicador de estrela nos dias em que a meta foi atingida.
+### Histórico e Visualização de Metas
+Acompanhe sua consistência de forma clara:
+- Linha do tempo com todos os registros e horários do dia.
+- Gráfico semanal com o consumo dos últimos 7 dias e indicação das metas alcançadas.
+- Cálculo de meta diária recomendada com base no peso corporal.
 
-### Modo Escuro (Oceano Noturno)
-- Alterne entre o **Modo Claro (Brisa Aquática)** e o **Modo Escuro (Oceano Noturno)** com 1 clique no ícone da barra de ferramentas ou pressionando `Ctrl + D`.
-- Paleta noturna com azul marinho profundo (`#0F172A`) e ciano (`#38BDF8`), calibrada para descanso visual.
+### Modos Claro e Escuro
+Conforto visual a qualquer momento do dia:
+- **Modo Claro (Brisa Aquática):** Paleta suave com tons de azul e branco.
+- **Modo Escuro (Oceano Noturno):** Tons profundos de azul marinho calibrados para evitar cansaço visual em ambientes com pouca luz.
 
-### Lembretes e Bandeja do Sistema
-- Lembretes visuais na tela com botões em formato de pílula.
-- Notificações nativas integradas à Central de Ações do Windows.
-- Efeitos sonoros suaves de gota e sino ao registrar água.
-- Minimização para a bandeja (perto do relógio do Windows) para rodar em segundo plano.
-
-### 100% Offline e Privado
-- Não requer internet, cadastro ou login.
-- Todos os registros ficam salvos localmente no seu computador no arquivo `dados_agua.json`.
+### Privacidade e Funcionamento Offline
+- Não requer conexão com a internet, login ou permissões invasivas.
+- Todos os registros ficam salvos localmente e com total privacidade no arquivo `dados_agua.json`.
 
 ---
 
@@ -116,7 +114,7 @@ A pasta do projeto é organizada de maneira limpa e modular:
 ├── .gitignore              # Regras de arquivos ignorados pelo Git
 │
 ├── dist/                   # Pacotes para distribuição
-│   ├── Lumi-v2.0-Portable.zip     # Pacote portátil pronto para envio
+│   ├── Lumi-v2.0-Portable.zip     # Pacote portátil pronto para uso
 │   └── LEIA-ME.txt                # Instruções rápidas de uso
 │
 ├── web/                    # Versão Web interativa da Lumi
@@ -140,6 +138,6 @@ A pasta do projeto é organizada de maneira limpa e modular:
 
 ---
 
-## Créditos
+## Desenvolvedora
 
 Desenvolvido por **Beatriz Guedes** para tornar o hábito de beber água mais leve, agradável e saudável.
