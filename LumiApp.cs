@@ -19,6 +19,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Windows.Interop;
+using System.Windows.Markup;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
 
@@ -1246,6 +1247,8 @@ namespace GotinhaAgua
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
                 FocusVisualStyle = null
             };
 
@@ -2635,7 +2638,9 @@ namespace GotinhaAgua
             ScrollViewer scrollHoje = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0)
             };
             scrollHoje.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
             {
@@ -2655,7 +2660,9 @@ namespace GotinhaAgua
             ScrollViewer scrollSemana = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0)
             };
             scrollSemana.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
             {
@@ -3998,6 +4005,9 @@ namespace GotinhaAgua
         {
             bool escuro = (_dados != null && _dados.ModoEscuro);
 
+            // Estilização moderna e refinada do ScrollBar (substitui o padrão quadrado do Windows)
+            AplicarEstiloScrollBar(this, escuro);
+
             // 1. Fundo e contorno da janela
             if (_janelaBorda != null)
             {
@@ -4286,6 +4296,110 @@ namespace GotinhaAgua
 
             template.VisualTree = borderFactory;
             btn.Template = template;
+        }
+
+        public static void AplicarEstiloScrollBar(FrameworkElement element, bool isDark)
+        {
+            if (element == null) return;
+            string thumbColor = isDark ? "#38BDF8" : "#0284C7";
+            string thumbHover = isDark ? "#7DD3FC" : "#0369A1";
+            string trackHover = isDark ? "#15FFFFFF" : "#100284C7";
+            string xaml = string.Format(@"
+<Style xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+       xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+       TargetType='{{x:Type ScrollBar}}'>
+    <Setter Property='SnapsToDevicePixels' Value='True'/>
+    <Setter Property='OverridesDefaultStyle' Value='True'/>
+    <Style.Triggers>
+        <Trigger Property='Orientation' Value='Vertical'>
+            <Setter Property='Width' Value='8'/>
+            <Setter Property='MinWidth' Value='8'/>
+            <Setter Property='Background' Value='Transparent'/>
+            <Setter Property='Template'>
+                <Setter.Value>
+                    <ControlTemplate TargetType='{{x:Type ScrollBar}}'>
+                        <Grid Background='Transparent' Margin='0,2,2,2'>
+                            <Border x:Name='trackBg' CornerRadius='4' Background='Transparent'/>
+                            <Track x:Name='PART_Track' IsDirectionReversed='true'>
+                                <Track.Thumb>
+                                    <Thumb FocusVisualStyle='{{x:Null}}'>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType='{{x:Type Thumb}}'>
+                                                <Border x:Name='thumbBorder' CornerRadius='3.5' Margin='1,0,1,0' Background='{0}' Opacity='0.38'/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property='IsMouseOver' Value='True'>
+                                                        <Setter TargetName='thumbBorder' Property='Opacity' Value='0.85'/>
+                                                        <Setter TargetName='thumbBorder' Property='Background' Value='{1}'/>
+                                                    </Trigger>
+                                                    <Trigger Property='IsDragging' Value='True'>
+                                                        <Setter TargetName='thumbBorder' Property='Opacity' Value='1.0'/>
+                                                        <Setter TargetName='thumbBorder' Property='Background' Value='{1}'/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property='IsMouseOver' Value='True'>
+                                <Setter TargetName='trackBg' Property='Background' Value='{2}'/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Trigger>
+        <Trigger Property='Orientation' Value='Horizontal'>
+            <Setter Property='Height' Value='8'/>
+            <Setter Property='MinHeight' Value='8'/>
+            <Setter Property='Background' Value='Transparent'/>
+            <Setter Property='Template'>
+                <Setter.Value>
+                    <ControlTemplate TargetType='{{x:Type ScrollBar}}'>
+                        <Grid Background='Transparent' Margin='2,0,2,2'>
+                            <Border x:Name='trackBg' CornerRadius='4' Background='Transparent'/>
+                            <Track x:Name='PART_Track' IsDirectionReversed='false'>
+                                <Track.Thumb>
+                                    <Thumb FocusVisualStyle='{{x:Null}}'>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType='{{x:Type Thumb}}'>
+                                                <Border x:Name='thumbBorder' CornerRadius='3.5' Margin='0,1,0,1' Background='{0}' Opacity='0.38'/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property='IsMouseOver' Value='True'>
+                                                        <Setter TargetName='thumbBorder' Property='Opacity' Value='0.85'/>
+                                                        <Setter TargetName='thumbBorder' Property='Background' Value='{1}'/>
+                                                    </Trigger>
+                                                    <Trigger Property='IsDragging' Value='True'>
+                                                        <Setter TargetName='thumbBorder' Property='Opacity' Value='1.0'/>
+                                                        <Setter TargetName='thumbBorder' Property='Background' Value='{1}'/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property='IsMouseOver' Value='True'>
+                                <Setter TargetName='trackBg' Property='Background' Value='{2}'/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Trigger>
+    </Style.Triggers>
+</Style>", thumbColor, thumbHover, trackHover);
+
+            try
+            {
+                Style s = (Style)System.Windows.Markup.XamlReader.Parse(xaml);
+                element.Resources[typeof(ScrollBar)] = s;
+            }
+            catch { }
         }
 
         private Button CriarBotaoPill(string texto, bool secondary, RoutedEventHandler handler)
@@ -5456,6 +5570,7 @@ namespace GotinhaAgua
         public ConfigWindow(HistoricoApp dados, Action onSalvar)
         {
             bool escuro = (dados != null && dados.ModoEscuro);
+            MainWindow.AplicarEstiloScrollBar(this, escuro);
 
             Title = "Configura\u00E7\u00F5es da Lumi \u2699\uFE0F";
             Width = 420;
@@ -5482,7 +5597,11 @@ namespace GotinhaAgua
                 BeginAnimation(UIElement.OpacityProperty, fadeIn);
             };
 
-            ScrollViewer sv = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            ScrollViewer sv = new ScrollViewer {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0)
+            };
             sv.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
             {
                 ScrollViewer scv = s as ScrollViewer;
