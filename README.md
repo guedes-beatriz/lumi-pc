@@ -6,15 +6,16 @@
 
 <br>
 
-**Um aplicativo desktop nativo para Windows (`.exe`), moderno, leve, acolhedor e com mascote animada para cuidar da sua hidratação e bem-estar.**
+**Um aplicativo desktop nativo para Windows (`.exe`), moderno, leve, acolhedor e com mascote animada para cuidar da sua hidratação e bem-estar — extremamente econômico em memória RAM e CPU.**
 
 <br>
 
-[![Windows](https://img.shields.io/badge/Plataforma-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/guedes-beatriz/app-pc)
-[![C#](https://img.shields.io/badge/C%23-WPF%20Desktop-239120?style=for-the-badge&logo=c-sharp&logoColor=white)](https://github.com/guedes-beatriz/app-pc)
-[![.NET](https://img.shields.io/badge/.NET-4.8%20Framework-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://github.com/guedes-beatriz/app-pc)
-[![Offline](https://img.shields.io/badge/Privacidade-100%25%20Offline-059669?style=for-the-badge)](https://github.com/guedes-beatriz/app-pc)
-[![Modo Escuro](https://img.shields.io/badge/Tema-Claro%20%26%20Escuro-0284C7?style=for-the-badge)](https://github.com/guedes-beatriz/app-pc)
+[![Windows](https://img.shields.io/badge/Plataforma-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/guedes-beatriz/lumi-pc)
+[![C#](https://img.shields.io/badge/C%23-WPF%20Desktop-239120?style=for-the-badge&logo=c-sharp&logoColor=white)](https://github.com/guedes-beatriz/lumi-pc)
+[![.NET](https://img.shields.io/badge/.NET-4.8%20Framework-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://github.com/guedes-beatriz/lumi-pc)
+[![Recursos](https://img.shields.io/badge/Desempenho-Baixo%20Uso%20RAM%20%26%20CPU-0284C7?style=for-the-badge)](https://github.com/guedes-beatriz/lumi-pc)
+[![Offline](https://img.shields.io/badge/Privacidade-100%25%20Offline-059669?style=for-the-badge)](https://github.com/guedes-beatriz/lumi-pc)
+[![Modo Escuro](https://img.shields.io/badge/Tema-Claro%20%26%20Escuro-0284C7?style=for-the-badge)](https://github.com/guedes-beatriz/lumi-pc)
 
 </div>
 
@@ -71,6 +72,11 @@ Acompanhe sua consistência de forma clara:
 - Linha do tempo com todos os registros e horários do dia.
 - Gráfico semanal com o consumo dos últimos 7 dias e indicação das metas alcançadas.
 - Cálculo de meta diária recomendada com base no peso corporal.
+
+### Leveza e Baixo Consumo de Memória e CPU
+Construído de forma nativa e ultra otimizada para acompanhar sua rotina sem pesar:
+- **Uso mínimo de memória RAM e CPU:** O aplicativo é extremamente leve e econômico, consumindo uma fração mínima de memória e praticamente 0% de CPU em repouso.
+- **Perfeito para segundo plano:** Pode ficar ativo o dia inteiro na bandeja ou em widget sem comprometer o desempenho de jogos, navegadores com dezenas de abas abertas ou programas de trabalho pesados.
 
 ### Modos Claro e Escuro
 Conforto visual a qualquer momento do dia:
