@@ -18,7 +18,7 @@ if not exist "%CSC_PATH%" (
     exit /b 1
 )
 
-"%CSC_PATH%" /target:winexe /out:Lumi.exe /win32icon:app.ico /codepage:65001 /reference:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll","System.Xaml.dll","System.Web.Extensions.dll","System.Windows.Forms.dll","System.Drawing.dll" LumiApp.cs SplashWindow.cs
+"%CSC_PATH%" /target:winexe /out:Lumi.exe /win32icon:icone.ico /codepage:65001 /reference:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll","System.Xaml.dll","System.Web.Extensions.dll","System.Windows.Forms.dll","System.Drawing.dll" LumiApp.cs SplashWindow.cs
 
 if %errorlevel% equ 0 (
     echo.

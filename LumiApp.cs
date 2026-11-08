@@ -253,7 +253,8 @@ namespace GotinhaAgua
                 string programsPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
                 string shortcutPath = System.IO.Path.Combine(programsPath, "Lumi.lnk");
                 string targetExe = Process.GetCurrentProcess().MainModule.FileName;
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                string iconPath = IconeHelper.ObterCaminhoIcone();
+                if (string.IsNullOrEmpty(iconPath)) iconPath = targetExe;
 
                 CShellLink link = new CShellLink();
                 IShellLinkW shellLink = (IShellLinkW)link;
@@ -513,6 +514,40 @@ namespace GotinhaAgua
     }
 
     // ==========================================
+    // Gerenciador centralizado do Ícone do App
+    // ==========================================
+    public static class IconeHelper
+    {
+        public static string ObterCaminhoIcone()
+        {
+            try
+            {
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string iconePath = System.IO.Path.Combine(baseDir, "icone.ico");
+                if (System.IO.File.Exists(iconePath)) return iconePath;
+                string appIco = System.IO.Path.Combine(baseDir, "app.ico");
+                if (System.IO.File.Exists(appIco)) return appIco;
+            }
+            catch { }
+            return null;
+        }
+
+        public static System.Windows.Media.ImageSource ObterIconeJanela()
+        {
+            try
+            {
+                string icoPath = ObterCaminhoIcone();
+                if (!string.IsNullOrEmpty(icoPath) && System.IO.File.Exists(icoPath))
+                {
+                    return System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(icoPath, UriKind.Absolute));
+                }
+            }
+            catch { }
+            return null;
+        }
+    }
+
+    // ==========================================
     // Janela Principal do Aplicativo (WPF Moderno)
     // ==========================================
     public class MainWindow : Window
@@ -766,15 +801,7 @@ namespace GotinhaAgua
             RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
             RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
 
-            string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
-            if (File.Exists(icoPath))
-            {
-                try
-                {
-                    Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(icoPath, UriKind.Absolute));
-                }
-                catch { }
-            }
+            Icon = IconeHelper.ObterIconeJanela();
 
             Background = Brushes.Transparent;
         }
@@ -3628,8 +3655,8 @@ namespace GotinhaAgua
             _trayIcon = new Forms.NotifyIcon();
             _trayIcon.Text = "Lumi - Lembrete de \u00C1gua \uD83D\uDCA7";
 
-            string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
-            if (File.Exists(icoPath))
+            string icoPath = IconeHelper.ObterCaminhoIcone();
+            if (!string.IsNullOrEmpty(icoPath) && File.Exists(icoPath))
             {
                 try
                 {
@@ -3642,7 +3669,14 @@ namespace GotinhaAgua
             }
             else
             {
-                _trayIcon.Icon = Drawing.SystemIcons.Application;
+                try
+                {
+                    _trayIcon.Icon = Drawing.Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
+                }
+                catch
+                {
+                    _trayIcon.Icon = Drawing.SystemIcons.Application;
+                }
             }
 
             _trayIcon.Visible = true;
@@ -4507,15 +4541,7 @@ namespace GotinhaAgua
             TextOptions.SetTextRenderingMode(this, TextRenderingMode.ClearType);
             RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
 
-            string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
-            if (File.Exists(icoPath))
-            {
-                try
-                {
-                    Icon = BitmapFrame.Create(new Uri(icoPath, UriKind.Absolute));
-                }
-                catch { }
-            }
+            Icon = IconeHelper.ObterIconeJanela();
 
             ConstruirWidgetUI();
             AplicarTemaWidget();
@@ -5303,15 +5329,7 @@ namespace GotinhaAgua
             Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
             Opacity = 0;
 
-            try
-            {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
-                if (File.Exists(iconPath))
-                {
-                    Icon = BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
-                }
-            }
-            catch { }
+            Icon = IconeHelper.ObterIconeJanela();
 
             Loaded += delegate {
                 DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) {
@@ -5877,15 +5895,7 @@ namespace GotinhaAgua
             UseLayoutRounding = true;
             Opacity = 0;
 
-            try
-            {
-                string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
-                if (File.Exists(iconPath))
-                {
-                    Icon = BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
-                }
-            }
-            catch { }
+            Icon = IconeHelper.ObterIconeJanela();
 
             Loaded += delegate {
                 DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) {

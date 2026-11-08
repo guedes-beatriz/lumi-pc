@@ -114,7 +114,7 @@ A pasta do projeto é organizada de maneira limpa e modular:
 ├── SplashWindow.cs         # Código-fonte da tela de abertura animada
 ├── compilar.bat            # Script em lote para compilar o app em 1 clique
 ├── mascote.png             # Mascote Lumi oficial em alta resolução
-├── app.ico                 # Ícone oficial do aplicativo (.ico)
+├── icone.ico               # Ícone oficial do aplicativo (.ico)
 ├── dados_agua.json         # Banco de dados local em formato JSON
 ├── README.md               # Documentação do projeto
 ├── .gitignore              # Regras de arquivos ignorados pelo Git

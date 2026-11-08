@@ -5,7 +5,7 @@ LUMI - LEMBRETE DE ÁGUA (WINDOWS)
 Oie! Que bom ter você usando a Lumi!
 
 COMO INICIAR:
-1. Extraia todos os arquivos desta pasta zip (Lumi.exe, mascote.png, app.ico).
+1. Extraia todos os arquivos desta pasta zip (Lumi.exe, mascote.png, icone.ico).
 2. Dê dois cliques em "Lumi.exe".
 3. Pronto! O aplicativo vai abrir com a tela de boas-vindas da Lumi.
 
