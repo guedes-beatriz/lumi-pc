@@ -18,6 +18,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Windows.Interop;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
 
@@ -625,7 +626,63 @@ namespace GotinhaAgua
             AtualizarInterface();
         }
 
-                private void AlternarMaximizar()
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
+            if (source != null)
+            {
+                source.AddHook(WndProc);
+            }
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            const int WM_NCHITTEST = 0x0084;
+            if (msg == WM_NCHITTEST && WindowState == WindowState.Normal)
+            {
+                try
+                {
+                    short sx = unchecked((short)(lParam.ToInt32() & 0xFFFF));
+                    short sy = unchecked((short)((lParam.ToInt32() >> 16) & 0xFFFF));
+
+                    Point ptClient = PointFromScreen(new Point(sx, sy));
+
+                    const int b = 8; // espessura da margem de redimensionamento em pixels
+
+                    if (ptClient.X >= -5 && ptClient.X <= ActualWidth + 5 &&
+                        ptClient.Y >= -5 && ptClient.Y <= ActualHeight + 5)
+                    {
+                        bool left = ptClient.X <= b;
+                        bool right = ptClient.X >= (ActualWidth - b);
+                        bool top = ptClient.Y <= b;
+                        bool bottom = ptClient.Y >= (ActualHeight - b);
+
+                        const int HTLEFT = 10;
+                        const int HTRIGHT = 11;
+                        const int HTTOP = 12;
+                        const int HTTOPLEFT = 13;
+                        const int HTTOPRIGHT = 14;
+                        const int HTBOTTOM = 15;
+                        const int HTBOTTOMLEFT = 16;
+                        const int HTBOTTOMRIGHT = 17;
+
+                        if (top && left) { handled = true; return new IntPtr(HTTOPLEFT); }
+                        if (top && right) { handled = true; return new IntPtr(HTTOPRIGHT); }
+                        if (bottom && left) { handled = true; return new IntPtr(HTBOTTOMLEFT); }
+                        if (bottom && right) { handled = true; return new IntPtr(HTBOTTOMRIGHT); }
+                        if (left) { handled = true; return new IntPtr(HTLEFT); }
+                        if (right) { handled = true; return new IntPtr(HTRIGHT); }
+                        if (top) { handled = true; return new IntPtr(HTTOP); }
+                        if (bottom) { handled = true; return new IntPtr(HTBOTTOM); }
+                    }
+                }
+                catch { }
+            }
+            return IntPtr.Zero;
+        }
+
+        private void AlternarMaximizar()
         {
             if (WindowState == WindowState.Maximized)
             {
@@ -639,7 +696,7 @@ namespace GotinhaAgua
             }
         }
 
-                        private void MainWindow_StateChanged(object sender, EventArgs e)
+        private void MainWindow_StateChanged(object sender, EventArgs e)
         {
             SolidColorBrush cor = (_dados != null && _dados.ModoEscuro)
                 ? new SolidColorBrush(Color.FromRgb(56, 189, 248))
@@ -683,12 +740,17 @@ namespace GotinhaAgua
         private void ConfigurarJanela()
         {
             Title = "Lumi - Lembrete de \u00C1gua \uD83D\uDCA7";
-            Width = 520;
-            Height = 840;
-            MinWidth = 480;
-            MinHeight = 720;
-            MaxHeight = SystemParameters.WorkArea.Height;
-            MaxWidth = SystemParameters.WorkArea.Width;
+
+            double workH = SystemParameters.WorkArea.Height;
+            double workW = SystemParameters.WorkArea.Width;
+
+            // Dimensões responsivas para qualquer resolução (ex: 1366x768 ou escala de 125%/150%)
+            Width = Math.Min(490, Math.Max(380, workW - 40));
+            Height = Math.Min(740, Math.Max(520, workH - 50));
+            MinWidth = 360;
+            MinHeight = 440;
+            MaxHeight = workH;
+            MaxWidth = workW;
             ResizeMode = ResizeMode.CanResize;
             StateChanged += MainWindow_StateChanged;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -1182,9 +1244,19 @@ namespace GotinhaAgua
         {
             ScrollViewer scroll = new ScrollViewer
             {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 FocusVisualStyle = null
+            };
+
+            scroll.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
+            {
+                ScrollViewer scv = s as ScrollViewer;
+                if (scv != null && scv.ScrollableHeight > 0)
+                {
+                    scv.ScrollToVerticalOffset(scv.VerticalOffset - (e.Delta > 0 ? 45 : -45));
+                    e.Handled = true;
+                }
             };
 
             StackPanel sp = new StackPanel { Margin = new Thickness(4, 0, 4, 8) };
@@ -2565,6 +2637,15 @@ namespace GotinhaAgua
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
             };
+            scrollHoje.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
+            {
+                ScrollViewer scv = s as ScrollViewer;
+                if (scv != null && scv.ScrollableHeight > 0)
+                {
+                    scv.ScrollToVerticalOffset(scv.VerticalOffset - (e.Delta > 0 ? 45 : -45));
+                    e.Handled = true;
+                }
+            };
             _painelHistorico = new StackPanel { Margin = new Thickness(0, 2, 0, 4) };
             scrollHoje.Content = _painelHistorico;
             _containerTabHoje = scrollHoje;
@@ -2575,6 +2656,15 @@ namespace GotinhaAgua
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
+            scrollSemana.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
+            {
+                ScrollViewer scv = s as ScrollViewer;
+                if (scv != null && scv.ScrollableHeight > 0)
+                {
+                    scv.ScrollToVerticalOffset(scv.VerticalOffset - (e.Delta > 0 ? 45 : -45));
+                    e.Handled = true;
+                }
             };
             _painelGraficoSemanal = new StackPanel { Margin = new Thickness(0, 2, 0, 4) };
             scrollSemana.Content = _painelGraficoSemanal;
@@ -5369,7 +5459,7 @@ namespace GotinhaAgua
 
             Title = "Configura\u00E7\u00F5es da Lumi \u2699\uFE0F";
             Width = 420;
-            Height = 520;
+            Height = Math.Min(520, SystemParameters.WorkArea.Height - 40);
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ResizeMode = ResizeMode.NoResize;
             Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
@@ -5393,6 +5483,15 @@ namespace GotinhaAgua
             };
 
             ScrollViewer sv = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            sv.PreviewMouseWheel += delegate(object s, MouseWheelEventArgs e)
+            {
+                ScrollViewer scv = s as ScrollViewer;
+                if (scv != null && scv.ScrollableHeight > 0)
+                {
+                    scv.ScrollToVerticalOffset(scv.VerticalOffset - (e.Delta > 0 ? 45 : -45));
+                    e.Handled = true;
+                }
+            };
             StackPanel sp = new StackPanel { Margin = new Thickness(22) };
 
             // Cabeçalho da Janela

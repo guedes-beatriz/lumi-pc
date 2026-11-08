@@ -26,8 +26,10 @@ namespace GotinhaAgua
         public SplashWindow()
         {
             Title = "Lumi - Bem-vindo!";
-            Width = 470;
-            Height = 650;
+            double workH = SystemParameters.WorkArea.Height;
+            double workW = SystemParameters.WorkArea.Width;
+            Width = Math.Min(470, Math.Max(360, workW - 40));
+            Height = Math.Min(650, Math.Max(480, workH - 50));
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -141,7 +143,14 @@ namespace GotinhaAgua
             FrameworkElement botaoVisual = CriarBotaoEntrar();
             stackCentro.Children.Add(botaoVisual);
 
-            contentGrid.Children.Add(stackCentro);
+            Viewbox vbCentro = new Viewbox
+            {
+                Child = stackCentro,
+                Stretch = Stretch.Uniform,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            contentGrid.Children.Add(vbCentro);
             rootGrid.Children.Add(contentGrid);
 
             Content = rootGrid;

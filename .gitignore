@@ -14,5 +14,8 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
+# Dados de uso e histórico local (não commitar dados pessoais)
+dados_agua.json
+
 # Manter o executável portátil principal para download e teste direto
-!Gotinha.exe
+!Lumi.exe
