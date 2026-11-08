@@ -28,13 +28,22 @@ namespace GotinhaAgua
             Title = "Lumi - Bem-vindo!";
             double workH = SystemParameters.WorkArea.Height;
             double workW = SystemParameters.WorkArea.Width;
-            Width = Math.Min(470, Math.Max(360, workW - 40));
-            Height = Math.Min(650, Math.Max(480, workH - 50));
+            Width = Math.Min(350, Math.Max(300, workW - 40));
+            Height = Math.Min(460, Math.Max(400, workH - 50));
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
             Background = Brushes.Transparent;
             ResizeMode = ResizeMode.NoResize;
+
+            // Otimizações de alta fidelidade visual (Renderização nítida sem blur/rasterização)
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
+            TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
+            TextOptions.SetTextRenderingMode(this, TextRenderingMode.ClearType);
+            TextOptions.SetTextHintingMode(this, TextHintingMode.Fixed);
+            RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
+            RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
 
             // Permite arrastar a janela livremente
             MouseLeftButtonDown += delegate(object s, MouseButtonEventArgs e)
@@ -52,24 +61,11 @@ namespace GotinhaAgua
         {
             Grid rootGrid = new Grid
             {
-                Margin = new Thickness(16)
+                Margin = new Thickness(12),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
-
-            // Card principal arredondado com efeito de vidro suave e sombra celestial
-            Border mainCard = new Border
-            {
-                CornerRadius = new CornerRadius(36),
-                BorderThickness = new Thickness(2.5),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255)),
-                ClipToBounds = true,
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 32,
-                    ShadowDepth = 6,
-                    Opacity = 0.28
-                }
-            };
+            RenderOptions.SetClearTypeHint(rootGrid, ClearTypeHint.Enabled);
 
             // Detecção suave do Modo Escuro das preferências salvas
             bool isDark = false;
@@ -84,7 +80,25 @@ namespace GotinhaAgua
             }
             catch { }
 
-            // Gradiente de fundo calibrado
+            // Card principal com proporções refinadas, borda delicada e sombra etérea
+            Border mainCard = new Border
+            {
+                CornerRadius = new CornerRadius(24),
+                BorderThickness = new Thickness(1.0),
+                ClipToBounds = true,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true,
+                Effect = new DropShadowEffect
+                {
+                    Color = isDark ? Colors.Black : Color.FromRgb(2, 132, 199),
+                    BlurRadius = isDark ? 28 : 24,
+                    ShadowDepth = 3,
+                    Opacity = isDark ? 0.45 : 0.16
+                }
+            };
+            RenderOptions.SetClearTypeHint(mainCard, ClearTypeHint.Enabled);
+
+            // Gradiente de fundo elegante e suave (tons pastéis no claro / midnight no escuro)
             LinearGradientBrush cardBg = new LinearGradientBrush
             {
                 StartPoint = new Point(0.5, 0),
@@ -92,16 +106,17 @@ namespace GotinhaAgua
             };
             if (isDark)
             {
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(11, 19, 43), 0.0));
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 0.5));
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(23, 37, 84), 1.0));
-                mainCard.BorderBrush = new SolidColorBrush(Color.FromArgb(140, 56, 189, 248));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 0.0));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(19, 32, 60), 0.55));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(10, 17, 36), 1.0));
+                mainCard.BorderBrush = new SolidColorBrush(Color.FromArgb(90, 56, 189, 248));
             }
             else
             {
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(224, 242, 254), 0.0));
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(186, 230, 253), 0.5));
-                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(240, 249, 255), 1.0));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(248, 252, 255), 0.0));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(240, 249, 255), 0.45));
+                cardBg.GradientStops.Add(new GradientStop(Color.FromRgb(224, 242, 254), 1.0));
+                mainCard.BorderBrush = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255));
             }
             mainCard.Background = cardBg;
 
@@ -111,55 +126,54 @@ namespace GotinhaAgua
                 ClipToBounds = true,
                 IsHitTestVisible = false
             };
-            CriarBolhasEFundo(canvasFundo);
+            CriarBolhasEFundo(canvasFundo, isDark);
             mainCard.Child = canvasFundo;
 
             rootGrid.Children.Add(mainCard);
 
             // Camada de conteúdo por cima do fundo
-            Grid contentGrid = new Grid();
+            Grid contentGrid = new Grid
+            {
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
+            };
 
-            // Botão fechar discreto e moderno
-            Button btnFechar = CriarBotaoFechar();
+            // Botão fechar delicado e minimalista
+            Button btnFechar = CriarBotaoFechar(isDark);
             contentGrid.Children.Add(btnFechar);
 
-            // Container centralizado
+            // Container centralizado com espaçamento harmônico
             StackPanel stackCentro = new StackPanel
             {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(20, 16, 20, 24)
+                Margin = new Thickness(16, 20, 16, 20),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
-            // 1. Apresentação da Mascote com animação de pulo, aceno, flutuação e piscada
+            // 1. Apresentação da Mascote com nitidez máxima e animação delicada
             FrameworkElement mascoteVisual = CriarMascoteAnimada();
             stackCentro.Children.Add(mascoteVisual);
 
-            // 2. Textos de Apresentação
-            FrameworkElement textosVisual = CriarTextosApresentacao();
+            // 2. Textos de Apresentação com renderização vetorial cristalina
+            FrameworkElement textosVisual = CriarTextosApresentacao(isDark);
             stackCentro.Children.Add(textosVisual);
 
             // 3. Botão "Entrar no app"
             FrameworkElement botaoVisual = CriarBotaoEntrar();
             stackCentro.Children.Add(botaoVisual);
 
-            Viewbox vbCentro = new Viewbox
-            {
-                Child = stackCentro,
-                Stretch = Stretch.Uniform,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-            contentGrid.Children.Add(vbCentro);
+            contentGrid.Children.Add(stackCentro);
             rootGrid.Children.Add(contentGrid);
 
             Content = rootGrid;
 
-            // Animação de entrada da janela inteira (Fade in suave)
+            // Animação de entrada da janela (Fade in sutil)
             Opacity = 0.0;
             Loaded += delegate
             {
-                DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(450))
+                DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(380))
                 {
                     EasingFunction = new QuarticEase { EasingMode = EasingMode.EaseOut }
                 };
@@ -168,20 +182,21 @@ namespace GotinhaAgua
         }
 
         // ==========================================
-        // 1. MASCOTE GOTINHA (Pulo de entrada, flutuação, aceno e piscar de olhos)
+        // 1. MASCOTE GOTINHA (Ultra nítida, alta definição e animada)
         // ==========================================
         private FrameworkElement CriarMascoteAnimada()
         {
             Grid mascotContainer = new Grid
             {
-                Width = 190,
-                Height = 190,
+                Width = 136,
+                Height = 136,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 18),
-                Cursor = Cursors.Hand
+                Margin = new Thickness(0, 0, 0, 10),
+                Cursor = Cursors.Hand,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
-            // Grupo de transformações: Translate (entrada/flutuação), Scale (bounce), Rotate (aceno alegre)
             TransformGroup tgMascote = new TransformGroup();
             _mascotScale = new ScaleTransform(1.0, 1.0);
             _mascotTranslate = new TranslateTransform(0, 0);
@@ -194,11 +209,31 @@ namespace GotinhaAgua
             mascotContainer.RenderTransform = tgMascote;
             mascotContainer.RenderTransformOrigin = new Point(0.5, 0.5);
 
-            // Halo/Aura celestial suave por trás da mascote
+            // Sombra de contato sutil no chão (vetorial pura, sem pixel shader no mascote)
+            Ellipse groundShadow = new Ellipse
+            {
+                Width = 84,
+                Height = 16,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, 4),
+                Fill = new RadialGradientBrush
+                {
+                    GradientStops = new GradientStopCollection
+                    {
+                        new GradientStop(Color.FromArgb(45, 2, 132, 199), 0.0),
+                        new GradientStop(Color.FromArgb(0, 2, 132, 199), 1.0)
+                    }
+                },
+                IsHitTestVisible = false
+            };
+            mascotContainer.Children.Add(groundShadow);
+
+            // Halo celestial suave por trás da mascote
             Ellipse glowAura = new Ellipse
             {
-                Width = 190,
-                Height = 190,
+                Width = 130,
+                Height = 130,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Fill = new RadialGradientBrush
@@ -209,8 +244,8 @@ namespace GotinhaAgua
                     RadiusY = 0.5,
                     GradientStops = new GradientStopCollection
                     {
-                        new GradientStop(Color.FromArgb(170, 255, 255, 255), 0.0),
-                        new GradientStop(Color.FromArgb(90, 56, 189, 248), 0.5),
+                        new GradientStop(Color.FromArgb(120, 255, 255, 255), 0.0),
+                        new GradientStop(Color.FromArgb(40, 56, 189, 248), 0.55),
                         new GradientStop(Color.FromArgb(0, 56, 189, 248), 1.0)
                     }
                 },
@@ -218,7 +253,7 @@ namespace GotinhaAgua
             };
             mascotContainer.Children.Add(glowAura);
 
-            // Mascote Gotinha Waving em Alta Definição com fundo transparente natural
+            // Imagem da Gotinha com decodificação de alta fidelidade e interpolação de alta qualidade
             string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
             if (File.Exists(mascotPath))
             {
@@ -226,22 +261,20 @@ namespace GotinhaAgua
                 {
                     Image mascotImg = new Image
                     {
-                        Width = 175,
-                        Height = 175,
+                        Width = 124,
+                        Height = 124,
                         Stretch = Stretch.Uniform,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center,
-                        Effect = new DropShadowEffect
-                        {
-                            Color = Color.FromRgb(56, 189, 248),
-                            BlurRadius = 26,
-                            ShadowDepth = 4,
-                            Opacity = 0.45
-                        }
+                        SnapsToDevicePixels = true,
+                        UseLayoutRounding = true
                     };
+                    RenderOptions.SetBitmapScalingMode(mascotImg, BitmapScalingMode.HighQuality);
+
                     BitmapImage bmp = new BitmapImage();
                     bmp.BeginInit();
                     bmp.UriSource = new Uri(mascotPath, UriKind.Absolute);
+                    bmp.DecodePixelWidth = 380; // Pré-amostragem lanczos nítida em alta densidade
                     bmp.CacheOption = BitmapCacheOption.OnLoad;
                     bmp.EndInit();
                     mascotImg.Source = bmp;
@@ -251,45 +284,40 @@ namespace GotinhaAgua
                 catch { }
             }
 
-            // ==========================================
-            // ANIMAÇÕES: Entrada (Pulo), Flutuação, Aceno e Piscar
-            // ==========================================
-
-            // 1. Entrada suave como se estivesse pulando para dentro da tela
-            _mascotTranslate.Y = -140;
-            _mascotScale.ScaleX = 0.3;
-            _mascotScale.ScaleY = 0.3;
+            // Animação de entrada suave com pulo amigável
+            _mascotTranslate.Y = -55;
+            _mascotScale.ScaleX = 0.5;
+            _mascotScale.ScaleY = 0.5;
             mascotContainer.Opacity = 0.0;
 
-            DoubleAnimation animPuloY = new DoubleAnimation(-140, 0, TimeSpan.FromMilliseconds(780))
+            DoubleAnimation animPuloY = new DoubleAnimation(-55, 0, TimeSpan.FromMilliseconds(650))
             {
-                EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2.4, EasingMode = EasingMode.EaseOut }
+                EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2.0, EasingMode = EasingMode.EaseOut }
             };
-            DoubleAnimation animScaleX = new DoubleAnimation(0.3, 1.0, TimeSpan.FromMilliseconds(650))
+            DoubleAnimation animScaleX = new DoubleAnimation(0.5, 1.0, TimeSpan.FromMilliseconds(550))
             {
-                EasingFunction = new BackEase { Amplitude = 0.38, EasingMode = EasingMode.EaseOut }
+                EasingFunction = new BackEase { Amplitude = 0.32, EasingMode = EasingMode.EaseOut }
             };
-            DoubleAnimation animScaleY = new DoubleAnimation(0.3, 1.0, TimeSpan.FromMilliseconds(650))
+            DoubleAnimation animScaleY = new DoubleAnimation(0.5, 1.0, TimeSpan.FromMilliseconds(550))
             {
-                EasingFunction = new BackEase { Amplitude = 0.38, EasingMode = EasingMode.EaseOut }
+                EasingFunction = new BackEase { Amplitude = 0.32, EasingMode = EasingMode.EaseOut }
             };
-            DoubleAnimation animMascotOpacity = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(420));
+            DoubleAnimation animMascotOpacity = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(350));
 
-            // 2. Aceno amigável e flutuação contínua após a entrada
+            // Aceno suave e flutuação contínua delicada
             animPuloY.Completed += delegate
             {
-                // Sequência de aceno animado (waving gesture da Gotinha)
                 DoubleAnimationUsingKeyFrames waveKeyFrames = new DoubleAnimationUsingKeyFrames();
-                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(-8.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200))));
-                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(8.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(450))));
-                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(-6.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(700))));
-                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(6.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(950))));
-                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1200))));
+                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(-5.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(180))));
+                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(5.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(400))));
+                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(-3.5, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(620))));
+                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(3.5, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(840))));
+                waveKeyFrames.KeyFrames.Add(new SplineDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(1050))));
 
                 waveKeyFrames.Completed += delegate
                 {
-                    // Flutuação contínua e suave (subindo e descendo delicadamente)
-                    DoubleAnimation floatAnim = new DoubleAnimation(-9, 9, TimeSpan.FromSeconds(2.5))
+                    // Flutuação sutil e serena
+                    DoubleAnimation floatAnim = new DoubleAnimation(-4.0, 4.0, TimeSpan.FromSeconds(2.4))
                     {
                         AutoReverse = true,
                         RepeatBehavior = RepeatBehavior.Forever,
@@ -297,14 +325,14 @@ namespace GotinhaAgua
                     };
                     _mascotTranslate.BeginAnimation(TranslateTransform.YProperty, floatAnim);
 
-                    // Movimento sutil de balanço/aceno contínuo
-                    DoubleAnimation gentleWave = new DoubleAnimation(-3.5, 3.5, TimeSpan.FromSeconds(2.0))
+                    // Inclinação sutil
+                    DoubleAnimation gentleTilt = new DoubleAnimation(-2.0, 2.0, TimeSpan.FromSeconds(2.0))
                     {
                         AutoReverse = true,
                         RepeatBehavior = RepeatBehavior.Forever,
                         EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
                     };
-                    _mascotRotate.BeginAnimation(RotateTransform.AngleProperty, gentleWave);
+                    _mascotRotate.BeginAnimation(RotateTransform.AngleProperty, gentleTilt);
                 };
 
                 _mascotRotate.BeginAnimation(RotateTransform.AngleProperty, waveKeyFrames);
@@ -315,12 +343,12 @@ namespace GotinhaAgua
             _mascotScale.BeginAnimation(ScaleTransform.ScaleYProperty, animScaleY);
             mascotContainer.BeginAnimation(UIElement.OpacityProperty, animMascotOpacity);
 
-            // Interação fofa ao passar o mouse ou clicar na Gotinha
+            // Interação charmosa ao passar o mouse ou clicar
             mascotContainer.MouseEnter += delegate
             {
-                DoubleAnimation petScale = new DoubleAnimation(1.06, TimeSpan.FromMilliseconds(200))
+                DoubleAnimation petScale = new DoubleAnimation(1.04, TimeSpan.FromMilliseconds(180))
                 {
-                    EasingFunction = new BackEase { Amplitude = 0.5, EasingMode = EasingMode.EaseOut }
+                    EasingFunction = new BackEase { Amplitude = 0.35, EasingMode = EasingMode.EaseOut }
                 };
                 _mascotScale.BeginAnimation(ScaleTransform.ScaleXProperty, petScale);
                 _mascotScale.BeginAnimation(ScaleTransform.ScaleYProperty, petScale);
@@ -328,7 +356,7 @@ namespace GotinhaAgua
 
             mascotContainer.MouseLeave += delegate
             {
-                DoubleAnimation unpetScale = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(250))
+                DoubleAnimation unpetScale = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(200))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                 };
@@ -339,7 +367,7 @@ namespace GotinhaAgua
             mascotContainer.MouseLeftButtonDown += delegate
             {
                 try { GeradorDeSom.TocarGota(); } catch { }
-                DoubleAnimation jump = new DoubleAnimation(-16, TimeSpan.FromMilliseconds(180))
+                DoubleAnimation jump = new DoubleAnimation(-8, TimeSpan.FromMilliseconds(160))
                 {
                     AutoReverse = true,
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
@@ -350,111 +378,58 @@ namespace GotinhaAgua
             return mascotContainer;
         }
 
-        private FrameworkElement CriarEyelidElemento()
-        {
-            Grid eyelidGrid = new Grid
-            {
-                Width = 24,
-                Height = 22,
-                Opacity = 0.0
-            };
-
-            // Cobertura do olho com o tom de azul celestial da Gotinha
-            Ellipse lidCover = new Ellipse
-            {
-                Width = 24,
-                Height = 22,
-                Fill = new SolidColorBrush(Color.FromArgb(240, 130, 214, 253)) // Tom de água da gotinha
-            };
-
-            // Curva feliz de olho fechado (estilo kawaii)
-            System.Windows.Shapes.Path eyeLine = new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse("M 1,11 Q 12,-1 23,11"),
-                Stroke = new SolidColorBrush(Color.FromRgb(26, 43, 76)), // Cor escura do contorno dos olhos
-                StrokeThickness = 3.2,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round
-            };
-
-            eyelidGrid.Children.Add(lidCover);
-            eyelidGrid.Children.Add(eyeLine);
-
-            return eyelidGrid;
-        }
-
-        private DoubleAnimationUsingKeyFrames CriarFramesPiscar()
-        {
-            DoubleAnimationUsingKeyFrames frames = new DoubleAnimationUsingKeyFrames();
-            frames.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.0))));
-            frames.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.0))));
-            frames.KeyFrames.Add(new LinearDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.1))));
-            frames.KeyFrames.Add(new LinearDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.28))));
-            frames.KeyFrames.Add(new LinearDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.38))));
-            frames.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.8))));
-            return frames;
-        }
-
         // ==========================================
-        // 2. TEXTOS DE BOAS-VINDAS
+        // 2. TEXTOS DE BOAS-VINDAS (Tipografia nítida com ClearType nativo)
         // ==========================================
-        private FrameworkElement CriarTextosApresentacao()
+        private FrameworkElement CriarTextosApresentacao(bool isDark)
         {
             StackPanel stackTextos = new StackPanel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 24)
+                Margin = new Thickness(0, 0, 0, 16),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
-            // Título "Gotinha" com tipografia arredondada, degradê marcante e sombra
+            // Título "Lumi" nítido, sem rasterização de shader
             TextBlock txtTitulo = new TextBlock
             {
                 Text = "Lumi",
                 FontFamily = new FontFamily("Segoe UI, Arial Rounded MT Bold, sans-serif"),
-                FontSize = 38,
+                FontSize = 26,
                 FontWeight = FontWeights.Bold,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 8),
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(186, 230, 253),
-                    BlurRadius = 16,
-                    ShadowDepth = 2,
-                    Opacity = 0.7
-                }
+                Margin = new Thickness(0, 0, 0, 4)
             };
+
             LinearGradientBrush tituloBrush = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
                 EndPoint = new Point(1, 1)
             };
-            tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(2, 132, 199), 0.0));  // Sky 600
-            tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(3, 105, 161), 1.0));  // Sky 700
-            txtTitulo.Foreground = tituloBrush;
-
-            bool isDark = false;
-            try
+            if (isDark)
             {
-                string dadosPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dados_agua.json");
-                if (File.Exists(dadosPath))
-                {
-                    string j = File.ReadAllText(dadosPath);
-                    isDark = j.Contains("\"ModoEscuro\":true") || j.Contains("\"ModoEscuro\": true");
-                }
+                tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(56, 189, 248), 0.0));
+                tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(125, 211, 252), 1.0));
             }
-            catch { }
+            else
+            {
+                tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(2, 132, 199), 0.0));
+                tituloBrush.GradientStops.Add(new GradientStop(Color.FromRgb(14, 165, 233), 1.0));
+            }
+            txtTitulo.Foreground = tituloBrush;
 
             // Frase principal: "Oiê! Que bom ter você aqui! 💧"
             TextBlock txtMensagem = new TextBlock
             {
                 Text = "Oi\u00EA! Que bom ter voc\u00EA aqui! \uD83D\uDCA7",
                 FontFamily = new FontFamily("Segoe UI, sans-serif"),
-                FontSize = 18,
+                FontSize = 13.5,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 6)
+                Margin = new Thickness(0, 0, 0, 4)
             };
 
             // Frase secundária: "Vamos cuidar da sua hidratação juntos?"
@@ -462,9 +437,9 @@ namespace GotinhaAgua
             {
                 Text = "Vamos cuidar da sua hidrata\u00E7\u00E3o juntos?",
                 FontFamily = new FontFamily("Segoe UI, sans-serif"),
-                FontSize = 14,
+                FontSize = 12,
                 FontWeight = FontWeights.Normal,
-                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105)),
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 TextAlignment = TextAlignment.Center
             };
@@ -473,10 +448,10 @@ namespace GotinhaAgua
             stackTextos.Children.Add(txtMensagem);
             stackTextos.Children.Add(txtSubMensagem);
 
-            // Animação gradual e fluida de aparição dos textos
-            AplicarAnimacaoEntradaTexto(txtTitulo, 320);
-            AplicarAnimacaoEntradaTexto(txtMensagem, 580);
-            AplicarAnimacaoEntradaTexto(txtSubMensagem, 800);
+            // Animação de aparição suave
+            AplicarAnimacaoEntradaTexto(txtTitulo, 220);
+            AplicarAnimacaoEntradaTexto(txtMensagem, 380);
+            AplicarAnimacaoEntradaTexto(txtSubMensagem, 520);
 
             return stackTextos;
         }
@@ -484,15 +459,15 @@ namespace GotinhaAgua
         private void AplicarAnimacaoEntradaTexto(UIElement elemento, int atrasoMs)
         {
             elemento.Opacity = 0.0;
-            TranslateTransform tt = new TranslateTransform(0, 16);
+            TranslateTransform tt = new TranslateTransform(0, 10);
             elemento.RenderTransform = tt;
 
-            DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(480))
+            DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(400))
             {
                 BeginTime = TimeSpan.FromMilliseconds(atrasoMs),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
-            DoubleAnimation slideUp = new DoubleAnimation(16, 0, TimeSpan.FromMilliseconds(480))
+            DoubleAnimation slideUp = new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(400))
             {
                 BeginTime = TimeSpan.FromMilliseconds(atrasoMs),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
@@ -503,49 +478,53 @@ namespace GotinhaAgua
         }
 
         // ==========================================
-        // 3. BOTÃO "ENTRAR NO APP"
+        // 3. BOTÃO "ENTRAR NO APP" (Pílula delicada, moderna e nítida)
         // ==========================================
         private FrameworkElement CriarBotaoEntrar()
         {
             Grid btnWrapper = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 6, 0, 0)
+                Margin = new Thickness(0, 4, 0, 0),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
             _btnEntrarBorder = new Border
             {
-                Width = 264,
-                Height = 56,
-                CornerRadius = new CornerRadius(28),
-                BorderThickness = new Thickness(2),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 255, 255, 255)),
+                Width = 196,
+                Height = 42,
+                CornerRadius = new CornerRadius(21),
+                BorderThickness = new Thickness(1.0),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(140, 255, 255, 255)),
                 Cursor = Cursors.Hand,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true,
                 Effect = new DropShadowEffect
                 {
                     Color = Color.FromRgb(2, 132, 199),
-                    BlurRadius = 20,
-                    ShadowDepth = 5,
-                    Opacity = 0.42
+                    BlurRadius = 14,
+                    ShadowDepth = 2,
+                    Opacity = 0.22
                 }
             };
 
-            // Fundo degradê vibrante azul-celeste
+            // Degradê suave azul-celeste
             LinearGradientBrush btnGradient = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
                 EndPoint = new Point(1, 1)
             };
-            btnGradient.GradientStops.Add(new GradientStop(Color.FromRgb(56, 189, 248), 0.0)); // Sky 400
+            btnGradient.GradientStops.Add(new GradientStop(Color.FromRgb(56, 189, 248), 0.0));  // Sky 400
             btnGradient.GradientStops.Add(new GradientStop(Color.FromRgb(2, 132, 199), 0.55)); // Sky 600
-            btnGradient.GradientStops.Add(new GradientStop(Color.FromRgb(3, 105, 161), 1.0)); // Sky 700
+            btnGradient.GradientStops.Add(new GradientStop(Color.FromRgb(3, 105, 161), 1.0));  // Sky 700
             _btnEntrarBorder.Background = btnGradient;
 
-            // Brilho superior (Glossy)
+            // Brilho sutil superior
             Border shineOverlay = new Border
             {
-                Height = 26,
-                CornerRadius = new CornerRadius(28, 28, 0, 0),
+                Height = 20,
+                CornerRadius = new CornerRadius(21, 21, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 IsHitTestVisible = false,
                 Background = new LinearGradientBrush
@@ -554,7 +533,7 @@ namespace GotinhaAgua
                     EndPoint = new Point(0.5, 1),
                     GradientStops = new GradientStopCollection
                     {
-                        new GradientStop(Color.FromArgb(110, 255, 255, 255), 0.0),
+                        new GradientStop(Color.FromArgb(70, 255, 255, 255), 0.0),
                         new GradientStop(Color.FromArgb(0, 255, 255, 255), 1.0)
                     }
                 }
@@ -565,15 +544,17 @@ namespace GotinhaAgua
             {
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
             TextBlock txtIcon = new TextBlock
             {
                 Text = "\u2728",
-                FontSize = 17,
+                FontSize = 13,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0),
+                Margin = new Thickness(0, 0, 6, 0),
                 Foreground = Brushes.White
             };
 
@@ -581,8 +562,8 @@ namespace GotinhaAgua
             {
                 Text = "Entrar no app",
                 FontFamily = new FontFamily("Segoe UI, sans-serif"),
-                FontSize = 17,
-                FontWeight = FontWeights.Bold,
+                FontSize = 13,
+                FontWeight = FontWeights.SemiBold,
                 Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -595,22 +576,21 @@ namespace GotinhaAgua
             innerBtnGrid.Children.Add(spBtn);
             _btnEntrarBorder.Child = innerBtnGrid;
 
-            // Transformação de Escala para Hover / Click / Pulse
             _btnScale = new ScaleTransform(1.0, 1.0);
             _btnEntrarBorder.RenderTransform = _btnScale;
             _btnEntrarBorder.RenderTransformOrigin = new Point(0.5, 0.5);
 
-            // Animação de pulso contínuo convidativo
+            // Respiração muito sutil e convidativa (1.0 -> 1.018)
             _btnPulseStoryboard = new Storyboard
             {
                 RepeatBehavior = RepeatBehavior.Forever,
                 AutoReverse = true
             };
-            DoubleAnimation pulseX = new DoubleAnimation(1.0, 1.035, TimeSpan.FromSeconds(1.6))
+            DoubleAnimation pulseX = new DoubleAnimation(1.0, 1.018, TimeSpan.FromSeconds(2.0))
             {
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
-            DoubleAnimation pulseY = new DoubleAnimation(1.0, 1.035, TimeSpan.FromSeconds(1.6))
+            DoubleAnimation pulseY = new DoubleAnimation(1.0, 1.018, TimeSpan.FromSeconds(2.0))
             {
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
@@ -622,11 +602,11 @@ namespace GotinhaAgua
             _btnPulseStoryboard.Children.Add(pulseY);
             _btnPulseStoryboard.Begin();
 
-            // Interatividade com o Mouse: Hover e Click
+            // Hover suave
             _btnEntrarBorder.MouseEnter += delegate
             {
                 _btnPulseStoryboard.Pause();
-                DoubleAnimation hoverScale = new DoubleAnimation(_btnScale.ScaleX, 1.06, TimeSpan.FromMilliseconds(180))
+                DoubleAnimation hoverScale = new DoubleAnimation(_btnScale.ScaleX, 1.03, TimeSpan.FromMilliseconds(160))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                 };
@@ -636,7 +616,7 @@ namespace GotinhaAgua
 
             _btnEntrarBorder.MouseLeave += delegate
             {
-                DoubleAnimation unhoverScale = new DoubleAnimation(_btnScale.ScaleX, 1.0, TimeSpan.FromMilliseconds(220))
+                DoubleAnimation unhoverScale = new DoubleAnimation(_btnScale.ScaleX, 1.0, TimeSpan.FromMilliseconds(180))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                 };
@@ -651,7 +631,7 @@ namespace GotinhaAgua
             _btnEntrarBorder.MouseLeftButtonDown += delegate(object s, MouseButtonEventArgs e)
             {
                 e.Handled = true;
-                DoubleAnimation clickScale = new DoubleAnimation(0.94, TimeSpan.FromMilliseconds(90))
+                DoubleAnimation clickScale = new DoubleAnimation(0.96, TimeSpan.FromMilliseconds(80))
                 {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                 };
@@ -662,7 +642,7 @@ namespace GotinhaAgua
             _btnEntrarBorder.MouseLeftButtonUp += delegate(object s, MouseButtonEventArgs e)
             {
                 e.Handled = true;
-                DoubleAnimation releaseScale = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(120));
+                DoubleAnimation releaseScale = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(100));
                 _btnScale.BeginAnimation(ScaleTransform.ScaleXProperty, releaseScale);
                 _btnScale.BeginAnimation(ScaleTransform.ScaleYProperty, releaseScale);
 
@@ -673,17 +653,17 @@ namespace GotinhaAgua
 
             // Animação de entrada do botão
             btnWrapper.Opacity = 0.0;
-            TranslateTransform ttBtn = new TranslateTransform(0, 20);
+            TranslateTransform ttBtn = new TranslateTransform(0, 12);
             btnWrapper.RenderTransform = ttBtn;
 
-            DoubleAnimation fadeInBtn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(500))
+            DoubleAnimation fadeInBtn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(420))
             {
-                BeginTime = TimeSpan.FromMilliseconds(920),
+                BeginTime = TimeSpan.FromMilliseconds(620),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
-            DoubleAnimation slideUpBtn = new DoubleAnimation(20, 0, TimeSpan.FromMilliseconds(500))
+            DoubleAnimation slideUpBtn = new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(420))
             {
-                BeginTime = TimeSpan.FromMilliseconds(920),
+                BeginTime = TimeSpan.FromMilliseconds(620),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
             btnWrapper.BeginAnimation(UIElement.OpacityProperty, fadeInBtn);
@@ -693,16 +673,16 @@ namespace GotinhaAgua
         }
 
         // ==========================================
-        // 4. BOLHAS E BRILHOS DECORATIVOS FLUTUANTES
+        // 4. BOLHAS E BRILHOS SERENOS (Vetoriais puros e nítidos)
         // ==========================================
-        private void CriarBolhasEFundo(Canvas canvas)
+        private void CriarBolhasEFundo(Canvas canvas, bool isDark)
         {
             Random rnd = new Random();
 
-            int totalBolhas = 14;
+            int totalBolhas = 9;
             for (int i = 0; i < totalBolhas; i++)
             {
-                double tamanho = rnd.Next(14, 32);
+                double tamanho = rnd.Next(8, 16);
                 Ellipse bolha = new Ellipse
                 {
                     Width = tamanho,
@@ -715,31 +695,31 @@ namespace GotinhaAgua
                         RadiusY = 0.5,
                         GradientStops = new GradientStopCollection
                         {
-                            new GradientStop(Color.FromArgb(170, 255, 255, 255), 0.0),
-                            new GradientStop(Color.FromArgb(80, 224, 242, 254), 0.6),
-                            new GradientStop(Color.FromArgb(20, 56, 189, 248), 1.0)
+                            new GradientStop(Color.FromArgb(140, 255, 255, 255), 0.0),
+                            new GradientStop(Color.FromArgb(40, 224, 242, 254), 0.6),
+                            new GradientStop(Color.FromArgb(10, 56, 189, 248), 1.0)
                         }
                     },
-                    Stroke = new SolidColorBrush(Color.FromArgb(110, 255, 255, 255)),
-                    StrokeThickness = 1,
+                    Stroke = new SolidColorBrush(Color.FromArgb(90, 255, 255, 255)),
+                    StrokeThickness = 0.8,
                     IsHitTestVisible = false
                 };
 
-                double posX = rnd.Next(12, 410);
-                double posY = rnd.Next(40, 620);
+                double posX = rnd.Next(12, 300);
+                double posY = rnd.Next(20, 410);
                 Canvas.SetLeft(bolha, posX);
                 Canvas.SetTop(bolha, posY);
                 canvas.Children.Add(bolha);
 
-                double duracao = rnd.Next(5000, 9000) / 1000.0;
-                DoubleAnimation animSubida = new DoubleAnimation(640, -50, TimeSpan.FromSeconds(duracao))
+                double duracao = rnd.Next(7000, 12000) / 1000.0;
+                DoubleAnimation animSubida = new DoubleAnimation(450, -30, TimeSpan.FromSeconds(duracao))
                 {
                     RepeatBehavior = RepeatBehavior.Forever,
-                    BeginTime = TimeSpan.FromSeconds(rnd.Next(0, 3500) / 1000.0)
+                    BeginTime = TimeSpan.FromSeconds(rnd.Next(0, 3000) / 1000.0)
                 };
                 bolha.BeginAnimation(Canvas.TopProperty, animSubida);
 
-                DoubleAnimation animDeriva = new DoubleAnimation(posX - 8, posX + 8, TimeSpan.FromSeconds(duracao / 2.0))
+                DoubleAnimation animDeriva = new DoubleAnimation(posX - 5, posX + 5, TimeSpan.FromSeconds(duracao / 2.0))
                 {
                     AutoReverse = true,
                     RepeatBehavior = RepeatBehavior.Forever,
@@ -748,33 +728,24 @@ namespace GotinhaAgua
                 bolha.BeginAnimation(Canvas.LeftProperty, animDeriva);
             }
 
-            // Brilhos cintilantes decorativos
-            CriarBrilhoEstrelar(canvas, 60, 100, 1.5);
-            CriarBrilhoEstrelar(canvas, 370, 85, 2.0);
-            CriarBrilhoEstrelar(canvas, 48, 275, 1.8);
-            CriarBrilhoEstrelar(canvas, 390, 285, 2.3);
-            CriarBrilhoEstrelar(canvas, 75, 460, 1.6);
-            CriarBrilhoEstrelar(canvas, 355, 480, 2.1);
+            // Brilhos cintilantes vetoriais puros (sem shaders para não criar borrão)
+            CriarBrilhoEstrelar(canvas, 36, 65, 1.2, isDark);
+            CriarBrilhoEstrelar(canvas, 280, 55, 1.8, isDark);
+            CriarBrilhoEstrelar(canvas, 30, 250, 1.5, isDark);
+            CriarBrilhoEstrelar(canvas, 285, 260, 2.1, isDark);
         }
 
-        private void CriarBrilhoEstrelar(Canvas canvas, double x, double y, double delaySec)
+        private void CriarBrilhoEstrelar(Canvas canvas, double x, double y, double delaySec, bool isDark)
         {
             System.Windows.Shapes.Path estrela = new System.Windows.Shapes.Path
             {
-                Data = Geometry.Parse("M 7,0 Q 7,7 14,7 Q 7,7 7,14 Q 7,7 0,7 Q 7,7 7,0"),
-                Fill = Brushes.White,
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(56, 189, 248),
-                    BlurRadius = 8,
-                    ShadowDepth = 0,
-                    Opacity = 0.8
-                },
-                Opacity = 0.3,
+                Data = Geometry.Parse("M 6,0 Q 6,6 12,6 Q 6,6 6,12 Q 6,6 0,6 Q 6,6 6,0"),
+                Fill = isDark ? new SolidColorBrush(Color.FromArgb(220, 186, 230, 253)) : new SolidColorBrush(Color.FromArgb(230, 56, 189, 248)),
+                Opacity = 0.35,
                 IsHitTestVisible = false
             };
 
-            ScaleTransform st = new ScaleTransform(0.8, 0.8);
+            ScaleTransform st = new ScaleTransform(0.75, 0.75);
             estrela.RenderTransform = st;
             estrela.RenderTransformOrigin = new Point(0.5, 0.5);
 
@@ -782,14 +753,14 @@ namespace GotinhaAgua
             Canvas.SetTop(estrela, y);
             canvas.Children.Add(estrela);
 
-            DoubleAnimation pulseOpacity = new DoubleAnimation(0.2, 0.95, TimeSpan.FromSeconds(1.4))
+            DoubleAnimation pulseOpacity = new DoubleAnimation(0.2, 0.85, TimeSpan.FromSeconds(1.5))
             {
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever,
                 BeginTime = TimeSpan.FromSeconds(delaySec),
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
-            DoubleAnimation pulseScale = new DoubleAnimation(0.7, 1.25, TimeSpan.FromSeconds(1.4))
+            DoubleAnimation pulseScale = new DoubleAnimation(0.7, 1.15, TimeSpan.FromSeconds(1.5))
             {
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever,
@@ -802,28 +773,30 @@ namespace GotinhaAgua
             st.BeginAnimation(ScaleTransform.ScaleYProperty, pulseScale);
         }
 
-        private Button CriarBotaoFechar()
+        private Button CriarBotaoFechar(bool isDark)
         {
             Button btnFechar = new Button
             {
                 Content = "\u2715",
-                Width = 32,
-                Height = 32,
+                Width = 26,
+                Height = 26,
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(0, 18, 18, 0),
+                Margin = new Thickness(0, 12, 12, 0),
                 Cursor = Cursors.Hand,
-                FontSize = 14,
+                FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)),
                 Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0)
+                BorderThickness = new Thickness(0),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
             };
 
             ControlTemplate template = new ControlTemplate(typeof(Button));
             FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
-            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(16));
-            borderFactory.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromArgb(60, 255, 255, 255)));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(13));
+            borderFactory.SetValue(Border.BackgroundProperty, new SolidColorBrush(isDark ? Color.FromArgb(40, 255, 255, 255) : Color.FromArgb(40, 0, 0, 0)));
             borderFactory.Name = "bd";
 
             FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
@@ -840,7 +813,7 @@ namespace GotinhaAgua
             };
             btnFechar.MouseLeave += delegate
             {
-                btnFechar.Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                btnFechar.Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184));
             };
             btnFechar.Click += delegate
             {
@@ -858,7 +831,7 @@ namespace GotinhaAgua
         }
 
         // ==========================================
-        // 5. TRANSIÇÃO ELEGANTE PARA O APLICATIVO PRINCIPAL
+        // 5. TRANSIÇÃO ELEGANTE PARA O APP
         // ==========================================
         private void IniciarTransicaoParaApp()
         {
@@ -871,8 +844,7 @@ namespace GotinhaAgua
             }
             catch { }
 
-            // Fade-out suave da janela de boas-vindas
-            DoubleAnimation fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(260))
+            DoubleAnimation fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(220))
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
@@ -888,11 +860,10 @@ namespace GotinhaAgua
                         Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
                     }
 
-                    // Transição suave de abertura da janela principal
                     mainWindow.Opacity = 0.0;
                     mainWindow.Show();
 
-                    DoubleAnimation fadeInMain = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(300))
+                    DoubleAnimation fadeInMain = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(280))
                     {
                         EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                     };
