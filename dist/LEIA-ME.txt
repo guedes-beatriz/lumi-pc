@@ -16,7 +16,7 @@ DICA PARA O DIA A DIA:
 RECURSOS PRINCIPAIS:
 - Mascote interativa com reações a cada gole e frases de incentivo.
 - Modo Widget Flutuante horizontal para fixar a Lumi no canto da tela enquanto você trabalha ou estuda.
-- Registre goles com os botões rápidos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
+- Registre goles com os botões rápidos (+75ml, +200ml, +350ml, +500ml ou digite seu valor).
 - Temporizador com contagem regressiva e lembretes para manter o ritmo de hidratação.
 - Acompanhamento do histórico do dia e gráfico semanal de metas.
 - Modos Claro e Escuro para conforto visual em qualquer momento.

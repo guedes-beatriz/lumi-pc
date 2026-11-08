@@ -56,7 +56,7 @@ Acompanhe sua hidratação sem interromper suas atividades:
 
 ### Registro Fácil e Adaptável de Água
 Adapte o app à sua rotina e ao recipiente que você costuma usar:
-- Botões rápidos com volumes pré-definidos: **Gole (150 ml)**, **Copo (250 ml)**, **Grande (350 ml)** e **Garrafa (500 ml)**.
+- Botões rápidos com volumes pré-definidos: **Gole (75 ml)**, **Copo (200 ml)**, **Grande (350 ml)** e **Garrafa (500 ml)**.
 - Campo para inserção de qualquer volume personalizado em ml.
 - Botão e atalho de desfazer caso registre algum valor por engano.
 
@@ -93,7 +93,7 @@ Conforto visual a qualquer momento do dia:
 
 | Tecla | Ação |
 |:---:|---|
-| <kbd>Espaço</kbd> | Registra um Copo de água (+250 ml) |
+| <kbd>Espaço</kbd> | Registra um Copo de água (+200 ml) |
 | <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Desfaz o último registro de água |
 | <kbd>Ctrl</kbd> + <kbd>D</kbd> | Alterna entre Modo Claro e Modo Escuro |
 | <kbd>Ctrl</kbd> + <kbd>H</kbd> | Alterna entre a tela da Lumi e o Histórico |

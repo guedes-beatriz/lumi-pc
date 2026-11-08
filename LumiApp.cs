@@ -2080,8 +2080,8 @@ namespace GotinhaAgua
             UniformGrid gridBotoes = new UniformGrid { Columns = 4, Margin = new Thickness(0, 0, 0, 10) };
             _botoesBebida.Clear();
 
-            Button b1 = CriarBotaoBebida(0, "\u2615", "Gole", 150, false);
-            Button b2 = CriarBotaoBebida(1, "\uD83E\uDD5B", "Copo", 250, true);
+            Button b1 = CriarBotaoBebida(0, "\u2615", "Gole", 75, false);
+            Button b2 = CriarBotaoBebida(1, "\uD83E\uDD5B", "Copo", 200, true);
             Button b3 = CriarBotaoBebida(2, "\uD83E\uDD64", "Grande", 350, false);
             Button b4 = CriarBotaoBebida(3, "\uD83C\uDF76", "Garrafa", 500, false);
 
@@ -2769,7 +2769,7 @@ namespace GotinhaAgua
                             _trayIcon
                         );
                     }
-                    MessageBox.Show("PARABÉNS! 🎉💧\nVocê atingiu sua meta diária de hidratação!", "Meta Batida!", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LumiDialog.MostrarSucesso(this, "PARAB\u00C9NS! \uD83C\uDF89\uD83D\uDCA7\nVoc\u00EA atingiu sua meta di\u00E1ria de hidrata\u00E7\u00E3o!", "Meta Batida! \uD83C\uDFC6", _dados != null && _dados.ModoEscuro);
                 }
                 else
                 {
@@ -2973,9 +2973,9 @@ namespace GotinhaAgua
                     Margin = new Thickness(0, 4, 0, 12)
                 });
 
-                Button btnBeberAgora = CriarBotaoPill("\uD83E\uDD64 Beber Copo (250 ml)", false, delegate
+                Button btnBeberAgora = CriarBotaoPill("\uD83E\uDD64 Beber Copo (200 ml)", false, delegate
                 {
-                    AdicionarAgua(250, "Copo");
+                    AdicionarAgua(200, "Copo");
                 });
                 btnBeberAgora.HorizontalAlignment = HorizontalAlignment.Center;
                 spEmpty.Children.Add(btnBeberAgora);
@@ -3036,12 +3036,12 @@ namespace GotinhaAgua
                 // Icone e Badge Colorida
                 string iconeStr = "\uD83D\uDCA7";
                 Brush badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
-                if (r.Quantidade <= 150)
+                if (r.Quantidade <= 100)
                 {
                     iconeStr = "\u2615";
                     badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(69, 26, 3)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
                 }
-                else if (r.Quantidade <= 250)
+                else if (r.Quantidade <= 220)
                 {
                     iconeStr = "\uD83E\uDD64";
                     badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
@@ -3650,7 +3650,7 @@ namespace GotinhaAgua
             Forms.ContextMenuStrip menu = new Forms.ContextMenuStrip();
             menu.Items.Add("Abrir Lumi \uD83D\uDCA7", null, delegate { SairModoWidget(); });
             menu.Items.Add("Modo Widget (Canto da Tela) 📌", null, delegate { AtivarModoWidget(); });
-            menu.Items.Add("Beber Copo (+250ml)", null, delegate { AdicionarAgua(250, "Copo (🥛)"); });
+            menu.Items.Add("Beber Copo (+200ml)", null, delegate { AdicionarAgua(200, "Copo (🥛)"); });
             menu.Items.Add("Testar Notificação Nativa", null, delegate { DispararLembrete(); });
             menu.Items.Add("-");
             menu.Items.Add("Sair", null, delegate { _trayIcon.Visible = false; Application.Current.Shutdown(); });
@@ -5381,9 +5381,9 @@ namespace GotinhaAgua
             };
             sp.Children.Add(desc);
 
-            Button btn250 = new Button
+            Button btn200 = new Button
             {
-                Content = "\uD83E\uDD5B Tomei um Copo (+250 ml)",
+                Content = "\uD83E\uDD5B Tomei um Copo (+200 ml)",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12.5,
                 Foreground = Brushes.White,
@@ -5393,13 +5393,13 @@ namespace GotinhaAgua
                 BorderThickness = new Thickness(0),
                 Cursor = Cursors.Hand
             };
-            AplicarPillModal(btn250, 12);
-            btn250.Click += delegate
+            AplicarPillModal(btn200, 12);
+            btn200.Click += delegate
             {
-                _main.AdicionarAgua(250, "Copo (\uD83E\uDD5B)");
+                _main.AdicionarAgua(200, "Copo (\uD83E\uDD5B)");
                 FecharSuave();
             };
-            sp.Children.Add(btn250);
+            sp.Children.Add(btn200);
 
             Button btnAdiar = new Button
             {
@@ -5563,6 +5563,299 @@ namespace GotinhaAgua
     }
 
     // ==========================================
+    // Diálogo Modal Moderno: Avisos, Mensagens e Notificações no Padrão Lumi
+    // ==========================================
+    public enum LumiDialogTipo
+    {
+        Aviso,
+        Informacao,
+        Sucesso,
+        Erro
+    }
+
+    public class LumiDialog : Window
+    {
+        public LumiDialog(string mensagem, string titulo, LumiDialogTipo tipo, bool isDark)
+        {
+            Title = string.IsNullOrEmpty(titulo) ? "Lumi - Aviso" : titulo;
+            Width = 390;
+            SizeToContent = SizeToContent.Height;
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
+            ResizeMode = ResizeMode.NoResize;
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
+            ShowInTaskbar = false;
+
+            Grid root = new Grid { Margin = new Thickness(14) };
+
+            Border card = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(1.5),
+                BorderBrush = isDark 
+                    ? (Brush)new SolidColorBrush(Color.FromArgb(140, 56, 189, 248)) 
+                    : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                Background = isDark
+                    ? (Brush)new LinearGradientBrush(Color.FromRgb(15, 23, 42), Color.FromRgb(23, 32, 54), 135.0)
+                    : new LinearGradientBrush(Color.FromRgb(240, 249, 255), Color.FromRgb(255, 255, 255), 135.0),
+                Effect = new DropShadowEffect
+                {
+                    Color = isDark ? Colors.Black : Color.FromRgb(2, 132, 199),
+                    BlurRadius = 26,
+                    ShadowDepth = 4,
+                    Opacity = isDark ? 0.6 : 0.22
+                }
+            };
+
+            StackPanel sp = new StackPanel();
+
+            // 1. Barra de Título do Diálogo
+            Grid titleBar = new Grid
+            {
+                Height = 36,
+                Margin = new Thickness(16, 8, 10, 0),
+                Background = Brushes.Transparent
+            };
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel titleLeft = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = "\uD83D\uDCA7 ",
+                FontSize = 13
+            });
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = string.IsNullOrEmpty(titulo) ? "Aviso" : titulo,
+                FontSize = 13,
+                FontWeight = FontWeights.Bold,
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(titleLeft, 0);
+            titleBar.Children.Add(titleLeft);
+
+            Button btnFechar = new Button
+            {
+                Content = "\u2715",
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Width = 28,
+                Height = 28,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FocusVisualStyle = null
+            };
+            btnFechar.MouseEnter += delegate
+            {
+                btnFechar.Foreground = isDark ? new SolidColorBrush(Color.FromRgb(248, 113, 113)) : new SolidColorBrush(Color.FromRgb(225, 29, 72));
+            };
+            btnFechar.MouseLeave += delegate
+            {
+                btnFechar.Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            };
+            btnFechar.Click += delegate { FecharComAnimacao(); };
+            Grid.SetColumn(btnFechar, 1);
+            titleBar.Children.Add(btnFechar);
+
+            titleBar.MouseDown += delegate(object s, System.Windows.Input.MouseButtonEventArgs e)
+            {
+                if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                {
+                    try { DragMove(); } catch { }
+                }
+            };
+            sp.Children.Add(titleBar);
+
+            // 2. Área Central (Badge com Ícone + Texto da Mensagem)
+            Grid corpo = new Grid { Margin = new Thickness(18, 10, 18, 16) };
+            corpo.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            corpo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            string iconEmoji;
+            Brush badgeBg;
+            Brush badgeBorder;
+
+            switch (tipo)
+            {
+                case LumiDialogTipo.Aviso:
+                    iconEmoji = "\u26A0\uFE0F"; // ⚠️
+                    badgeBg = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(69, 26, 3)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                    badgeBorder = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(120, 53, 15)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
+                    break;
+                case LumiDialogTipo.Sucesso:
+                    iconEmoji = "\uD83C\uDF89"; // 🎉
+                    badgeBg = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(6, 78, 59)) : new SolidColorBrush(Color.FromRgb(220, 252, 231));
+                    badgeBorder = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(5, 150, 105)) : new SolidColorBrush(Color.FromRgb(134, 239, 172));
+                    break;
+                default:
+                    iconEmoji = "\uD83D\uDCA7"; // 💧
+                    badgeBg = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(23, 37, 84)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                    badgeBorder = isDark ? (Brush)new SolidColorBrush(Color.FromRgb(30, 64, 175)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                    break;
+            }
+
+            Border badge = new Border
+            {
+                Width = 44,
+                Height = 44,
+                CornerRadius = new CornerRadius(22),
+                Background = badgeBg,
+                BorderBrush = badgeBorder,
+                BorderThickness = new Thickness(1.5),
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 2, 14, 0),
+                Child = new TextBlock
+                {
+                    Text = iconEmoji,
+                    FontSize = 21,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+            Grid.SetColumn(badge, 0);
+            corpo.Children.Add(badge);
+
+            TextBlock txtMsg = new TextBlock
+            {
+                Text = mensagem,
+                FontSize = 13,
+                FontWeight = FontWeights.Medium,
+                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center,
+                LineHeight = 19
+            };
+            Grid.SetColumn(txtMsg, 1);
+            corpo.Children.Add(txtMsg);
+            sp.Children.Add(corpo);
+
+            // 3. Rodapé com Botão "Entendido" estilo Pill
+            Border footer = new Border { Margin = new Thickness(18, 0, 18, 16) };
+            Button btnOk = new Button
+            {
+                Content = "Entendido",
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                Background = new LinearGradientBrush(Color.FromRgb(2, 132, 199), Color.FromRgb(56, 189, 248), 0.0),
+                BorderThickness = new Thickness(0),
+                Height = 36,
+                MinWidth = 110,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FocusVisualStyle = null,
+                IsDefault = true,
+                IsCancel = true
+            };
+            AplicarPillDialog(btnOk, 10);
+            btnOk.Click += delegate { FecharComAnimacao(); };
+            footer.Child = btnOk;
+            sp.Children.Add(footer);
+
+            card.Child = sp;
+            root.Children.Add(card);
+            Content = root;
+
+            Opacity = 0.0;
+            card.RenderTransformOrigin = new Point(0.5, 0.5);
+            ScaleTransform st = new ScaleTransform(0.93, 0.93);
+            card.RenderTransform = st;
+
+            Loaded += delegate
+            {
+                DoubleAnimation fadeIn = new DoubleAnimation(0.0, 1.0, TimeSpan.FromMilliseconds(160));
+                DoubleAnimation scaleAnim = new DoubleAnimation(0.93, 1.0, TimeSpan.FromMilliseconds(180))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
+            };
+        }
+
+        private void FecharComAnimacao()
+        {
+            DoubleAnimation fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(120));
+            fadeOut.Completed += delegate { Close(); };
+            BeginAnimation(UIElement.OpacityProperty, fadeOut);
+        }
+
+        private static void AplicarPillDialog(Button btn, double cornerRadius)
+        {
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(cornerRadius));
+            borderFactory.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.BorderThicknessProperty, new Binding("BorderThickness") { RelativeSource = RelativeSource.TemplatedParent });
+            borderFactory.SetBinding(Border.PaddingProperty, new Binding("Padding") { RelativeSource = RelativeSource.TemplatedParent });
+
+            FrameworkElementFactory presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+            presenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            borderFactory.AppendChild(presenter);
+
+            template.VisualTree = borderFactory;
+            btn.Template = template;
+        }
+
+        public static void MostrarAviso(Window owner, string mensagem, string titulo, bool? modoEscuro)
+        {
+            Mostrar(owner, mensagem, titulo, LumiDialogTipo.Aviso, modoEscuro);
+        }
+
+        public static void MostrarSucesso(Window owner, string mensagem, string titulo, bool? modoEscuro)
+        {
+            Mostrar(owner, mensagem, titulo, LumiDialogTipo.Sucesso, modoEscuro);
+        }
+
+        public static void Mostrar(Window owner, string mensagem, string titulo, LumiDialogTipo tipo, bool? modoEscuro)
+        {
+            bool isDark = false;
+            if (modoEscuro.HasValue)
+            {
+                isDark = modoEscuro.Value;
+            }
+            else if (owner is MainWindow)
+            {
+                MainWindow mw = (MainWindow)owner;
+                isDark = (mw._dados != null && mw._dados.ModoEscuro);
+            }
+
+            LumiDialog dlg = new LumiDialog(mensagem, titulo, tipo, isDark);
+            if (owner != null && owner.IsVisible)
+            {
+                dlg.Owner = owner;
+                dlg.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            }
+            else
+            {
+                dlg.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            try
+            {
+                dlg.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText("error.log", ex.ToString()); } catch { }
+            }
+        }
+    }
+
+    // ==========================================
     // Janela Modal: Configurações com Toggle Nativo & Suporte a Modo Escuro
     // ==========================================
     public class ConfigWindow : Window
@@ -5573,11 +5866,15 @@ namespace GotinhaAgua
             MainWindow.AplicarEstiloScrollBar(this, escuro);
 
             Title = "Configura\u00E7\u00F5es da Lumi \u2699\uFE0F";
-            Width = 420;
-            Height = Math.Min(520, SystemParameters.WorkArea.Height - 40);
+            Width = 440;
+            Height = Math.Min(560, SystemParameters.WorkArea.Height - 40);
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
             ResizeMode = ResizeMode.NoResize;
-            Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
             Opacity = 0;
 
             try
@@ -5706,14 +6003,15 @@ namespace GotinhaAgua
             btnCalcular.Click += delegate
             {
                 double peso;
-                if (double.TryParse(txtPeso.Text, out peso) && peso > 20)
+                string pesoStr = txtPeso.Text != null ? txtPeso.Text.Trim().Replace(',', '.') : "";
+                if (double.TryParse(pesoStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out peso) && peso >= 20 && peso <= 300)
                 {
                     int recomendacao = (int)Math.Round(peso * 35);
                     txtMeta.Text = recomendacao.ToString();
                 }
                 else
                 {
-                    MessageBox.Show("Digite um peso v\u00E1lido em kg (ex: 65).", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    LumiDialog.MostrarAviso(this, "Por favor, digite um peso v\u00E1lido em kg (ex: 65) para calcular a sua meta recomendada.", "Aviso de Peso \u2696\uFE0F", escuro);
                 }
             };
             Grid.SetColumn(btnCalcular, 1);
@@ -5871,16 +6169,117 @@ namespace GotinhaAgua
                 }
                 else
                 {
-                    MessageBox.Show("Por favor informe uma meta di\u00E1ria v\u00E1lida entre 500 ml e 8000 ml.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    LumiDialog.MostrarAviso(this, "Por favor, informe uma meta di\u00E1ria v\u00E1lida entre 500 ml e 8000 ml.", "Meta Inv\u00E1lida \uD83D\uDCA7", escuro);
                 }
             };
             sp.Children.Add(btnSalvar);
 
             sv.Content = sp;
-            Content = sv;
+
+            Grid root = new Grid { Margin = new Thickness(14) };
+
+            Border cardPrincipal = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(1.5),
+                BorderBrush = escuro
+                    ? (Brush)new SolidColorBrush(Color.FromArgb(140, 56, 189, 248))
+                    : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                Background = escuro
+                    ? (Brush)new SolidColorBrush(Color.FromRgb(15, 23, 42))
+                    : new SolidColorBrush(Color.FromRgb(248, 250, 252)),
+                Effect = new DropShadowEffect
+                {
+                    Color = escuro ? Colors.Black : Color.FromRgb(2, 132, 199),
+                    BlurRadius = 28,
+                    ShadowDepth = 4,
+                    Opacity = escuro ? 0.6 : 0.22
+                }
+            };
+
+            Grid layoutInterno = new Grid();
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            Grid titleBar = new Grid
+            {
+                Height = 38,
+                Margin = new Thickness(18, 10, 12, 0),
+                Background = Brushes.Transparent
+            };
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel titleLeft = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = "\u2699\uFE0F ",
+                FontSize = 13
+            });
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = "Configura\u00E7\u00F5es da Lumi",
+                FontSize = 13,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(titleLeft, 0);
+            titleBar.Children.Add(titleLeft);
+
+            Button btnFecharTopo = new Button
+            {
+                Content = "\u2715",
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Width = 28,
+                Height = 28,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FocusVisualStyle = null
+            };
+            btnFecharTopo.MouseEnter += delegate
+            {
+                btnFecharTopo.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(248, 113, 113)) : new SolidColorBrush(Color.FromRgb(225, 29, 72));
+            };
+            btnFecharTopo.MouseLeave += delegate
+            {
+                btnFecharTopo.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            };
+            btnFecharTopo.Click += delegate
+            {
+                DoubleAnimation fo = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
+                fo.Completed += delegate { Close(); };
+                BeginAnimation(UIElement.OpacityProperty, fo);
+            };
+            Grid.SetColumn(btnFecharTopo, 1);
+            titleBar.Children.Add(btnFecharTopo);
+
+            titleBar.MouseDown += delegate(object s, System.Windows.Input.MouseButtonEventArgs e)
+            {
+                if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                {
+                    try { DragMove(); } catch { }
+                }
+            };
+            Grid.SetRow(titleBar, 0);
+            layoutInterno.Children.Add(titleBar);
+
+            Grid.SetRow(sv, 1);
+            layoutInterno.Children.Add(sv);
+
+            cardPrincipal.Child = layoutInterno;
+            root.Children.Add(cardPrincipal);
+            Content = root;
         }
 
-        private static void AplicarPillModal(Button btn, double cornerRadius)
+        public static void AplicarPillModal(Button btn, double cornerRadius)
         {
             ControlTemplate template = new ControlTemplate(typeof(Button));
             FrameworkElementFactory borderFactory = new FrameworkElementFactory(typeof(Border));

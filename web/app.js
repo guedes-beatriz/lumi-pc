@@ -415,7 +415,7 @@
 
       // Ações do Modal de Alerta
       this.dom.btnAlertDrink250.addEventListener('click', () => {
-        this.addWater(250, 'Copo (🥛)');
+        this.addWater(200, 'Copo (🥛)');
         this.closeReminderAlert();
       });
 
