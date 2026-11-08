@@ -1,20 +1,21 @@
 =====================================================
-GOTINHA - LEMBRETE DE ÁGUA (WINDOWS)
+LUMI - LEMBRETE DE ÁGUA (WINDOWS)
 =====================================================
 
-Oie! Que bom ter você testando o Gotinha!
+Oie! Que bom ter você testando a Lumi!
 
 COMO INICIAR:
-1. Extraia todos os arquivos desta pasta zip (Gotinha.exe, mascote.png, app.ico).
-2. Dê dois cliques em "Gotinha.exe".
-3. Pronto! O aplicativo vai abrir com a tela de boas-vindas da Gotinha.
+1. Extraia todos os arquivos desta pasta zip (Lumi.exe, mascote.png, app.ico).
+2. Dê dois cliques em "Lumi.exe".
+3. Pronto! O aplicativo vai abrir com a tela de boas-vindas da Lumi.
 
 DICA PARA O DIA A DIA:
 - Para criar um atalho na sua Área de Trabalho:
-  Clique com o botão direito em "Gotinha.exe" -> "Enviar para" -> "Área de trabalho (criar atalho)".
+  Clique com o botão direito em "Lumi.exe" -> "Enviar para" -> "Área de trabalho (criar atalho)".
 
 RECURSOS PRINCIPAIS:
-- Clique na Gotinha para receber frases carinhosas e vê-la pular de alegria.
+- Clique na Lumi para receber frases carinhosas e vê-la pular de alegria.
+- Modo Widget Flutuante horizontal para fixar a Lumi no canto da tela enquanto você trabalha ou estuda.
 - Registre goles com os botões coloridos (+150ml, +250ml, +350ml, +500ml ou digite seu valor).
 - Temporizador Zen com contagem regressiva para te lembrar de beber água.
 - Veja seu histórico do dia e o gráfico semanal com metas atingidas.

@@ -169,7 +169,7 @@ namespace GotinhaAgua
     // ==========================================
     public static class ShellShortcutHelper
     {
-        public const string APP_ID = "Gotinha.Agua.App";
+        public const string APP_ID = "Lumi.Agua.App";
 
         [DllImport("shell32.dll", SetLastError = true)]
         public static extern int SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
@@ -249,7 +249,7 @@ namespace GotinhaAgua
             try
             {
                 string programsPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
-                string shortcutPath = System.IO.Path.Combine(programsPath, "Gotinha.lnk");
+                string shortcutPath = System.IO.Path.Combine(programsPath, "Lumi.lnk");
                 string targetExe = Process.GetCurrentProcess().MainModule.FileName;
                 string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
 
@@ -257,7 +257,7 @@ namespace GotinhaAgua
                 IShellLinkW shellLink = (IShellLinkW)link;
                 shellLink.SetPath(targetExe);
                 shellLink.SetWorkingDirectory(System.IO.Path.GetDirectoryName(targetExe));
-                shellLink.SetDescription("Gotinha - Lembrete de Ãgua");
+                shellLink.SetDescription("Lumi - Lembrete de Ãgua");
                 if (System.IO.File.Exists(iconPath))
                 {
                     shellLink.SetIconLocation(iconPath, 0);
@@ -682,7 +682,7 @@ namespace GotinhaAgua
 
         private void ConfigurarJanela()
         {
-            Title = "Gotinha - Lembrete de \u00C1gua \uD83D\uDCA7";
+            Title = "Lumi - Lembrete de \u00C1gua \uD83D\uDCA7";
             Width = 520;
             Height = 840;
             MinWidth = 480;
@@ -809,7 +809,7 @@ namespace GotinhaAgua
 
             _txtBrandTitle = new TextBlock
             {
-                Text = "Gotinha",
+                Text = "Lumi",
                 FontWeight = FontWeights.ExtraBold,
                 FontSize = 13.5,
                 Foreground = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
@@ -915,7 +915,7 @@ namespace GotinhaAgua
                 if (_dados.NotificacoesAtivadas)
                 {
                     NotificadorWindows.EnviarNotificacao(
-                        "Gotinha continua rodando \uD83D\uDCA7",
+                        "Lumi continua rodando \uD83D\uDCA7",
                         "Vou continuar te lembrando de beber \u00E1gua enquanto voc\u00EA usa o computador!",
                         _trayIcon
                     );
@@ -1278,7 +1278,7 @@ namespace GotinhaAgua
             Grid.SetColumn(titleStack, 0);
             topHist.Children.Add(titleStack);
 
-            _btnVoltarHistorico = CriarBotaoPill("\u2190 Voltar \u00E0 Gotinha", true, delegate { AlternarVisualizacaoHistorico(); });
+            _btnVoltarHistorico = CriarBotaoPill("\u2190 Voltar \u00E0 Lumi", true, delegate { AlternarVisualizacaoHistorico(); });
             _btnVoltarHistorico.Padding = new Thickness(12, 6, 12, 6);
             Grid.SetColumn(_btnVoltarHistorico, 1);
             topHist.Children.Add(_btnVoltarHistorico);
@@ -1305,8 +1305,8 @@ namespace GotinhaAgua
 
             if (_btnToggleHistorico != null)
             {
-                _btnToggleHistorico.Content = mostrandoHistorico ? "\uD83D\uDCCA Ver Hist\u00F3rico" : "\uD83D\uDCA7 Ver Gotinha";
-                _btnToggleHistorico.ToolTip = mostrandoHistorico ? "Ver Hist\u00F3rico e Estat\u00EDsticas" : "Voltar para a Gotinha";
+                _btnToggleHistorico.Content = mostrandoHistorico ? "\uD83D\uDCCA Ver Hist\u00F3rico" : "\uD83D\uDCA7 Ver Lumi";
+                _btnToggleHistorico.ToolTip = mostrandoHistorico ? "Ver Hist\u00F3rico e Estat\u00EDsticas" : "Voltar para a Lumi";
             }
 
             if (!mostrandoHistorico)
@@ -2869,7 +2869,7 @@ namespace GotinhaAgua
 
                 spEmpty.Children.Add(new TextBlock
                 {
-                    Text = "Que tal tomar seu primeiro copo de \u00E1gua agora mesmo?\nSeu corpo e a Gotinha agradecem! \u2728",
+                    Text = "Que tal tomar seu primeiro copo de \u00E1gua agora mesmo?\nSeu corpo e a Lumi agradecem! \u2728",
                     FontSize = 11,
                     Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                     TextAlignment = TextAlignment.Center,
@@ -3470,7 +3470,7 @@ namespace GotinhaAgua
             if (_dados.NotificacoesAtivadas)
             {
                 NotificadorWindows.EnviarNotificacao(
-                    "Gotinha - Hora de Beber \u00C1gua! \uD83D\uDCA7",
+                    "Lumi - Hora de Beber \u00C1gua! \uD83D\uDCA7",
                     "Fa\u00E7a uma pausa r\u00E1pida para um gole d'\u00E1gua agora mesmo e cuide do seu corpo!",
                     _trayIcon
                 );
@@ -3529,7 +3529,7 @@ namespace GotinhaAgua
         private void ConfigurarBandejaSistema()
         {
             _trayIcon = new Forms.NotifyIcon();
-            _trayIcon.Text = "Gotinha - Lembrete de Água 💧";
+            _trayIcon.Text = "Lumi - Lembrete de \u00C1gua \uD83D\uDCA7";
 
             string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
             if (File.Exists(icoPath))
@@ -3551,7 +3551,7 @@ namespace GotinhaAgua
             _trayIcon.Visible = true;
 
             Forms.ContextMenuStrip menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Abrir Gotinha 💧", null, delegate { SairModoWidget(); });
+            menu.Items.Add("Abrir Lumi \uD83D\uDCA7", null, delegate { SairModoWidget(); });
             menu.Items.Add("Modo Widget (Canto da Tela) 📌", null, delegate { AtivarModoWidget(); });
             menu.Items.Add("Beber Copo (+250ml)", null, delegate { AdicionarAgua(250, "Copo (🥛)"); });
             menu.Items.Add("Testar Notificação Nativa", null, delegate { DispararLembrete(); });
@@ -3611,7 +3611,7 @@ namespace GotinhaAgua
             }
             if (_dados.SomAtivado) GeradorDeSom.TocarGota(); ExecutarAnimacaoPuloGotinha();
             ExecutarAnimacaoPuloGotinha();
-            ExibirSnackBar("Gotinha ficou muito feliz com o seu carinho! \uD83D\uDCA7\u2728");
+            ExibirSnackBar("Lumi ficou muito feliz com o seu carinho! \uD83D\uDCA7\u2728");
         }
 
         private void AtualizarVisualBtnSom()
@@ -4287,7 +4287,7 @@ namespace GotinhaAgua
         {
             _main = main;
 
-            Title = "Gotinha Widget \uD83D\uDCA7";
+            Title = "Lumi Widget \uD83D\uDCA7";
             Width = 396;
             Height = 142;
             WindowStyle = WindowStyle.None;
@@ -4661,7 +4661,7 @@ namespace GotinhaAgua
                 Width = 84,
                 Height = 82,
                 Cursor = Cursors.Hand,
-                ToolTip = "Clique na Gotinha para receber um carinho (ou duplo clique no card para expandir)"
+                ToolTip = "Clique na Lumi para receber um carinho (ou duplo clique no card para expandir)"
             };
 
             string mascotPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
@@ -5367,7 +5367,7 @@ namespace GotinhaAgua
         {
             bool escuro = (dados != null && dados.ModoEscuro);
 
-            Title = "Configura\u00E7\u00F5es da Gotinha \u2699\uFE0F";
+            Title = "Configura\u00E7\u00F5es da Lumi \u2699\uFE0F";
             Width = 420;
             Height = 520;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;

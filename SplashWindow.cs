@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -25,7 +25,7 @@ namespace GotinhaAgua
 
         public SplashWindow()
         {
-            Title = "Gotinha - Bem-vindo!";
+            Title = "Lumi - Bem-vindo!";
             Width = 470;
             Height = 650;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -400,7 +400,7 @@ namespace GotinhaAgua
             // Título "Gotinha" com tipografia arredondada, degradê marcante e sombra
             TextBlock txtTitulo = new TextBlock
             {
-                Text = "Gotinha",
+                Text = "Lumi",
                 FontFamily = new FontFamily("Segoe UI, Arial Rounded MT Bold, sans-serif"),
                 FontSize = 38,
                 FontWeight = FontWeights.Bold,

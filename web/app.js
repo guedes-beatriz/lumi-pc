@@ -794,12 +794,12 @@
       modal.classList.remove('hidden', 'closing');
 
       // 3. Piscar o título na aba / barra de tarefas
-      this.startFlashingTitle('🔔 HORA DA ÁGUA! 💧 Gotinha');
+      this.startFlashingTitle('🔔 HORA DA ÁGUA! 💧 Lumi');
 
       // 4. Notificação do Windows (Web Notification)
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification('Gotinha: Hora de Beber Água! 💧', {
+          new Notification('Lumi: Hora de Beber Água! 💧', {
             body: 'Que tal uma pausa rápida para um copo de água fresquinha agora?',
             icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💧</text></svg>',
             silent: !this.config.soundEnabled,

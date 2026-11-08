@@ -1,8 +1,8 @@
-# Gotinha - Lembrete de Água
+# Lumi - Lembrete de Água
 
 <div align="center">
 
-<img src="mascote.png" width="165" alt="Mascote Gotinha">
+<img src="mascote.png" width="165" alt="Mascote Lumi">
 
 <br>
 
@@ -22,27 +22,32 @@
 
 ## Como Baixar e Testar (Para Amigos)
 
-Não é necessário instalar programas pesados nem ter conhecimentos técnicos para usar a Gotinha.
+Não é necessário instalar programas pesados nem ter conhecimentos técnicos para usar a Lumi.
 
 ### Opção 1: Baixar o Pacote Portátil Pronto (Recomendado)
-1. Baixe o arquivo zip direto aqui pelo GitHub: **[`dist/Gotinha-v2.0-Portable.zip`](dist/Gotinha-v2.0-Portable.zip)** (ou clique no botão verde **Code** ➔ **Download ZIP** no topo do repositório).
+1. Baixe o arquivo zip direto aqui pelo GitHub: **[`dist/Lumi-v2.0-Portable.zip`](dist/Lumi-v2.0-Portable.zip)** (ou clique no botão verde **Code** ➔ **Download ZIP** no topo do repositório).
 2. Extraia o arquivo zip em qualquer pasta do seu computador (como sua Área de Trabalho ou Documentos).
-3. Dê **dois cliques em `Gotinha.exe`** e pronto! O app abrirá com uma animação de boas-vindas.
-4. **Dica:** Clique com o botão direito em `Gotinha.exe` ➔ *Enviar para* ➔ *Área de trabalho (criar atalho)* para abrir com 1 clique sempre que ligar o PC.
+3. Dê **dois cliques em `Lumi.exe`** e pronto! O app abrirá com uma animação de boas-vindas.
+4. **Dica:** Clique com o botão direito em `Lumi.exe` ➔ *Enviar para* ➔ *Área de trabalho (criar atalho)* para abrir com 1 clique sempre que ligar o PC.
 
 ### Opção 2: Compilar do Código-Fonte
 Se você clonou o repositório e deseja compilar o executável:
 - Dê um duplo clique em **`compilar.bat`**.
-- O Windows usará o compilador nativo C# (`csc.exe`) e gerará o `Gotinha.exe` em menos de 2 segundos.
+- O Windows usará o compilador nativo C# (`csc.exe`) e gerará o `Lumi.exe` em menos de 2 segundos.
 
 ---
 
 ## Principais Recursos
 
 ### Mascote Interativa e Expressiva
-- **Animações fluidas:** A Gotinha pisca, flutua suavemente e pula a cada gole registrado.
-- **Frases motivacionais:** Clique na Gotinha para receber lembretes carinhosos e motivacionais.
-- **Celebração:** Ao atingir 100% da sua meta diária, a Gotinha ganha uma coroa dourada e comemora com você.
+- **Animações fluidas:** A Lumi pisca, flutua suavemente e pula a cada gole registrado.
+- **Frases motivacionais:** Clique na Lumi para receber lembretes carinhosos e motivacionais.
+- **Celebração:** Ao atingir 100% da sua meta diária, a Lumi ganha uma coroa dourada e comemora com você.
+
+### Modo Widget Flutuante (Canto da Tela)
+- **Layout horizontal compacto:** Coloque a Lumi no canto da tela enquanto trabalha, estuda ou joga.
+- **Sempre no Topo (`📌`):** Opção para manter o widget sempre visível sobre outras janelas e arrastar livremente com alinhamento magnético nas bordas.
+- **Registro rápido em `ml`:** Digite quantos `ml` você tomou diretamente no widget e pressione `Enter` ou clique em `+ Beber`.
 
 ### Cards de Bebidas
 - Cores pastéis e identificação rápida:
@@ -87,7 +92,7 @@ Se você clonou o repositório e deseja compilar o executável:
 | <kbd>Espaço</kbd> | Registra um Copo de água (+250 ml) |
 | <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Desfaz o último registro de água |
 | <kbd>Ctrl</kbd> + <kbd>D</kbd> | Alterna entre Modo Claro e Modo Escuro |
-| <kbd>Ctrl</kbd> + <kbd>H</kbd> | Alterna entre a tela da Gotinha e o Histórico |
+| <kbd>Ctrl</kbd> + <kbd>H</kbd> | Alterna entre a tela da Lumi e o Histórico |
 | <kbd>Ctrl</kbd> + <kbd>P</kbd> | Pausa ou retoma o temporizador de lembretes |
 | <kbd>Esc</kbd> | Minimiza o aplicativo para a bandeja do sistema |
 
@@ -100,21 +105,21 @@ A pasta do projeto é organizada de maneira limpa e modular:
 ```text
 Água/
 │
-├── Gotinha.exe             # Aplicativo compilado pronto para rodar (Windows)
-├── GotinhaApp.cs           # Código-fonte C# da aplicação principal (WPF)
+├── Lumi.exe                # Aplicativo compilado pronto para rodar (Windows)
+├── LumiApp.cs              # Código-fonte C# da aplicação principal e Widget (WPF)
 ├── SplashWindow.cs         # Código-fonte da tela de abertura animada
 ├── compilar.bat            # Script em lote para compilar o app em 1 clique
-├── mascote.png             # Mascote Gotinha oficial em alta resolução
+├── mascote.png             # Mascote Lumi oficial em alta resolução
 ├── app.ico                 # Ícone oficial do aplicativo (.ico)
 ├── dados_agua.json         # Banco de dados local em formato JSON
 ├── README.md               # Documentação do projeto
 ├── .gitignore              # Regras de arquivos ignorados pelo Git
 │
 ├── dist/                   # Pacotes para distribuição
-│   ├── Gotinha-v2.0-Portable.zip  # Pacote portátil pronto para envio
+│   ├── Lumi-v2.0-Portable.zip     # Pacote portátil pronto para envio
 │   └── LEIA-ME.txt                # Instruções rápidas de uso
 │
-├── web/                    # Versão Web interativa do Gotinha
+├── web/                    # Versão Web interativa da Lumi
 │   ├── index.html
 │   ├── style.css
 │   └── app.js

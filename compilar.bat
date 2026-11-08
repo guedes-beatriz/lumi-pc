@@ -1,7 +1,7 @@
 @echo off
-title Compilador Gotinha
+title Compilador Lumi
 echo ==============================================
-echo       Compilador do App Gotinha (Windows)
+echo         Compilador do App Lumi (Windows)
 echo ==============================================
 echo.
 echo Compilando codigo-fonte em C# para Windows...
@@ -18,15 +18,15 @@ if not exist "%CSC_PATH%" (
     exit /b 1
 )
 
-"%CSC_PATH%" /target:winexe /out:Gotinha.exe /win32icon:app.ico /codepage:65001 /reference:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll","System.Xaml.dll","System.Web.Extensions.dll","System.Windows.Forms.dll","System.Drawing.dll" GotinhaApp.cs SplashWindow.cs
+"%CSC_PATH%" /target:winexe /out:Lumi.exe /win32icon:app.ico /codepage:65001 /reference:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll","C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll","System.Xaml.dll","System.Web.Extensions.dll","System.Windows.Forms.dll","System.Drawing.dll" LumiApp.cs SplashWindow.cs
 
 if %errorlevel% equ 0 (
     echo.
     echo ==============================================
-    echo  [SUCESSO] Gotinha.exe gerado com sucesso!
+    echo  [SUCESSO] Lumi.exe gerado com sucesso!
     echo ==============================================
     echo.
-    echo Voce ja pode clicar duas vezes em Gotinha.exe para iniciar!
+    echo Voce ja pode clicar duas vezes em Lumi.exe para iniciar!
 ) else (
     echo.
     echo [ERRO] Ocorreu uma falha durante a compilacao.
