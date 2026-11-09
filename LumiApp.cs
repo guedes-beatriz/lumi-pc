@@ -620,6 +620,7 @@ namespace GotinhaAgua
         private TextBlock _txtTituloHistorico;
         private TextBlock _txtSubtituloHistorico;
         private Button _btnVoltarHistorico;
+        private Button _btnExportarRelatorio;
         private TextBlock _txtStatsHojeVal;
         private TextBlock _txtStatsHojeSub;
         private TextBlock _txtStatsMediaVal;
@@ -1382,10 +1383,20 @@ namespace GotinhaAgua
             Grid.SetColumn(titleStack, 0);
             topHist.Children.Add(titleStack);
 
+            StackPanel topActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+
+            _btnExportarRelatorio = CriarBotaoPill("\uD83D\uDCCB Relat\u00F3rio de Sa\u00FAde", true, delegate { AbrirJanelaRelatorioSaude(); });
+            _btnExportarRelatorio.Padding = new Thickness(10, 6, 10, 6);
+            _btnExportarRelatorio.ToolTip = "Exportar Relat\u00F3rio Completo de Sa\u00FAde e Hidrata\u00E7\u00E3o (TXT / CSV)";
+            _btnExportarRelatorio.Margin = new Thickness(0, 0, 6, 0);
+            topActions.Children.Add(_btnExportarRelatorio);
+
             _btnVoltarHistorico = CriarBotaoPill("\u2190 Voltar \u00E0 Lumi", true, delegate { AlternarVisualizacaoHistorico(); });
             _btnVoltarHistorico.Padding = new Thickness(12, 6, 12, 6);
-            Grid.SetColumn(_btnVoltarHistorico, 1);
-            topHist.Children.Add(_btnVoltarHistorico);
+            topActions.Children.Add(_btnVoltarHistorico);
+
+            Grid.SetColumn(topActions, 1);
+            topHist.Children.Add(topActions);
 
             Grid.SetRow(topHist, 0);
             gridHist.Children.Add(topHist);
@@ -3822,6 +3833,13 @@ namespace GotinhaAgua
             cfg.ShowDialog();
         }
 
+        private void AbrirJanelaRelatorioSaude()
+        {
+            RelatorioSaudeWindow rw = new RelatorioSaudeWindow(_dados);
+            rw.Owner = this;
+            rw.ShowDialog();
+        }
+
         // ==========================================
         // Persistência em JSON e Estados
         // ==========================================
@@ -4274,6 +4292,12 @@ namespace GotinhaAgua
                 _btnVoltarHistorico.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
                 _btnVoltarHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
                 _btnVoltarHistorico.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            }
+            if (_btnExportarRelatorio != null)
+            {
+                _btnExportarRelatorio.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                _btnExportarRelatorio.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                _btnExportarRelatorio.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
             if (_pillsSegmentedContainer != null)
             {
@@ -5924,6 +5948,1088 @@ namespace GotinhaAgua
     }
 
     // ==========================================
+    // Janela Modal: Relatório de Saúde & Exportação
+    // ==========================================
+    public class RelatorioSaudeWindow : Window
+    {
+        public RelatorioSaudeWindow(HistoricoApp dados)
+        {
+            bool escuro = (dados != null && dados.ModoEscuro);
+            MainWindow.AplicarEstiloScrollBar(this, escuro);
+
+            Title = "Relat\u00F3rio de Sa\u00FAde & Hidrata\u00E7\u00E3o \uD83D\uDCCA";
+            Width = 600;
+            Height = Math.Min(660, SystemParameters.WorkArea.Height - 30);
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
+            ResizeMode = ResizeMode.NoResize;
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
+            Opacity = 0;
+
+            Icon = IconeHelper.ObterIconeJanela();
+
+            Loaded += delegate
+            {
+                DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                BeginAnimation(UIElement.OpacityProperty, fadeIn);
+            };
+
+            Brush cardBg = escuro
+                ? (Brush)new SolidColorBrush(Color.FromRgb(15, 23, 42))
+                : new SolidColorBrush(Color.FromRgb(248, 250, 252));
+            Brush cardBorder = escuro
+                ? (Brush)new SolidColorBrush(Color.FromArgb(140, 56, 189, 248))
+                : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+            Brush miniCardBg = escuro
+                ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59))
+                : Brushes.White;
+            Brush miniCardBorder = escuro
+                ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85))
+                : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+            Brush txtPreto = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+            Brush txtMuted = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            Brush txtDestaque = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+
+            Grid root = new Grid { Margin = new Thickness(14) };
+
+            Border cardPrincipal = new Border
+            {
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(1.5),
+                BorderBrush = cardBorder,
+                Background = cardBg,
+                Effect = new DropShadowEffect
+                {
+                    Color = escuro ? Colors.Black : Color.FromRgb(2, 132, 199),
+                    BlurRadius = 28,
+                    ShadowDepth = 4,
+                    Opacity = escuro ? 0.6 : 0.22
+                }
+            };
+
+            Grid layoutInterno = new Grid();
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 0: Title Bar
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 1: Mini stats cards
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // 2: Text preview
+            layoutInterno.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 3: Action Buttons bar
+
+            // 0: Title Bar
+            Grid titleBar = new Grid
+            {
+                Height = 40,
+                Margin = new Thickness(18, 10, 12, 0),
+                Background = Brushes.Transparent
+            };
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel titleLeft = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = "\uD83D\uDCCA ",
+                FontSize = 14
+            });
+            titleLeft.Children.Add(new TextBlock
+            {
+                Text = "Relat\u00F3rio de Sa\u00FAde & Hidrata\u00E7\u00E3o",
+                FontSize = 13.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? Brushes.White : txtDestaque,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(titleLeft, 0);
+            titleBar.Children.Add(titleLeft);
+
+            Button btnFecharTopo = new Button
+            {
+                Content = "\u2715",
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Width = 28,
+                Height = 28,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = escuro ? Brushes.White : txtMuted,
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null
+            };
+            btnFecharTopo.MouseEnter += delegate
+            {
+                btnFecharTopo.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(248, 113, 113)) : new SolidColorBrush(Color.FromRgb(225, 29, 72));
+            };
+            btnFecharTopo.MouseLeave += delegate
+            {
+                btnFecharTopo.Foreground = escuro ? Brushes.White : txtMuted;
+            };
+            btnFecharTopo.Click += delegate
+            {
+                DoubleAnimation fo = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
+                fo.Completed += delegate { Close(); };
+                BeginAnimation(UIElement.OpacityProperty, fo);
+            };
+            Grid.SetColumn(btnFecharTopo, 1);
+            titleBar.Children.Add(btnFecharTopo);
+
+            titleBar.MouseDown += delegate(object s, MouseButtonEventArgs e)
+            {
+                if (e.ChangedButton == MouseButton.Left)
+                {
+                    try { DragMove(); } catch { }
+                }
+            };
+            Grid.SetRow(titleBar, 0);
+            layoutInterno.Children.Add(titleBar);
+
+            // 1: Mini stats cards row
+            int totalDias = (dados != null && dados.Dias != null && dados.Dias.Count > 0) ? dados.Dias.Count : 1;
+            int somaTotal = 0;
+            int metasBatidas = 0;
+            if (dados != null && dados.Dias != null)
+            {
+                foreach (DadosDia d in dados.Dias)
+                {
+                    somaTotal += d.TotalMl;
+                    if (d.TotalMl >= dados.MetaDiaria) metasBatidas++;
+                }
+            }
+            double mediaDiaria = (double)somaTotal / totalDias;
+            int pctMetas = (int)Math.Round(((double)metasBatidas / totalDias) * 100.0);
+            int streak = CalcularStreakAtual(dados);
+
+            Grid miniStatsGrid = new Grid { Margin = new Thickness(18, 6, 18, 10) };
+            miniStatsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            miniStatsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            miniStatsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            miniStatsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            miniStatsGrid.Children.Add(CriarMiniStatCard(miniCardBg, miniCardBorder, txtPreto, txtMuted, "\uD83D\uDCA7 Total", (somaTotal / 1000.0).ToString("0.1") + " L", totalDias + " dias", 0));
+            miniStatsGrid.Children.Add(CriarMiniStatCard(miniCardBg, miniCardBorder, txtPreto, txtMuted, "\uD83D\uDCC8 M\u00E9dia", (mediaDiaria >= 1000 ? (mediaDiaria / 1000.0).ToString("0.1") + " L" : Math.Round(mediaDiaria) + " ml"), "por dia", 1));
+            miniStatsGrid.Children.Add(CriarMiniStatCard(miniCardBg, miniCardBorder, txtPreto, txtMuted, "\uD83C\uDFC6 Metas", pctMetas + "%", metasBatidas + " de " + totalDias, 2));
+            miniStatsGrid.Children.Add(CriarMiniStatCard(miniCardBg, miniCardBorder, txtPreto, txtMuted, "\uD83D\uDD25 Sequ\u00EAncia", streak + " d", "consecutivos", 3));
+
+            Grid.SetRow(miniStatsGrid, 1);
+            layoutInterno.Children.Add(miniStatsGrid);
+
+            // 2: Área Visual do Documento / Relatório de Saúde (estilo editorial limpo, humanizado)
+            string relatorioTxt = GerarTextoRelatorio(dados);
+            string relatorioCsv = GerarCsvRelatorio(dados);
+
+            ScrollViewer scroll = new ScrollViewer
+            {
+                Margin = new Thickness(18, 0, 18, 12),
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                FocusVisualStyle = null
+            };
+
+            StackPanel docPanel = new StackPanel();
+
+            DadosDia melhorDia = null;
+            if (dados != null && dados.Dias != null)
+            {
+                foreach (DadosDia d in dados.Dias)
+                {
+                    if (melhorDia == null || d.TotalMl > melhorDia.TotalMl) melhorDia = d;
+                }
+            }
+
+            // --- Card 1: Diagnóstico de Bem-Estar da Lumi ---
+            Border cardDiag = new Border
+            {
+                Background = escuro
+                    ? (mediaDiaria >= dados.MetaDiaria
+                        ? (Brush)new SolidColorBrush(Color.FromArgb(50, 16, 185, 129))
+                        : (mediaDiaria >= dados.MetaDiaria * 0.75
+                            ? (Brush)new SolidColorBrush(Color.FromArgb(50, 56, 189, 248))
+                            : (Brush)new SolidColorBrush(Color.FromArgb(50, 245, 158, 11))))
+                    : (mediaDiaria >= dados.MetaDiaria
+                        ? (Brush)new SolidColorBrush(Color.FromRgb(240, 253, 244))
+                        : (mediaDiaria >= dados.MetaDiaria * 0.75
+                            ? (Brush)new SolidColorBrush(Color.FromRgb(240, 249, 255))
+                            : (Brush)new SolidColorBrush(Color.FromRgb(254, 252, 232)))),
+                BorderBrush = escuro
+                    ? (mediaDiaria >= dados.MetaDiaria
+                        ? (Brush)new SolidColorBrush(Color.FromArgb(140, 52, 211, 153))
+                        : (mediaDiaria >= dados.MetaDiaria * 0.75
+                            ? (Brush)new SolidColorBrush(Color.FromArgb(140, 56, 189, 248))
+                            : (Brush)new SolidColorBrush(Color.FromArgb(140, 251, 191, 36))))
+                    : (mediaDiaria >= dados.MetaDiaria
+                        ? (Brush)new SolidColorBrush(Color.FromRgb(187, 247, 208))
+                        : (mediaDiaria >= dados.MetaDiaria * 0.75
+                            ? (Brush)new SolidColorBrush(Color.FromRgb(186, 230, 253))
+                            : (Brush)new SolidColorBrush(Color.FromRgb(254, 240, 138)))),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(16, 13, 16, 13),
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+
+            StackPanel diagStack = new StackPanel();
+
+            Grid diagHeader = new Grid();
+            diagHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            diagHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel diagTitleLeft = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            diagTitleLeft.Children.Add(new TextBlock
+            {
+                Text = "\u2728 ",
+                FontSize = 13.5
+            });
+            diagTitleLeft.Children.Add(new TextBlock
+            {
+                Text = "Diagn\u00F3stico de Bem-Estar da Lumi",
+                FontSize = 12.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? Brushes.White : txtPreto,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(diagTitleLeft, 0);
+            diagHeader.Children.Add(diagTitleLeft);
+
+            string badgeTexto;
+            Brush badgeBg;
+            Brush badgeBorder;
+            Brush badgeFg;
+
+            if (mediaDiaria >= dados.MetaDiaria)
+            {
+                badgeTexto = "\u2713 Excelente";
+                badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(90, 6, 95, 70)) : new SolidColorBrush(Color.FromRgb(220, 252, 231));
+                badgeBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(134, 239, 172));
+                badgeFg = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(21, 128, 61));
+            }
+            else if (mediaDiaria >= dados.MetaDiaria * 0.75)
+            {
+                badgeTexto = "\uD83D\uDCA7 Muito Bom";
+                badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(90, 12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                badgeBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(125, 211, 252));
+                badgeFg = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+            }
+            else
+            {
+                badgeTexto = "\u26A0\uFE0F Aten\u00E7\u00E3o \u00E0 Hidrata\u00E7\u00E3o";
+                badgeBg = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(90, 120, 53, 15)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                badgeBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(252, 211, 77));
+                badgeFg = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 83, 9));
+            }
+
+            Border diagBadge = new Border
+            {
+                Background = badgeBg,
+                BorderBrush = badgeBorder,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(10, 3, 10, 3),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            diagBadge.Child = new TextBlock
+            {
+                Text = badgeTexto,
+                FontSize = 10.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = badgeFg
+            };
+            Grid.SetColumn(diagBadge, 1);
+            diagHeader.Children.Add(diagBadge);
+            diagStack.Children.Add(diagHeader);
+
+            string mensagemDiag;
+            if (mediaDiaria >= dados.MetaDiaria)
+            {
+                mensagemDiag = "Parab\u00E9ns! Sua rotina de hidrata\u00E7\u00E3o est\u00E1 impec\u00E1vel. Manter esse n\u00EDvel protege seus rins, melhora o foco cognitivo no computador e revigora sua disposi\u00E7\u00E3o f\u00EDsica e mental. Continue com essa const\u00E2ncia maravilhosa!";
+            }
+            else if (mediaDiaria >= dados.MetaDiaria * 0.75)
+            {
+                mensagemDiag = "Voc\u00EA est\u00E1 no caminho certo e muito perto da sua meta ideal! Seu h\u00E1bito est\u00E1 bem estabelecido. Uma dica da Lumi: experimente tomar um copo de \u00E1gua logo pela manh\u00E3 ou no meio da tarde para alcan\u00E7ar 100% de forma leve e natural.";
+            }
+            else
+            {
+                mensagemDiag = "Seu consumo m\u00E9dio est\u00E1 abaixo do recomendado para o seu bem-estar. Dica da Lumi: mantenha uma garrafinha sempre vis\u00EDvel na sua mesa e aproveite os lembretes do app para dar pequenos goles constantes ao longo do dia.";
+            }
+
+            diagStack.Children.Add(new TextBlock
+            {
+                Text = mensagemDiag,
+                FontSize = 11.5,
+                Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(51, 65, 85)),
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 18,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+
+            if (melhorDia != null && melhorDia.TotalMl > 0)
+            {
+                Border recordeBox = new Border
+                {
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(60, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(120, 241, 245, 249)),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 9, 0, 0)
+                };
+                StackPanel recordeSp = new StackPanel { Orientation = Orientation.Horizontal };
+                recordeSp.Children.Add(new TextBlock
+                {
+                    Text = "\uD83C\uDFC6 Recorde Pessoal: ",
+                    FontSize = 11,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = escuro ? Brushes.White : txtPreto
+                });
+                recordeSp.Children.Add(new TextBlock
+                {
+                    Text = string.Format("{0:N0} ml em {1}", melhorDia.TotalMl, FormatarDataAmigavel(melhorDia.Data)),
+                    FontSize = 11,
+                    Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : txtDestaque,
+                    FontWeight = FontWeights.SemiBold
+                });
+                recordeBox.Child = recordeSp;
+                diagStack.Children.Add(recordeBox);
+            }
+
+            cardDiag.Child = diagStack;
+            docPanel.Children.Add(cardDiag);
+
+            // --- Card 2: Histórico Diário de Consumo ---
+            Border cardHistorico = new Border
+            {
+                Background = miniCardBg,
+                BorderBrush = miniCardBorder,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(16, 13, 16, 13),
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+
+            StackPanel histStack = new StackPanel();
+
+            Grid histHeader = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            histHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            histHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel histTitleSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            histTitleSp.Children.Add(new TextBlock
+            {
+                Text = "\uD83D\uDCC5 ",
+                FontSize = 13
+            });
+            histTitleSp.Children.Add(new TextBlock
+            {
+                Text = "Hist\u00F3rico Di\u00E1rio de Consumo",
+                FontSize = 12.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? Brushes.White : txtPreto,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(histTitleSp, 0);
+            histHeader.Children.Add(histTitleSp);
+
+            TextBlock txtMetaRef = new TextBlock
+            {
+                Text = "Meta: " + dados.MetaDiaria + " ml",
+                FontSize = 11,
+                Foreground = txtMuted,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(txtMetaRef, 1);
+            histHeader.Children.Add(txtMetaRef);
+
+            histStack.Children.Add(histHeader);
+
+            List<DadosDia> listaOrdenada = new List<DadosDia>(dados != null && dados.Dias != null ? dados.Dias : new List<DadosDia>());
+            listaOrdenada.Sort(delegate(DadosDia a, DadosDia b) { return string.Compare(b.Data, a.Data); });
+
+            if (listaOrdenada.Count == 0)
+            {
+                histStack.Children.Add(new TextBlock
+                {
+                    Text = "Nenhum dia registrado ainda. Comece a beber \u00E1gua para acompanhar seu progresso! \uD83D\uDCA7",
+                    FontSize = 11.5,
+                    Foreground = txtMuted,
+                    Margin = new Thickness(0, 8, 0, 8)
+                });
+            }
+            else
+            {
+                int maxExibir = Math.Min(30, listaOrdenada.Count);
+                for (int i = 0; i < maxExibir; i++)
+                {
+                    DadosDia d = listaOrdenada[i];
+                    histStack.Children.Add(CriarLinhaDiaVisual(d, dados.MetaDiaria, escuro, txtPreto, txtMuted));
+                }
+
+                if (listaOrdenada.Count > maxExibir)
+                {
+                    histStack.Children.Add(new TextBlock
+                    {
+                        Text = "+ " + (listaOrdenada.Count - maxExibir) + " dias anteriores dispon\u00EDveis nos arquivos TXT e CSV.",
+                        FontSize = 10.5,
+                        Foreground = txtMuted,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 8, 0, 0)
+                    });
+                }
+            }
+
+            cardHistorico.Child = histStack;
+            docPanel.Children.Add(cardHistorico);
+
+            // --- Card 3: Goles Registrados Hoje ---
+            string hojeStr = DateTime.Today.ToString("yyyy-MM-dd");
+            DadosDia diaHoje = listaOrdenada.Find(delegate(DadosDia x) { return x.Data == hojeStr; });
+
+            Border cardHoje = new Border
+            {
+                Background = miniCardBg,
+                BorderBrush = miniCardBorder,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(16, 13, 16, 13),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            StackPanel hojeStack = new StackPanel();
+
+            Grid hojeHeader = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            hojeHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            hojeHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel hojeTitleSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            hojeTitleSp.Children.Add(new TextBlock
+            {
+                Text = "\uD83D\uDCA7 ",
+                FontSize = 13
+            });
+            hojeTitleSp.Children.Add(new TextBlock
+            {
+                Text = "Goles Registrados Hoje",
+                FontSize = 12.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = escuro ? Brushes.White : txtPreto,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            Grid.SetColumn(hojeTitleSp, 0);
+            hojeHeader.Children.Add(hojeTitleSp);
+
+            int qtdGolesHoje = (diaHoje != null && diaHoje.Registros != null) ? diaHoje.Registros.Count : 0;
+            int totalHoje = (diaHoje != null) ? diaHoje.TotalMl : 0;
+
+            TextBlock txtResumoHoje = new TextBlock
+            {
+                Text = qtdGolesHoje + " gole(s) \u2022 Total: " + totalHoje + " ml",
+                FontSize = 11,
+                Foreground = txtMuted,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(txtResumoHoje, 1);
+            hojeHeader.Children.Add(txtResumoHoje);
+            hojeStack.Children.Add(hojeHeader);
+
+            if (diaHoje != null && diaHoje.Registros != null && diaHoje.Registros.Count > 0)
+            {
+                WrapPanel wpGoles = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+                foreach (RegistroAgua r in diaHoje.Registros)
+                {
+                    string iconeTipo = "\uD83E\uDD64";
+                    string tipoLower = (r.Tipo ?? "").ToLower();
+                    if (tipoLower.Contains("garrafa")) iconeTipo = "\uD83C\uDF7C";
+                    else if (tipoLower.Contains("gole")) iconeTipo = "\uD83D\uDCA7";
+
+                    Border chip = new Border
+                    {
+                        Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                        BorderBrush = miniCardBorder,
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(8),
+                        Padding = new Thickness(8, 4, 8, 4),
+                        Margin = new Thickness(0, 0, 6, 6)
+                    };
+                    StackPanel spChip = new StackPanel { Orientation = Orientation.Horizontal };
+                    spChip.Children.Add(new TextBlock
+                    {
+                        Text = iconeTipo + " ",
+                        FontSize = 10.5,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    spChip.Children.Add(new TextBlock
+                    {
+                        Text = r.Hora + " \u2022 ",
+                        FontSize = 10.5,
+                        Foreground = txtMuted,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    spChip.Children.Add(new TextBlock
+                    {
+                        Text = "+" + r.Quantidade + " ml",
+                        FontSize = 10.5,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = escuro ? Brushes.White : txtPreto,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    chip.Child = spChip;
+                    wpGoles.Children.Add(chip);
+                }
+                hojeStack.Children.Add(wpGoles);
+            }
+            else
+            {
+                hojeStack.Children.Add(new TextBlock
+                {
+                    Text = "Nenhum gole registrado hoje ainda. Que tal beber um copinho de \u00E1gua agora? \uD83D\uDCA7",
+                    FontSize = 11,
+                    Foreground = txtMuted,
+                    Margin = new Thickness(0, 4, 0, 2)
+                });
+            }
+
+            cardHoje.Child = hojeStack;
+            docPanel.Children.Add(cardHoje);
+
+            // --- Rodapé de Metadados ---
+            docPanel.Children.Add(new TextBlock
+            {
+                Text = "Emitido em " + DateTime.Now.ToString("dd/MM/yyyy 'às' HH:mm") + " \u2022 Aplicativo Lumi \u2728",
+                FontSize = 10,
+                Foreground = txtMuted,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 4, 0, 8)
+            });
+
+            scroll.Content = docPanel;
+            Grid.SetRow(scroll, 2);
+            layoutInterno.Children.Add(scroll);
+
+            // 3: Botões de Ação no Rodapé
+            Border footer = new Border
+            {
+                Margin = new Thickness(18, 0, 18, 16),
+                Background = Brushes.Transparent
+            };
+
+            Grid footerGrid = new Grid();
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel leftButtons = new StackPanel { Orientation = Orientation.Horizontal };
+
+            Button btnCopiar = new Button
+            {
+                Content = "\uD83D\uDCCB Copiar Texto",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Padding = new Thickness(12, 8, 12, 8),
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                BorderBrush = miniCardBorder,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+            ConfigWindow.AplicarPillModal(btnCopiar, 10);
+            btnCopiar.Click += delegate
+            {
+                try
+                {
+                    Clipboard.SetText(relatorioTxt);
+                    GeradorDeSom.TocarGota();
+                    btnCopiar.Content = "\u2713 Copiado!";
+                    DispatcherTimer dt = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
+                    dt.Tick += delegate
+                    {
+                        btnCopiar.Content = "\uD83D\uDCCB Copiar Texto";
+                        dt.Stop();
+                    };
+                    dt.Start();
+                }
+                catch (Exception ex)
+                {
+                    LumiDialog.MostrarAviso(this, "N\u00E3o foi poss\u00EDvel copiar para a \u00E1rea de transfer\u00EAncia: " + ex.Message, "Aviso", escuro);
+                }
+            };
+            leftButtons.Children.Add(btnCopiar);
+
+            Button btnSalvarTxt = new Button
+            {
+                Content = "\uD83D\uDCBE Salvar TXT",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Padding = new Thickness(12, 8, 12, 8),
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                BorderBrush = miniCardBorder,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+            ConfigWindow.AplicarPillModal(btnSalvarTxt, 10);
+            btnSalvarTxt.Click += delegate
+            {
+                try
+                {
+                    Microsoft.Win32.SaveFileDialog sfd = new Microsoft.Win32.SaveFileDialog();
+                    sfd.Title = "Salvar Relat\u00F3rio de Sa\u00FAde Lumi";
+                    sfd.Filter = "Relat\u00F3rio de Texto (*.txt)|*.txt|Todos os arquivos (*.*)|*.*";
+                    sfd.FileName = "Lumi_Relatorio_Saude_" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+                    if (sfd.ShowDialog(this) == true)
+                    {
+                        File.WriteAllText(sfd.FileName, relatorioTxt, Encoding.UTF8);
+                        GeradorDeSom.TocarGota();
+                        LumiDialog.MostrarSucesso(this, "Relat\u00F3rio de Sa\u00FAde salvo com sucesso!\n\n" + sfd.FileName, "Relat\u00F3rio Exportado! \uD83D\uDCC4", escuro);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LumiDialog.MostrarAviso(this, "Erro ao salvar arquivo: " + ex.Message, "Erro", escuro);
+                }
+            };
+            leftButtons.Children.Add(btnSalvarTxt);
+
+            Button btnSalvarCsv = new Button
+            {
+                Content = "\uD83D\uDCCA Planilha CSV (Excel)",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Padding = new Thickness(12, 8, 12, 8),
+                Background = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand
+            };
+            ConfigWindow.AplicarPillModal(btnSalvarCsv, 10);
+            btnSalvarCsv.Click += delegate
+            {
+                try
+                {
+                    Microsoft.Win32.SaveFileDialog sfd = new Microsoft.Win32.SaveFileDialog();
+                    sfd.Title = "Salvar Planilha de Hidrata\u00E7\u00E3o Lumi (Excel)";
+                    sfd.Filter = "Planilha CSV (*.csv)|*.csv|Todos os arquivos (*.*)|*.*";
+                    sfd.FileName = "Lumi_Dados_Hidratacao_" + DateTime.Now.ToString("yyyy-MM-dd") + ".csv";
+                    if (sfd.ShowDialog(this) == true)
+                    {
+                        File.WriteAllText(sfd.FileName, relatorioCsv, Encoding.UTF8);
+                        GeradorDeSom.TocarGota();
+                        LumiDialog.MostrarSucesso(this, "Planilha CSV salva com sucesso!\nCompat\u00EDvel com Excel e Google Sheets.\n\n" + sfd.FileName, "Planilha Exportada! \uD83D\uDCCA", escuro);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LumiDialog.MostrarAviso(this, "Erro ao salvar planilha: " + ex.Message, "Erro", escuro);
+                }
+            };
+            leftButtons.Children.Add(btnSalvarCsv);
+
+            Grid.SetColumn(leftButtons, 0);
+            footerGrid.Children.Add(leftButtons);
+
+            Button btnFechar = new Button
+            {
+                Content = "Fechar",
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Padding = new Thickness(16, 8, 16, 8),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Foreground = txtPreto,
+                BorderBrush = miniCardBorder,
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+            ConfigWindow.AplicarPillModal(btnFechar, 10);
+            btnFechar.Click += delegate
+            {
+                DoubleAnimation fo = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
+                fo.Completed += delegate { Close(); };
+                BeginAnimation(UIElement.OpacityProperty, fo);
+            };
+            Grid.SetColumn(btnFechar, 1);
+            footerGrid.Children.Add(btnFechar);
+
+            footer.Child = footerGrid;
+            Grid.SetRow(footer, 3);
+            layoutInterno.Children.Add(footer);
+
+            cardPrincipal.Child = layoutInterno;
+            root.Children.Add(cardPrincipal);
+            Content = root;
+        }
+
+        private static Border CriarMiniStatCard(Brush bg, Brush border, Brush txtTitle, Brush txtSub, string titulo, string valor, string sub, int col)
+        {
+            Border b = new Border
+            {
+                Background = bg,
+                BorderBrush = border,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(col == 0 ? 0 : 4, 0, col == 3 ? 0 : 4, 0)
+            };
+            StackPanel sp = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            sp.Children.Add(new TextBlock
+            {
+                Text = titulo,
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = txtSub,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            sp.Children.Add(new TextBlock
+            {
+                Text = valor,
+                FontSize = 13.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = txtTitle,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 1, 0, 0)
+            });
+            sp.Children.Add(new TextBlock
+            {
+                Text = sub,
+                FontSize = 9.5,
+                Foreground = txtSub,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+            b.Child = sp;
+            Grid.SetColumn(b, col);
+            return b;
+        }
+
+        public static int CalcularStreakAtual(HistoricoApp dados)
+        {
+            if (dados == null || dados.Dias == null || dados.Dias.Count == 0) return 0;
+            int streak = 0;
+            DateTime dataAtual = DateTime.Today;
+
+            string hojeStr = dataAtual.ToString("yyyy-MM-dd");
+            DadosDia diaHoje = dados.Dias.Find(delegate(DadosDia x) { return x.Data == hojeStr; });
+            if (diaHoje != null && diaHoje.TotalMl >= dados.MetaDiaria)
+            {
+                streak++;
+                dataAtual = dataAtual.AddDays(-1);
+            }
+            else
+            {
+                dataAtual = dataAtual.AddDays(-1);
+            }
+
+            while (true)
+            {
+                string dStr = dataAtual.ToString("yyyy-MM-dd");
+                DadosDia diaSalvo = dados.Dias.Find(delegate(DadosDia x) { return x.Data == dStr; });
+                if (diaSalvo != null && diaSalvo.TotalMl >= dados.MetaDiaria)
+                {
+                    streak++;
+                    dataAtual = dataAtual.AddDays(-1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        private static FrameworkElement CriarLinhaDiaVisual(DadosDia d, int metaDiaria, bool escuro, Brush txtPreto, Brush txtMuted)
+        {
+            Border rowBorder = new Border
+            {
+                Padding = new Thickness(10, 7, 10, 7),
+                Margin = new Thickness(0, 2, 0, 2),
+                CornerRadius = new CornerRadius(8),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(40, 15, 23, 42)) : new SolidColorBrush(Color.FromArgb(60, 248, 250, 252))
+            };
+
+            Grid g = new Grid();
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(145) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(125) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Col 0: Data
+            string dataFormatada = FormatarDataAmigavel(d.Data);
+            bool ehHoje = (d.Data == DateTime.Today.ToString("yyyy-MM-dd"));
+            TextBlock txtData = new TextBlock
+            {
+                Text = dataFormatada,
+                FontSize = 11.5,
+                FontWeight = ehHoje ? FontWeights.Bold : FontWeights.Normal,
+                Foreground = ehHoje
+                    ? (escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)))
+                    : (escuro ? Brushes.White : txtPreto),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(txtData, 0);
+            g.Children.Add(txtData);
+
+            // Col 1: Barra de progresso
+            int pct = (d.TotalMl * 100) / Math.Max(1, metaDiaria);
+            double larguraTotal = 110;
+            double preenchimento = Math.Min(larguraTotal, Math.Max(0, ((double)d.TotalMl / Math.Max(1, metaDiaria)) * larguraTotal));
+            bool metaBatida = (d.TotalMl >= metaDiaria);
+
+            Border progressTrack = new Border
+            {
+                Width = larguraTotal,
+                Height = 8,
+                CornerRadius = new CornerRadius(4),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            Border progressFill = new Border
+            {
+                Width = preenchimento,
+                Height = 8,
+                CornerRadius = new CornerRadius(4),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Background = metaBatida
+                    ? (escuro ? (Brush)new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(16, 185, 129)))
+                    : (escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)))
+            };
+            progressTrack.Child = progressFill;
+            Grid.SetColumn(progressTrack, 1);
+            g.Children.Add(progressTrack);
+
+            // Col 2: Volume ml
+            TextBlock txtVol = new TextBlock
+            {
+                Text = d.TotalMl.ToString("N0") + " ml",
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = escuro ? Brushes.White : txtPreto,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 0, 10, 0)
+            };
+            Grid.SetColumn(txtVol, 2);
+            g.Children.Add(txtVol);
+
+            // Col 3: Badge
+            Border badge = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(8, 2, 8, 2),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            if (metaBatida)
+            {
+                badge.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(90, 6, 95, 70)) : new SolidColorBrush(Color.FromRgb(220, 252, 231));
+                badge.BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(134, 239, 172));
+                badge.BorderThickness = new Thickness(1);
+                badge.Child = new TextBlock
+                {
+                    Text = "\u2713 Batida",
+                    FontSize = 10,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(21, 128, 61))
+                };
+            }
+            else
+            {
+                badge.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)) : new SolidColorBrush(Color.FromRgb(241, 245, 249));
+                badge.BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+                badge.BorderThickness = new Thickness(1);
+                badge.Child = new TextBlock
+                {
+                    Text = pct + "%",
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(226, 232, 240)) : txtMuted
+                };
+            }
+            Grid.SetColumn(badge, 3);
+            g.Children.Add(badge);
+
+            rowBorder.Child = g;
+            return rowBorder;
+        }
+
+        private static string FormatarDataAmigavel(string yyyyMmDd)
+        {
+            DateTime dt;
+            if (DateTime.TryParse(yyyyMmDd, out dt))
+            {
+                if (dt.Date == DateTime.Today)
+                {
+                    return "Hoje (" + dt.ToString("dd/MM") + ")";
+                }
+                if (dt.Date == DateTime.Today.AddDays(-1))
+                {
+                    return "Ontem (" + dt.ToString("dd/MM") + ")";
+                }
+                try
+                {
+                    System.Globalization.CultureInfo ptBr = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+                    return dt.ToString("dd 'de' MMM (ddd)", ptBr);
+                }
+                catch
+                {
+                    return dt.ToString("dd/MM/yyyy");
+                }
+            }
+            return yyyyMmDd;
+        }
+
+        private static string FormatarData(string yyyyMmDd)
+        {
+            DateTime dt;
+            if (DateTime.TryParse(yyyyMmDd, out dt))
+            {
+                return dt.ToString("dd/MM/yyyy");
+            }
+            return yyyyMmDd;
+        }
+
+        public static string GerarTextoRelatorio(HistoricoApp dados)
+        {
+            if (dados == null) return "Nenhum dado dispon\u00EDvel.";
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("=================================================================");
+            sb.AppendLine("           LUMI - RELAT\u00D3RIO DE SA\u00DADE & HIDRATA\u00C7\u00C3O \uD83D\uDCA7            ");
+            sb.AppendLine("=================================================================");
+            sb.AppendLine("Emitido em: " + DateTime.Now.ToString("dd/MM/yyyy 'às' HH:mm"));
+            sb.AppendLine("Meta Di\u00E1ria Configurada: " + dados.MetaDiaria + " ml");
+            sb.AppendLine();
+
+            int totalDias = Math.Max(1, dados.Dias != null && dados.Dias.Count > 0 ? dados.Dias.Count : 1);
+            int somaTotal = 0;
+            int metasBatidas = 0;
+            DadosDia melhorDia = null;
+
+            if (dados.Dias != null)
+            {
+                foreach (DadosDia d in dados.Dias)
+                {
+                    somaTotal += d.TotalMl;
+                    if (d.TotalMl >= dados.MetaDiaria) metasBatidas++;
+                    if (melhorDia == null || d.TotalMl > melhorDia.TotalMl) melhorDia = d;
+                }
+            }
+
+            double mediaDiaria = (double)somaTotal / totalDias;
+            double taxaSucesso = ((double)metasBatidas / totalDias) * 100.0;
+            int streak = CalcularStreakAtual(dados);
+
+            sb.AppendLine("RESUMO EXECUTIVO");
+            sb.AppendLine("-----------------------------------------------------------------");
+            sb.AppendLine(string.Format("\u2022 Total de Dias Monitorados : {0} dia(s)", totalDias));
+            sb.AppendLine(string.Format("\u2022 Volume Total Consumido    : {0:N0} ml ({1:0.0} Litros)", somaTotal, somaTotal / 1000.0));
+            sb.AppendLine(string.Format("\u2022 M\u00E9dia Di\u00E1ria              : {0:N0} ml/dia", Math.Round(mediaDiaria)));
+            sb.AppendLine(string.Format("\u2022 Metas Di\u00E1rias Batidas     : {0} de {1} ({2:0}%)", metasBatidas, totalDias, taxaSucesso));
+            sb.AppendLine(string.Format("\u2022 Sequ\u00EAncia Atual de Metas  : {0} dia(s) consecutivo(s)", streak));
+            if (melhorDia != null)
+            {
+                sb.AppendLine(string.Format("\u2022 Recorde em um \u00DAnico Dia   : {0:N0} ml em {1}", melhorDia.TotalMl, FormatarData(melhorDia.Data)));
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("AVALIA\u00C7\u00C3O DE HIDRATA\u00C7\u00C3O");
+            sb.AppendLine("-----------------------------------------------------------------");
+            if (mediaDiaria >= dados.MetaDiaria)
+            {
+                sb.AppendLine("Status: EXCELENTE \uD83C\uDF1F");
+                sb.AppendLine("Parab\u00E9ns! Sua rotina de hidrata\u00E7\u00E3o est\u00E1 impec\u00E1vel. Manter esse n\u00EDvel");
+                sb.AppendLine("protege a fun\u00E7\u00E3o renal, melhora o foco cognitivo no computador");
+                sb.AppendLine("e revigora a sa\u00FAde da pele e energia do corpo.");
+            }
+            else if (mediaDiaria >= dados.MetaDiaria * 0.75)
+            {
+                sb.AppendLine("Status: MUITO BOM (Perto da meta) \uD83D\uDCA7");
+                sb.AppendLine("Voc\u00EA est\u00E1 no caminho certo! Tente adicionar apenas um copo extra");
+                sb.AppendLine("pela manh\u00E3 ou pela tarde para atingir 100% da sua meta todos os dias.");
+            }
+            else
+            {
+                sb.AppendLine("Status: ATEN\u00C7\u00C3O \u00C0 HIDRATA\u00C7\u00C3O \u26A0\uFE0F");
+                sb.AppendLine("Seu consumo m\u00E9dio est\u00E1 abaixo do recomendado. Dica da Lumi:");
+                sb.AppendLine("Mantenha uma garrafa de \u00E1gua por perto e aproveite os lembretes");
+                sb.AppendLine("autom\u00E1ticos para dar pequenos goles constantes.");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("HIST\u00D3RICO DI\u00C1RIO DETALHADO");
+            sb.AppendLine("-----------------------------------------------------------------");
+            sb.AppendLine(string.Format("{0,-12} | {1,-10} | {2,-8} | {3,-7} | {4}", "DATA", "CONSUMO", "META", "% META", "SITUA\u00C7\u00C3O"));
+            sb.AppendLine("-----------------------------------------------------------------");
+
+            List<DadosDia> listaOrdenada = new List<DadosDia>(dados.Dias != null ? dados.Dias : new List<DadosDia>());
+            listaOrdenada.Sort(delegate(DadosDia a, DadosDia b) { return string.Compare(b.Data, a.Data); });
+
+            foreach (DadosDia d in listaOrdenada)
+            {
+                int pct = (d.TotalMl * 100) / Math.Max(1, dados.MetaDiaria);
+                string situacao = (d.TotalMl >= dados.MetaDiaria) ? "Meta Batida! \uD83C\uDFC6" : (pct >= 75 ? "Bom \uD83D\uDCA7" : "Abaixo \u26A0\uFE0F");
+                sb.AppendLine(string.Format("{0,-12} | {1,7} ml | {2,5} ml | {3,5}% | {4}", FormatarData(d.Data), d.TotalMl, dados.MetaDiaria, pct, situacao));
+            }
+
+            string hojeStr = DateTime.Today.ToString("yyyy-MM-dd");
+            DadosDia diaHoje = listaOrdenada.Find(delegate(DadosDia x) { return x.Data == hojeStr; });
+            if (diaHoje != null && diaHoje.Registros != null && diaHoje.Registros.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine(string.Format("REGISTROS INDIVIDUAIS DE HOJE ({0}):", FormatarData(hojeStr)));
+                sb.AppendLine("-----------------------------------------------------------------");
+                for (int i = 0; i < diaHoje.Registros.Count; i++)
+                {
+                    RegistroAgua r = diaHoje.Registros[i];
+                    sb.AppendLine(string.Format("  {0}. [{1}] +{2} ml ({3})", i + 1, r.Hora, r.Quantidade, r.Tipo));
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("=================================================================");
+            sb.AppendLine("Gerado automaticamente pelo aplicativo Lumi - Hidrata\u00E7\u00E3o Di\u00E1ria");
+            sb.AppendLine("=================================================================");
+
+            return sb.ToString();
+        }
+
+        public static string GerarCsvRelatorio(HistoricoApp dados)
+        {
+            if (dados == null) return "";
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Data;Total_ml;Meta_ml;Percentual;Situacao;Qtd_Goles");
+
+            List<DadosDia> listaOrdenada = new List<DadosDia>(dados.Dias != null ? dados.Dias : new List<DadosDia>());
+            listaOrdenada.Sort(delegate(DadosDia a, DadosDia b) { return string.Compare(b.Data, a.Data); });
+
+            foreach (DadosDia d in listaOrdenada)
+            {
+                int pct = (d.TotalMl * 100) / Math.Max(1, dados.MetaDiaria);
+                string situacao = (d.TotalMl >= dados.MetaDiaria) ? "Meta Batida" : (pct >= 75 ? "Bom" : "Abaixo da Meta");
+                int qtdGoles = (d.Registros != null ? d.Registros.Count : 0);
+                sb.AppendLine(string.Format("{0};{1};{2};{3}%;{4};{5}", d.Data, d.TotalMl, dados.MetaDiaria, pct, situacao, qtdGoles));
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("DETALHAMENTO DE CADA GOLE");
+            sb.AppendLine("Data;Hora;Quantidade_ml;Tipo");
+            foreach (DadosDia d in listaOrdenada)
+            {
+                if (d.Registros != null)
+                {
+                    foreach (RegistroAgua r in d.Registros)
+                    {
+                        sb.AppendLine(string.Format("{0};{1};{2};{3}", d.Data, r.Hora, r.Quantidade, (r.Tipo ?? "").Replace(';', ' ')));
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
+    }
+
+    // ==========================================
     // Janela Modal: Configurações com Toggle Nativo & Suporte a Modo Escuro
     // ==========================================
     public class ConfigWindow : Window
@@ -6199,6 +7305,64 @@ namespace GotinhaAgua
 
             cardTema.Child = temaGrid;
             sp.Children.Add(cardTema);
+
+            // Card 5: Relatório de Saúde
+            Border cardExport = new Border
+            {
+                Background = cardBg,
+                CornerRadius = new CornerRadius(12),
+                BorderBrush = cardBorder,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(14),
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+            Grid exportGrid = new Grid();
+            exportGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            exportGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            StackPanel exportTextSp = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            exportTextSp.Children.Add(new TextBlock
+            {
+                Text = "\uD83D\uDCCA Relat\u00F3rio de Sa\u00FAde & Hidrata\u00E7\u00E3o",
+                FontWeight = FontWeights.Bold,
+                FontSize = 12,
+                Foreground = textTitle
+            });
+            exportTextSp.Children.Add(new TextBlock
+            {
+                Text = "Exporte seus dados em relat\u00F3rio TXT ou planilha CSV para nutricionistas ou controle pessoal.",
+                FontSize = 10,
+                Foreground = textDesc,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 2, 8, 0)
+            });
+            Grid.SetColumn(exportTextSp, 0);
+            exportGrid.Children.Add(exportTextSp);
+
+            Button btnAbrirRelatorio = new Button
+            {
+                Content = "Ver Relat\u00F3rio \uD83D\uDCCB",
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Padding = new Thickness(12, 6, 12, 6),
+                Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
+            AplicarPillModal(btnAbrirRelatorio, 8);
+            btnAbrirRelatorio.Click += delegate
+            {
+                RelatorioSaudeWindow rw = new RelatorioSaudeWindow(dados);
+                rw.Owner = this;
+                rw.ShowDialog();
+            };
+            Grid.SetColumn(btnAbrirRelatorio, 1);
+            exportGrid.Children.Add(btnAbrirRelatorio);
+
+            cardExport.Child = exportGrid;
+            sp.Children.Add(cardExport);
 
             // Botão Salvar
             Button btnSalvar = new Button
