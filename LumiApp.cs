@@ -108,6 +108,8 @@ namespace GotinhaAgua
         private bool _somAtivado;
         private bool _notificacoesAtivadas;
         private bool _modoEscuro;
+        private double _pesoUsuario;
+        private string _sexoUsuario;
         private List<DadosDia> _dias;
 
         public int MetaDiaria
@@ -140,6 +142,18 @@ namespace GotinhaAgua
             set { _modoEscuro = value; OnPropertyChanged("ModoEscuro"); }
         }
 
+        public double PesoUsuario
+        {
+            get { return _pesoUsuario; }
+            set { _pesoUsuario = value; OnPropertyChanged("PesoUsuario"); }
+        }
+
+        public string SexoUsuario
+        {
+            get { return _sexoUsuario; }
+            set { _sexoUsuario = value; OnPropertyChanged("SexoUsuario"); }
+        }
+
         public List<DadosDia> Dias
         {
             get { return _dias; }
@@ -153,6 +167,8 @@ namespace GotinhaAgua
             _somAtivado = true;
             _notificacoesAtivadas = true;
             _modoEscuro = false;
+            _pesoUsuario = 0;
+            _sexoUsuario = "";
             _dias = new List<DadosDia>();
         }
 
@@ -5462,9 +5478,22 @@ namespace GotinhaAgua
             };
             sp.Children.Add(title);
 
+            string textoDicaLembrete = "Seus olhos e sua mente precisam de uma pausa.\nHidrate seu corpo agora!";
+            if (_main != null && _main._dados != null && !string.IsNullOrEmpty(_main._dados.SexoUsuario))
+            {
+                if (_main._dados.SexoUsuario == "M")
+                {
+                    textoDicaLembrete = "Homens t\u00EAm mais massa muscular e gastam \u00E1gua r\u00E1pido.\nAbaste\u00E7a seu corpo com mais um gole d'\u00E1gua agora!";
+                }
+                else if (_main._dados.SexoUsuario == "F")
+                {
+                    textoDicaLembrete = "Manter a hidrata\u00E7\u00E3o constante revigora a energia e a pele.\nHora de fazer uma pausa e beber \u00E1gua!";
+                }
+            }
+
             TextBlock desc = new TextBlock
             {
-                Text = "Seus olhos e sua mente precisam de uma pausa.\nHidrate seu corpo agora!",
+                Text = textoDicaLembrete,
                 FontSize = 11.5,
                 Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 TextAlignment = TextAlignment.Center,
@@ -6296,6 +6325,35 @@ namespace GotinhaAgua
                 diagStack.Children.Add(recordeBox);
             }
 
+            if (dados != null && dados.PesoUsuario > 0 && !string.IsNullOrEmpty(dados.SexoUsuario))
+            {
+                string perfilDesc = (dados.SexoUsuario == "M" ? "Homem" : "Mulher");
+                string perfilFaixa = (dados.SexoUsuario == "M" ? "35 a 40 ml/kg (alta massa muscular)" : "30 a 35 ml/kg (base)");
+                Border perfilBox = new Border
+                {
+                    Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(60, 30, 41, 59)) : new SolidColorBrush(Color.FromArgb(120, 241, 245, 249)),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 6, 0, 0)
+                };
+                StackPanel perfilSp = new StackPanel { Orientation = Orientation.Horizontal };
+                perfilSp.Children.Add(new TextBlock
+                {
+                    Text = "\u2696\uFE0F Perfil Biol\u00F3gico: ",
+                    FontSize = 10.5,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = escuro ? Brushes.White : txtPreto
+                });
+                perfilSp.Children.Add(new TextBlock
+                {
+                    Text = string.Format("{0} ({1:0.#} kg) \u2022 {2}", perfilDesc, dados.PesoUsuario, perfilFaixa),
+                    FontSize = 10.5,
+                    Foreground = txtMuted
+                });
+                perfilBox.Child = perfilSp;
+                diagStack.Children.Add(perfilBox);
+            }
+
             cardDiag.Child = diagStack;
             docPanel.Children.Add(cardDiag);
 
@@ -6899,6 +6957,11 @@ namespace GotinhaAgua
             sb.AppendLine("=================================================================");
             sb.AppendLine("Emitido em: " + DateTime.Now.ToString("dd/MM/yyyy 'às' HH:mm"));
             sb.AppendLine("Meta Di\u00E1ria Configurada: " + dados.MetaDiaria + " ml");
+            if (dados != null && dados.PesoUsuario > 0 && !string.IsNullOrEmpty(dados.SexoUsuario))
+            {
+                string perfilNome = (dados.SexoUsuario == "M" ? "Homem (35-40 ml/kg)" : "Mulher (30-35 ml/kg)");
+                sb.AppendLine(string.Format("Perfil Biol\u00F3gico       : {0}, {1:0.#} kg", perfilNome, dados.PesoUsuario));
+            }
             sb.AppendLine();
 
             int totalDias = Math.Max(1, dados.Dias != null && dados.Dias.Count > 0 ? dados.Dias.Count : 1);
@@ -7040,8 +7103,8 @@ namespace GotinhaAgua
             MainWindow.AplicarEstiloScrollBar(this, escuro);
 
             Title = "Configura\u00E7\u00F5es da Lumi \u2699\uFE0F";
-            Width = 440;
-            Height = Math.Min(560, SystemParameters.WorkArea.Height - 40);
+            Width = 460;
+            Height = Math.Min(620, SystemParameters.WorkArea.Height - 30);
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -7102,7 +7165,7 @@ namespace GotinhaAgua
             Brush inputBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
             Brush inputFg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(15, 23, 42));
 
-            // Card 1: Meta Diária
+            // Card 1: Meta Diária & Calculadora Inteligente
             Border cardMeta = new Border
             {
                 Background = cardBg,
@@ -7131,16 +7194,78 @@ namespace GotinhaAgua
                 Foreground = inputFg,
                 BorderBrush = inputBorder,
                 CaretBrush = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : null,
-                Margin = new Thickness(0, 0, 0, 8)
+                Margin = new Thickness(0, 0, 0, 10)
             };
             spMeta.Children.Add(txtMeta);
 
-            Grid pesoGrid = new Grid();
+            // Seção: Calculadora Inteligente por Peso & Sexo Biológico
+            Border sepCalc = new Border
+            {
+                Height = 1,
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                Margin = new Thickness(0, 2, 0, 8)
+            };
+            spMeta.Children.Add(sepCalc);
+
+            spMeta.Children.Add(new TextBlock
+            {
+                Text = "\u2696\uFE0F Calculadora por Peso & Sexo Biol\u00F3gico",
+                FontWeight = FontWeights.Bold,
+                FontSize = 11.5,
+                Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
+                Margin = new Thickness(0, 0, 0, 2)
+            });
+
+            spMeta.Children.Add(new TextBlock
+            {
+                Text = "Homens e mulheres t\u00EAm necessidades h\u00EDdricas distintas devido \u00E0 massa muscular e taxa metab\u00F3lica:",
+                FontSize = 10,
+                Foreground = textDesc,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 8)
+            });
+
+            string sexoSelecionado = !string.IsNullOrEmpty(dados.SexoUsuario) ? dados.SexoUsuario : "";
+
+            Grid sexGrid = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            sexGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            sexGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            Button btnHomem = new Button
+            {
+                Content = "\uD83D\uDC68 Homem (35-40 ml/kg)",
+                FontSize = 10.5,
+                FontWeight = FontWeights.SemiBold,
+                Padding = new Thickness(6, 6, 6, 6),
+                Margin = new Thickness(0, 0, 3, 0),
+                Cursor = Cursors.Hand
+            };
+            AplicarPillModal(btnHomem, 8);
+            Grid.SetColumn(btnHomem, 0);
+            sexGrid.Children.Add(btnHomem);
+
+            Button btnMulher = new Button
+            {
+                Content = "\uD83D\uDC69 Mulher (30-35 ml/kg)",
+                FontSize = 10.5,
+                FontWeight = FontWeights.SemiBold,
+                Padding = new Thickness(6, 6, 6, 6),
+                Margin = new Thickness(3, 0, 0, 0),
+                Cursor = Cursors.Hand
+            };
+            AplicarPillModal(btnMulher, 8);
+            Grid.SetColumn(btnMulher, 1);
+            sexGrid.Children.Add(btnMulher);
+
+            spMeta.Children.Add(sexGrid);
+
+            Grid pesoGrid = new Grid { Margin = new Thickness(0, 0, 0, 2) };
             pesoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             pesoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             TextBox txtPeso = new TextBox
             {
+                Text = dados.PesoUsuario > 0 ? dados.PesoUsuario.ToString(System.Globalization.CultureInfo.InvariantCulture) : "",
                 FontSize = 11,
                 Padding = new Thickness(8, 6, 8, 6),
                 ToolTip = "Digite seu peso em kg (ex: 70)",
@@ -7154,35 +7279,162 @@ namespace GotinhaAgua
 
             Button btnCalcular = new Button
             {
-                Content = "Calcular p/ Peso",
+                Content = "\u26A1 Calcular Meta",
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 Padding = new Thickness(12, 6, 12, 6),
                 Margin = new Thickness(8, 0, 0, 0),
-                Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
                 Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
-                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
+                BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
                 BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand
             };
             AplicarPillModal(btnCalcular, 8);
-            btnCalcular.Click += delegate
+            Grid.SetColumn(btnCalcular, 1);
+            pesoGrid.Children.Add(btnCalcular);
+            spMeta.Children.Add(pesoGrid);
+
+            // Box de Observação e Alerta da Lumi
+            Border boxObservacao = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(10, 8, 10, 8),
+                Margin = new Thickness(0, 6, 0, 0),
+                BorderThickness = new Thickness(1),
+                Visibility = Visibility.Collapsed
+            };
+            StackPanel spObs = new StackPanel();
+            TextBlock txtObsTitulo = new TextBlock
+            {
+                FontWeight = FontWeights.Bold,
+                FontSize = 10.5,
+                Margin = new Thickness(0, 0, 0, 3)
+            };
+            TextBlock txtObsCorpo = new TextBlock
+            {
+                FontSize = 10,
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 15
+            };
+            spObs.Children.Add(txtObsTitulo);
+            spObs.Children.Add(txtObsCorpo);
+            boxObservacao.Child = spObs;
+            spMeta.Children.Add(boxObservacao);
+
+            Action atualizarEstilosSexo = delegate
+            {
+                Brush bgAtivo = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(90, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                Brush borderAtivo = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                Brush fgAtivo = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+
+                Brush bgInativo = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
+                Brush borderInativo = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
+                Brush fgInativo = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+
+                if (sexoSelecionado == "M")
+                {
+                    btnHomem.Background = bgAtivo;
+                    btnHomem.BorderBrush = borderAtivo;
+                    btnHomem.Foreground = fgAtivo;
+
+                    btnMulher.Background = bgInativo;
+                    btnMulher.BorderBrush = borderInativo;
+                    btnMulher.Foreground = fgInativo;
+                }
+                else if (sexoSelecionado == "F")
+                {
+                    btnMulher.Background = bgAtivo;
+                    btnMulher.BorderBrush = borderAtivo;
+                    btnMulher.Foreground = fgAtivo;
+
+                    btnHomem.Background = bgInativo;
+                    btnHomem.BorderBrush = borderInativo;
+                    btnHomem.Foreground = fgInativo;
+                }
+                else
+                {
+                    btnHomem.Background = bgInativo;
+                    btnHomem.BorderBrush = borderInativo;
+                    btnHomem.Foreground = fgInativo;
+
+                    btnMulher.Background = bgInativo;
+                    btnMulher.BorderBrush = borderInativo;
+                    btnMulher.Foreground = fgInativo;
+                }
+            };
+
+            btnHomem.Click += delegate
+            {
+                sexoSelecionado = "M";
+                atualizarEstilosSexo();
+            };
+
+            btnMulher.Click += delegate
+            {
+                sexoSelecionado = "F";
+                atualizarEstilosSexo();
+            };
+
+            Action executarCalculoMeta = delegate
             {
                 double peso;
                 string pesoStr = txtPeso.Text != null ? txtPeso.Text.Trim().Replace(',', '.') : "";
                 if (double.TryParse(pesoStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out peso) && peso >= 20 && peso <= 300)
                 {
-                    int recomendacao = (int)Math.Round(peso * 35);
-                    txtMeta.Text = recomendacao.ToString();
+                    if (sexoSelecionado == "M")
+                    {
+                        int recomendacao = (int)Math.Round(peso * 38);
+                        txtMeta.Text = recomendacao.ToString();
+
+                        boxObservacao.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(60, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                        boxObservacao.BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                        txtObsTitulo.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                        txtObsTitulo.Text = "\uD83D\uDCA1 Observa\u00E7\u00E3o da Lumi para Homens:";
+                        txtObsCorpo.Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(51, 65, 85));
+                        txtObsCorpo.Text = string.Format("Homens possuem cerca de 60-65% de \u00E1gua no corpo e maior propor\u00E7\u00E3o de massa muscular (75% \u00E1gua), o que acelera o metabolismo. \u00D3rg\u00E3os de sa\u00FAde recomendam de 35 a 40 ml/kg ({0:N0} a {1:N0} ml para seus {2:0.#} kg). Beba \u00E1gua regularmente para manter o foco e evitar fadiga muscular!", Math.Round(peso * 35), Math.Round(peso * 40), peso);
+                        boxObservacao.Visibility = Visibility.Visible;
+                    }
+                    else if (sexoSelecionado == "F")
+                    {
+                        int recomendacao = (int)Math.Round(peso * 35);
+                        txtMeta.Text = recomendacao.ToString();
+
+                        boxObservacao.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(60, 244, 114, 182)) : new SolidColorBrush(Color.FromRgb(253, 242, 248));
+                        boxObservacao.BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(244, 114, 182)) : new SolidColorBrush(Color.FromRgb(251, 207, 232));
+                        txtObsTitulo.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(190, 24, 93));
+                        txtObsTitulo.Text = "\uD83D\uDCA1 Observa\u00E7\u00E3o da Lumi para Mulheres:";
+                        txtObsCorpo.Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(51, 65, 85));
+                        txtObsCorpo.Text = string.Format("A recomenda\u00E7\u00E3o base \u00E9 de 30 a 35 ml/kg ({0:N0} a {1:N0} ml para seus {2:0.#} kg). Aten\u00E7\u00E3o: em dias quentes, ap\u00F3s exerc\u00EDcios ou em fases hormonais (gesta\u00E7\u00E3o exige +300 ml e amamenta\u00E7\u00E3o at\u00E9 +1.000 ml/dia), o corpo pede hidrata\u00E7\u00E3o redobrada!", Math.Round(peso * 30), Math.Round(peso * 35), peso);
+                        boxObservacao.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        int recomendacao = (int)Math.Round(peso * 35);
+                        txtMeta.Text = recomendacao.ToString();
+
+                        boxObservacao.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(50, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
+                        boxObservacao.BorderBrush = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
+                        txtObsTitulo.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                        txtObsTitulo.Text = "\uD83D\uDCA1 Observa\u00E7\u00E3o da Lumi:";
+                        txtObsCorpo.Foreground = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(51, 65, 85));
+                        txtObsCorpo.Text = string.Format("Meta de 35 ml/kg ({0:N0} ml para seus {1:0.#} kg). Dica: selecione 'Homem' ou 'Mulher' acima para calibrar conforme a composi\u00E7\u00E3o corporal!", recomendacao, peso);
+                        boxObservacao.Visibility = Visibility.Visible;
+                    }
                 }
                 else
                 {
                     LumiDialog.MostrarAviso(this, "Por favor, digite um peso v\u00E1lido em kg (ex: 65) para calcular a sua meta recomendada.", "Aviso de Peso \u2696\uFE0F", escuro);
                 }
             };
-            Grid.SetColumn(btnCalcular, 1);
-            pesoGrid.Children.Add(btnCalcular);
-            spMeta.Children.Add(pesoGrid);
+
+            btnCalcular.Click += delegate { executarCalculoMeta(); };
+            atualizarEstilosSexo();
+            if (dados.PesoUsuario > 0 && !string.IsNullOrEmpty(dados.SexoUsuario))
+            {
+                executarCalculoMeta();
+            }
+
             cardMeta.Child = spMeta;
             sp.Children.Add(cardMeta);
 
@@ -7386,6 +7638,15 @@ namespace GotinhaAgua
                     dados.NotificacoesAtivadas = toggleNotif.IsChecked;
                     dados.SomAtivado = toggleSom.IsChecked;
                     dados.ModoEscuro = toggleTema.IsChecked;
+
+                    double pesoSalvo;
+                    string pesoSalvoStr = txtPeso.Text != null ? txtPeso.Text.Trim().Replace(',', '.') : "";
+                    if (double.TryParse(pesoSalvoStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out pesoSalvo) && pesoSalvo >= 20 && pesoSalvo <= 300)
+                    {
+                        dados.PesoUsuario = pesoSalvo;
+                    }
+                    dados.SexoUsuario = sexoSelecionado;
+
                     onSalvar();
                     DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
                     fadeOut.Completed += delegate { Close(); };
