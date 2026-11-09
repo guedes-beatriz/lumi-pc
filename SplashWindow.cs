@@ -786,7 +786,7 @@ namespace GotinhaAgua
                 Cursor = Cursors.Hand,
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(148, 163, 184)),
+                Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(148, 163, 184)),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 SnapsToDevicePixels = true,
@@ -813,7 +813,7 @@ namespace GotinhaAgua
             };
             btnFechar.MouseLeave += delegate
             {
-                btnFechar.Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184));
+                btnFechar.Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(148, 163, 184));
             };
             btnFechar.Click += delegate
             {

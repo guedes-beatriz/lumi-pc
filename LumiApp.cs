@@ -734,8 +734,9 @@ namespace GotinhaAgua
 
         private void MainWindow_StateChanged(object sender, EventArgs e)
         {
-            SolidColorBrush cor = (_dados != null && _dados.ModoEscuro)
-                ? new SolidColorBrush(Color.FromRgb(56, 189, 248))
+            bool isDark = (_dados != null && _dados.ModoEscuro);
+            Brush cor = isDark
+                ? Brushes.White
                 : new SolidColorBrush(Color.FromRgb(3, 105, 161));
             if (WindowState == WindowState.Maximized)
             {
@@ -746,7 +747,7 @@ namespace GotinhaAgua
                 }
                 if (_btnMax != null)
                 {
-                    _btnMax.Content = CriarIconeMaximizar(cor, true);
+                    _btnMax.Content = CriarIconeMaximizar(cor, true, isDark);
                     _btnMax.ToolTip = "Restaurar";
                 }
                 if (_gridConteudo != null)
@@ -763,7 +764,7 @@ namespace GotinhaAgua
                 }
                 if (_btnMax != null)
                 {
-                    _btnMax.Content = CriarIconeMaximizar(cor, false);
+                    _btnMax.Content = CriarIconeMaximizar(cor, false, isDark);
                     _btnMax.ToolTip = "Maximizar";
                 }
                 if (_gridConteudo != null)
@@ -997,7 +998,8 @@ namespace GotinhaAgua
             _btnClose.MouseLeave += delegate
             {
                 _btnClose.Background = Brushes.Transparent;
-                _btnClose.Content = CriarIconeFechar(corIconeBarra);
+                bool isDark = (_dados != null && _dados.ModoEscuro);
+                _btnClose.Content = CriarIconeFechar(isDark ? Brushes.White : corIconeBarra);
             };
             _btnClose.Click += delegate
             {
@@ -2342,7 +2344,7 @@ namespace GotinhaAgua
             {
                 _btnDesfazer.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249));
                 _btnDesfazer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
-                _btnDesfazer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                _btnDesfazer.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139));
             }
 
             if (_txtCustomAgua != null && _txtCustomAgua.Parent is Border)
@@ -2358,17 +2360,26 @@ namespace GotinhaAgua
                 if (!(btn.Tag is BebidaInfo)) continue;
                 BebidaInfo info = (BebidaInfo)btn.Tag;
 
+                if (info.TxtIcone != null)
+                {
+                    info.TxtIcone.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42));
+                }
+
                 switch (info.Index)
                 {
                     case 0: // Gole (Âmbar/Pêssego)
                         btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 45, 24, 7)) : new SolidColorBrush(Color.FromRgb(255, 251, 235));
-                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(180, 83, 9)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
                         if (info.BadgeIcone != null)
+                        {
                             info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(120, 53, 15)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
+                            info.BadgeIcone.BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)) : Brushes.Transparent;
+                            info.BadgeIcone.BorderThickness = escuro ? new Thickness(1) : new Thickness(0);
+                        }
                         if (info.TxtNome != null)
-                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(253, 230, 138)) : new SolidColorBrush(Color.FromRgb(146, 64, 14));
+                            info.TxtNome.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(146, 64, 14));
                         if (info.TxtMl != null)
-                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(217, 119, 6));
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(253, 230, 138)) : new SolidColorBrush(Color.FromRgb(217, 119, 6));
                         btn.Effect = null;
                         break;
 
@@ -2376,11 +2387,15 @@ namespace GotinhaAgua
                         btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(220, 8, 47, 73)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
                         btn.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
                         if (info.BadgeIcone != null)
+                        {
                             info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
+                            info.BadgeIcone.BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)) : Brushes.Transparent;
+                            info.BadgeIcone.BorderThickness = escuro ? new Thickness(1) : new Thickness(0);
+                        }
                         if (info.TxtNome != null)
-                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(186, 230, 253)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                            info.TxtNome.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161));
                         if (info.TxtMl != null)
-                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(186, 230, 253)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
                         btn.Effect = new DropShadowEffect
                         {
                             Color = Color.FromRgb(2, 132, 199),
@@ -2392,25 +2407,33 @@ namespace GotinhaAgua
 
                     case 2: // Grande (Turquesa / Aqua)
                         btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 4, 47, 46)) : new SolidColorBrush(Color.FromRgb(240, 253, 250));
-                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(13, 148, 136)) : new SolidColorBrush(Color.FromRgb(153, 246, 228));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(45, 212, 191)) : new SolidColorBrush(Color.FromRgb(153, 246, 228));
                         if (info.BadgeIcone != null)
+                        {
                             info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(19, 78, 74)) : new SolidColorBrush(Color.FromRgb(204, 251, 241));
+                            info.BadgeIcone.BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)) : Brushes.Transparent;
+                            info.BadgeIcone.BorderThickness = escuro ? new Thickness(1) : new Thickness(0);
+                        }
                         if (info.TxtNome != null)
-                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(153, 246, 228)) : new SolidColorBrush(Color.FromRgb(15, 118, 110));
+                            info.TxtNome.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 118, 110));
                         if (info.TxtMl != null)
-                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(45, 212, 191)) : new SolidColorBrush(Color.FromRgb(13, 148, 136));
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(153, 246, 228)) : new SolidColorBrush(Color.FromRgb(13, 148, 136));
                         btn.Effect = null;
                         break;
 
                     case 3: // Garrafa (Menta / Esmeralda)
                         btn.Background = escuro ? (Brush)new SolidColorBrush(Color.FromArgb(200, 5, 46, 22)) : new SolidColorBrush(Color.FromRgb(240, 253, 244));
-                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(5, 150, 105)) : new SolidColorBrush(Color.FromRgb(167, 243, 208));
+                        btn.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(167, 243, 208));
                         if (info.BadgeIcone != null)
+                        {
                             info.BadgeIcone.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(6, 78, 59)) : new SolidColorBrush(Color.FromRgb(209, 250, 229));
+                            info.BadgeIcone.BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(160, 255, 255, 255)) : Brushes.Transparent;
+                            info.BadgeIcone.BorderThickness = escuro ? new Thickness(1) : new Thickness(0);
+                        }
                         if (info.TxtNome != null)
-                            info.TxtNome.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(167, 243, 208)) : new SolidColorBrush(Color.FromRgb(4, 120, 87));
+                            info.TxtNome.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(4, 120, 87));
                         if (info.TxtMl != null)
-                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(5, 150, 105));
+                            info.TxtMl.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(167, 243, 208)) : new SolidColorBrush(Color.FromRgb(5, 150, 105));
                         btn.Effect = null;
                         break;
                 }
@@ -2437,6 +2460,7 @@ namespace GotinhaAgua
             {
                 Text = icone + " ",
                 FontSize = 10,
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 VerticalAlignment = VerticalAlignment.Center
             });
             topRow.Children.Add(new TextBlock
@@ -3447,7 +3471,7 @@ namespace GotinhaAgua
                     _btnPausarTimer.Content = "\u25B6 Continuar";
                     _btnPausarTimer.Background = escuro ? new SolidColorBrush(Color.FromRgb(120, 53, 15)) : new SolidColorBrush(Color.FromRgb(254, 243, 199));
                     _btnPausarTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(217, 119, 6)) : new SolidColorBrush(Color.FromRgb(253, 230, 138));
-                    _btnPausarTimer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(251, 191, 36)) : new SolidColorBrush(Color.FromRgb(180, 83, 9));
+                    _btnPausarTimer.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 83, 9));
                 }
                 if (_badgeIconeTimer != null)
                 {
@@ -3457,6 +3481,7 @@ namespace GotinhaAgua
                 if (_txtIconeTimer != null)
                 {
                     _txtIconeTimer.Text = "\uD83D\uDCA4";
+                    _txtIconeTimer.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(180, 83, 9));
                 }
                 if (_txtTimerLabel != null)
                 {
@@ -3475,7 +3500,7 @@ namespace GotinhaAgua
                     _btnPausarTimer.Content = "\u23F8 Pausar";
                     _btnPausarTimer.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
                     _btnPausarTimer.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                    _btnPausarTimer.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161));
+                    _btnPausarTimer.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161));
                 }
                 if (_badgeIconeTimer != null)
                 {
@@ -3485,6 +3510,7 @@ namespace GotinhaAgua
                 if (_txtIconeTimer != null)
                 {
                     _txtIconeTimer.Text = "\u23F3";
+                    _txtIconeTimer.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161));
                 }
                 if (_txtTimerLabel != null)
                 {
@@ -3749,16 +3775,18 @@ namespace GotinhaAgua
         {
             if (_btnSom != null)
             {
-                _btnSom.Content = CriarIconeSom(_dados.SomAtivado);
+                bool escuro = (_dados != null && _dados.ModoEscuro);
+                _btnSom.Content = CriarIconeSom(_dados.SomAtivado, escuro);
                 _btnSom.ToolTip = _dados.SomAtivado ? "Som ativado (clique para silenciar)" : "Som silenciado (clique para ativar)";
             }
         }
 
-                private void AtualizarVisualBtnNotif()
+        private void AtualizarVisualBtnNotif()
         {
             if (_btnNotif != null)
             {
-                _btnNotif.Content = CriarIconeNotif(_dados.NotificacoesAtivadas);
+                bool escuro = (_dados != null && _dados.ModoEscuro);
+                _btnNotif.Content = CriarIconeNotif(_dados.NotificacoesAtivadas, escuro);
                 _btnNotif.ToolTip = _dados.NotificacoesAtivadas ? "Notifica\u00E7\u00F5es ativadas (clique para pausar)" : "Notifica\u00E7\u00F5es desativadas (clique para ativar)";
             }
         }
@@ -3888,7 +3916,7 @@ namespace GotinhaAgua
             return c;
         }
 
-        private static UIElement CriarIconeMaximizar(Brush cor, bool maximizado)
+        private static UIElement CriarIconeMaximizar(Brush cor, bool maximizado, bool escuro = false)
         {
             if (maximizado)
             {
@@ -3903,7 +3931,7 @@ namespace GotinhaAgua
 
                 System.Windows.Shapes.Rectangle rFront = new System.Windows.Shapes.Rectangle
                 {
-                    Width = 7, Height = 7, Stroke = cor, StrokeThickness = 1.1, Fill = Brushes.White
+                    Width = 7, Height = 7, Stroke = cor, StrokeThickness = 1.1, Fill = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : Brushes.White
                 };
                 Canvas.SetLeft(rFront, 0);
                 Canvas.SetTop(rFront, 3);
@@ -3930,47 +3958,65 @@ namespace GotinhaAgua
             return c;
         }
 
-        private static UIElement CriarIconeEngrenagem()
+        private static UIElement CriarIconeEngrenagem(Brush cor = null)
         {
+            if (cor == null) cor = new SolidColorBrush(Color.FromRgb(71, 85, 105));
             Viewbox vb = new Viewbox { Width = 17, Height = 17, Stretch = Stretch.Uniform };
             System.Windows.Shapes.Path p = new System.Windows.Shapes.Path
             {
                 Data = Geometry.Parse("M 12,15 C 10.34,15 9,13.66 9,12 C 9,10.34 10.34,9 12,9 C 13.66,9 15,10.34 15,12 C 15,13.66 13.66,15 12,15 Z M 19.4,13 C 19.45,12.67 19.5,12.34 19.5,12 C 19.5,11.66 19.45,11.33 19.4,11 L 21.54,9.33 C 21.73,9.18 21.78,8.91 21.66,8.69 L 19.66,5.23 C 19.54,5.01 19.28,4.93 19.05,5.02 L 16.53,6.03 C 16,5.62 15.43,5.28 14.8,5.03 L 14.42,2.35 C 14.39,2.11 14.18,1.93 13.94,1.93 L 9.94,1.93 C 9.7,1.93 9.5,2.11 9.46,2.35 L 9.08,5.03 C 8.45,5.28 7.88,5.62 7.35,6.03 L 4.83,5.02 C 4.6,4.93 4.34,5.01 4.22,5.23 L 2.22,8.69 C 2.1,8.91 2.15,9.18 2.34,9.33 L 4.48,11 C 4.43,11.33 4.38,11.67 4.38,12 C 4.38,12.33 4.43,12.67 4.48,13 L 2.34,14.67 C 2.15,14.82 2.1,15.09 2.22,15.31 L 4.22,18.77 C 4.34,18.99 4.6,19.07 4.83,18.98 L 7.35,17.97 C 7.88,18.38 8.45,18.72 9.08,18.97 L 9.46,21.65 C 9.5,21.89 9.7,22.07 9.94,22.07 L 13.94,22.07 C 14.18,22.07 14.38,21.89 14.42,21.65 L 14.8,18.97 C 15.43,18.72 16,18.38 16.53,17.97 L 19.05,18.98 C 19.28,19.07 19.54,18.99 19.66,18.77 L 21.66,15.31 C 21.78,15.09 21.73,14.82 21.54,14.67 L 19.4,13 Z"),
-                Fill = new SolidColorBrush(Color.FromRgb(71, 85, 105))
+                Fill = cor
             };
             vb.Child = p;
             return vb;
         }
 
-        private static UIElement CriarIconeSom(bool ativado)
+        private static UIElement CriarIconeSom(bool ativado, bool escuro = false)
         {
             Viewbox vb = new Viewbox { Width = 17, Height = 17, Stretch = Stretch.Uniform };
+            Brush cor;
+            if (escuro)
+            {
+                cor = ativado ? Brushes.White : new SolidColorBrush(Color.FromArgb(140, 255, 255, 255));
+            }
+            else
+            {
+                cor = ativado ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184));
+            }
             System.Windows.Shapes.Path p = new System.Windows.Shapes.Path
             {
                 Data = Geometry.Parse(ativado
                     ? "M 3,9 L 7,9 L 12,4 L 12,20 L 7,15 L 3,15 Z M 16.5,12 C 16.5,10.23 15.48,8.71 14,7.97 L 14,16.02 C 15.48,15.29 16.5,13.77 16.5,12 Z M 14,3.23 L 14,5.29 C 16.89,6.15 19,8.83 19,12 C 19,15.17 16.89,17.85 14,18.71 L 14,20.77 C 18.01,19.86 21,16.28 21,12 C 21,7.72 18.01,4.14 14,3.23 Z"
                     : "M 4.27,3 L 3,4.27 L 7.73,9 L 3,9 L 3,15 L 7,15 L 12,20 L 12,13.27 L 16.25,17.53 C 15.58,18.04 14.83,18.46 14,18.7 L 14,20.77 C 15.38,20.45 16.63,19.82 17.68,18.96 L 19.73,21 L 21,19.73 L 4.27,3 Z M 12,4 L 9.91,6.09 L 12,8.18 L 12,4 Z M 19,12 C 19,12.82 18.84,13.61 18.55,14.33 L 20.08,15.86 C 20.67,14.69 21,13.39 21,12 C 21,7.72 18.01,4.14 14,3.23 L 14,5.29 C 16.89,6.15 19,8.83 19,12 Z M 16.5,12 C 16.5,10.23 15.48,8.71 14,7.97 L 14,10.18 L 16.45,12.63 C 16.48,12.43 16.5,12.22 16.5,12 Z"),
-                Fill = ativado ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184))
+                Fill = cor
             };
             vb.Child = p;
             return vb;
         }
 
-        private static UIElement CriarIconeNotif(bool ativado)
+        private static UIElement CriarIconeNotif(bool ativado, bool escuro = false)
         {
             Viewbox vb = new Viewbox { Width = 17, Height = 17, Stretch = Stretch.Uniform };
+            Brush cor;
+            if (escuro)
+            {
+                cor = ativado ? Brushes.White : new SolidColorBrush(Color.FromArgb(140, 255, 255, 255));
+            }
+            else
+            {
+                cor = ativado ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184));
+            }
             System.Windows.Shapes.Path p = new System.Windows.Shapes.Path
             {
                 Data = Geometry.Parse(ativado
                     ? "M 12,22 C 13.1,22 14,21.1 14,20 L 10,20 C 10,21.1 10.89,22 12,22 Z M 18,16 L 18,11 C 18,7.93 16.36,5.36 13.5,4.68 L 13.5,4 C 13.5,3.17 12.83,2.5 12,2.5 C 11.17,2.5 10.5,3.17 10.5,4 L 10.5,4.68 C 7.63,5.36 6,7.92 6,11 L 6,16 L 4,18 L 4,19 L 20,19 L 20,18 L 18,16 Z"
                     : "M 20,18.69 L 5.31,4 L 4,5.31 L 6.27,7.58 C 6.1,8.65 6,9.8 6,11 L 6,16 L 4,18 L 4,19 L 17.69,19 L 18.69,20 L 20,18.69 Z M 12,22 C 13.1,22 14,21.1 14,20 L 10,20 C 10,21.1 10.89,22 12,22 Z M 18,16 L 18,11 C 18,8.6 16.94,6.54 15,5.35 L 15,4 C 15,2.34 13.66,1 12,1 C 11.39,1 10.83,1.18 10.36,1.49 L 18,9.13 L 18,16 Z"),
-                Fill = ativado ? new SolidColorBrush(Color.FromRgb(2, 132, 199)) : new SolidColorBrush(Color.FromRgb(148, 163, 184))
+                Fill = cor
             };
             vb.Child = p;
             return vb;
         }
 
-        
         private static UIElement CriarIconeLua(Brush cor)
         {
             Viewbox vb = new Viewbox { Width = 17, Height = 17, Stretch = Stretch.Uniform };
@@ -3998,20 +4044,8 @@ namespace GotinhaAgua
         private static UIElement CriarIconeTema(bool escuro)
         {
             return escuro
-                ? CriarIconeSol(new SolidColorBrush(Color.FromRgb(251, 191, 36)))
+                ? CriarIconeSol(Brushes.White)
                 : CriarIconeLua(new SolidColorBrush(Color.FromRgb(2, 132, 199)));
-        }
-
-        private static UIElement CriarIconeEngrenagem(Brush cor)
-        {
-            Viewbox vb = new Viewbox { Width = 17, Height = 17, Stretch = Stretch.Uniform };
-            System.Windows.Shapes.Path p = new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse("M 12,15 C 10.34,15 9,13.66 9,12 C 9,10.34 10.34,9 12,9 C 13.66,9 15,10.34 15,12 C 15,13.66 13.66,15 12,15 Z M 19.4,13 C 19.45,12.67 19.5,12.34 19.5,12 C 19.5,11.66 19.45,11.33 19.4,11 L 21.54,9.33 C 21.73,9.18 21.78,8.91 21.66,8.69 L 19.66,5.23 C 19.54,5.01 19.28,4.93 19.05,5.02 L 16.53,6.03 C 16,5.62 15.43,5.28 14.8,5.03 L 14.42,2.35 C 14.39,2.11 14.18,1.93 13.94,1.93 L 9.94,1.93 C 9.7,1.93 9.5,2.11 9.46,2.35 L 9.08,5.03 C 8.45,5.28 7.88,5.62 7.35,6.03 L 4.83,5.02 C 4.6,4.93 4.34,5.01 4.22,5.23 L 2.22,8.69 C 2.1,8.91 2.15,9.18 2.34,9.33 L 4.48,11 C 4.43,11.33 4.38,11.67 4.38,12 C 4.38,12.33 4.43,12.67 4.48,13 L 2.34,14.67 C 2.15,14.82 2.1,15.09 2.22,15.31 L 4.22,18.77 C 4.34,18.99 4.6,19.07 4.83,18.98 L 7.35,17.97 C 7.88,18.38 8.45,18.72 9.08,18.97 L 9.46,21.65 C 9.5,21.89 9.7,22.07 9.94,22.07 L 13.94,22.07 C 14.18,22.07 14.38,21.89 14.42,21.65 L 14.8,18.97 C 15.43,18.72 16,18.38 16.53,17.97 L 19.05,18.98 C 19.28,19.07 19.54,18.99 19.66,18.77 L 21.66,15.31 C 21.78,15.09 21.73,14.82 21.54,14.67 L 19.4,13 Z"),
-                Fill = cor
-            };
-            vb.Child = p;
-            return vb;
         }
 
         private void AlternarModoEscuro()
@@ -4151,9 +4185,10 @@ namespace GotinhaAgua
                 _statusPill.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(5, 150, 105)) : new SolidColorBrush(Color.FromRgb(167, 243, 208));
                 _txtStatusPill.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(5, 150, 105));
             }
-            if (_btnMin != null) _btnMin.Content = CriarIconeMinimizar(corTitulo);
-            if (_btnMax != null) _btnMax.Content = CriarIconeMaximizar(corTitulo, WindowState == WindowState.Maximized);
-            if (_btnClose != null) _btnClose.Content = CriarIconeFechar(corTitulo);
+            Brush corIconesJanela = escuro ? Brushes.White : corTitulo;
+            if (_btnMin != null) _btnMin.Content = CriarIconeMinimizar(corIconesJanela);
+            if (_btnMax != null) _btnMax.Content = CriarIconeMaximizar(corIconesJanela, WindowState == WindowState.Maximized, escuro);
+            if (_btnClose != null) _btnClose.Content = CriarIconeFechar(corIconesJanela);
 
             // 4. Card Header (Mascote, PRO, Toolbar, Balão)
             if (_txtHeaderTitle != null) _txtHeaderTitle.Foreground = corTitulo;
@@ -4170,22 +4205,22 @@ namespace GotinhaAgua
             Brush bgBtn = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
             Brush borderBtn = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
 
-            if (_btnSom != null) { _btnSom.Background = bgBtn; _btnSom.BorderBrush = borderBtn; _btnSom.Content = CriarIconeSom(_dados.SomAtivado); }
-            if (_btnNotif != null) { _btnNotif.Background = bgBtn; _btnNotif.BorderBrush = borderBtn; _btnNotif.Content = CriarIconeNotif(_dados.NotificacoesAtivadas); }
-            if (_btnConfig != null) { _btnConfig.Background = bgBtn; _btnConfig.BorderBrush = borderBtn; _btnConfig.Content = CriarIconeEngrenagem(escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105))); }
+            if (_btnSom != null) { _btnSom.Background = bgBtn; _btnSom.BorderBrush = borderBtn; _btnSom.Content = CriarIconeSom(_dados.SomAtivado, escuro); }
+            if (_btnNotif != null) { _btnNotif.Background = bgBtn; _btnNotif.BorderBrush = borderBtn; _btnNotif.Content = CriarIconeNotif(_dados.NotificacoesAtivadas, escuro); }
+            if (_btnConfig != null) { _btnConfig.Background = bgBtn; _btnConfig.BorderBrush = borderBtn; _btnConfig.Content = CriarIconeEngrenagem(escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(71, 85, 105))); }
             AtualizarVisualBtnTema();
 
             if (_btnToggleHistorico != null)
             {
                 _btnToggleHistorico.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
                 _btnToggleHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                _btnToggleHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnToggleHistorico.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
             if (_btnModoWidget != null)
             {
                 _btnModoWidget.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromArgb(220, 224, 242, 254));
                 _btnModoWidget.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                _btnModoWidget.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnModoWidget.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
             if (_widgetWindow != null)
             {
@@ -4214,7 +4249,7 @@ namespace GotinhaAgua
             {
                 _btnTestarLembrete.Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
                 _btnTestarLembrete.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
-                _btnTestarLembrete.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(71, 85, 105));
+                _btnTestarLembrete.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(71, 85, 105));
             }
             if (_trackTimerProgress != null)
             {
@@ -4238,7 +4273,7 @@ namespace GotinhaAgua
             {
                 _btnVoltarHistorico.Background = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
                 _btnVoltarHistorico.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                _btnVoltarHistorico.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnVoltarHistorico.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
             if (_pillsSegmentedContainer != null)
             {
@@ -4268,6 +4303,7 @@ namespace GotinhaAgua
 
         private Button CriarBotaoToolbarCard(UIElement icone, string tooltip, RoutedEventHandler handler, bool isGear = false)
         {
+            bool escuro = (_dados != null && _dados.ModoEscuro);
             Button btn = new Button
             {
                 Content = icone,
@@ -4275,8 +4311,8 @@ namespace GotinhaAgua
                 Width = 34,
                 Height = 34,
                 Margin = new Thickness(3, 0, 3, 0),
-                Background = new SolidColorBrush(Color.FromRgb(240, 249, 255)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
                 BorderThickness = new Thickness(1),
                 FocusVisualStyle = null,
                 Cursor = Cursors.Hand
@@ -4438,16 +4474,27 @@ namespace GotinhaAgua
 
         private Button CriarBotaoPill(string texto, bool secondary, RoutedEventHandler handler)
         {
+            bool escuro = (_dados != null && _dados.ModoEscuro);
+            Brush fg = escuro
+                ? Brushes.White
+                : (secondary ? new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)));
+            Brush bg = escuro
+                ? new SolidColorBrush(Color.FromRgb(23, 32, 54))
+                : (secondary ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)));
+            Brush border = escuro
+                ? new SolidColorBrush(Color.FromRgb(51, 65, 85))
+                : (secondary ? new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)));
+
             Button btn = new Button
             {
                 Content = texto,
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = secondary ? new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
-                Background = secondary ? new SolidColorBrush(Color.FromRgb(248, 250, 252)) : new SolidColorBrush(Color.FromRgb(240, 249, 255)),
+                Foreground = fg,
+                Background = bg,
                 Padding = new Thickness(12, 6, 12, 6),
                 Margin = new Thickness(4, 0, 0, 0),
-                BorderBrush = secondary ? new SolidColorBrush(Color.FromRgb(226, 232, 240)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderBrush = border,
                 BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand,
                 RenderTransformOrigin = new Point(0.5, 0.5),
@@ -5240,12 +5287,14 @@ namespace GotinhaAgua
                 {
                     _btnPin.Background = escuro ? new SolidColorBrush(Color.FromRgb(12, 74, 110)) : new SolidColorBrush(Color.FromRgb(224, 242, 254));
                     _btnPin.BorderBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+                    _btnPin.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
                     _btnPin.Opacity = 1.0;
                 }
                 else
                 {
                     _btnPin.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249));
                     _btnPin.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+                    _btnPin.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139));
                     _btnPin.Opacity = 0.65;
                 }
             }
@@ -5254,7 +5303,7 @@ namespace GotinhaAgua
             {
                 _btnExpandir.Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(240, 249, 255));
                 _btnExpandir.BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(186, 230, 253));
-                _btnExpandir.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+                _btnExpandir.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(2, 132, 199));
             }
 
             if (_txtStatusGotinha != null)
@@ -5655,7 +5704,7 @@ namespace GotinhaAgua
                 Text = string.IsNullOrEmpty(titulo) ? "Aviso" : titulo,
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
-                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
                 VerticalAlignment = VerticalAlignment.Center
             });
             Grid.SetColumn(titleLeft, 0);
@@ -5670,7 +5719,7 @@ namespace GotinhaAgua
                 Height = 28,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FocusVisualStyle = null
             };
@@ -5680,7 +5729,7 @@ namespace GotinhaAgua
             };
             btnFechar.MouseLeave += delegate
             {
-                btnFechar.Foreground = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                btnFechar.Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139));
             };
             btnFechar.Click += delegate { FecharComAnimacao(); };
             Grid.SetColumn(btnFechar, 1);
@@ -5738,7 +5787,8 @@ namespace GotinhaAgua
                     Text = iconEmoji,
                     FontSize = 21,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = isDark ? Brushes.White : new SolidColorBrush(Color.FromRgb(15, 23, 42))
                 }
             };
             Grid.SetColumn(badge, 0);
@@ -5940,7 +5990,7 @@ namespace GotinhaAgua
 
             Brush cardBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(30, 41, 59)) : Brushes.White;
             Brush cardBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240));
-            Brush textTitle = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(30, 41, 59));
+            Brush textTitle = escuro ? (Brush)Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59));
             Brush textDesc = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
             Brush inputBg = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(15, 23, 42)) : Brushes.White;
             Brush inputBorder = escuro ? (Brush)new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(203, 213, 225));
@@ -6004,7 +6054,7 @@ namespace GotinhaAgua
                 Padding = new Thickness(12, 6, 12, 6),
                 Margin = new Thickness(8, 0, 0, 0),
                 Background = escuro ? new SolidColorBrush(Color.FromRgb(23, 32, 54)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(30, 41, 59)),
                 BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)),
                 BorderThickness = new Thickness(1),
                 Cursor = Cursors.Hand
@@ -6235,7 +6285,7 @@ namespace GotinhaAgua
                 Text = "Configura\u00E7\u00F5es da Lumi",
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(3, 105, 161)),
                 VerticalAlignment = VerticalAlignment.Center
             });
             Grid.SetColumn(titleLeft, 0);
@@ -6250,7 +6300,7 @@ namespace GotinhaAgua
                 Height = 28,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FocusVisualStyle = null
             };
@@ -6260,7 +6310,7 @@ namespace GotinhaAgua
             };
             btnFecharTopo.MouseLeave += delegate
             {
-                btnFecharTopo.Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+                btnFecharTopo.Foreground = escuro ? Brushes.White : new SolidColorBrush(Color.FromRgb(100, 116, 139));
             };
             btnFecharTopo.Click += delegate
             {
