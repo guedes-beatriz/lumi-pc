@@ -665,6 +665,8 @@ namespace GotinhaAgua
         private ColumnDefinition _colProgressoAtivo;
         private ColumnDefinition _colProgressoRestante;
 
+        private bool _backdropAtivo;
+
         public MainWindow()
         {
             _caminhoArquivo = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dados_agua.json");
@@ -686,6 +688,17 @@ namespace GotinhaAgua
             if (source != null)
             {
                 source.AddHook(WndProc);
+                if (_backdropAtivo)
+                {
+                    bool escuroInicial = (_dados != null && _dados.ModoEscuro);
+                    if (!DwmApiHelper.Aplicar(this, escuroInicial, true))
+                    {
+                        // Falhou: volta ao visual opaco com cantos retos (seguro)
+                        _backdropAtivo = false;
+                        AplicarTema();
+                        if (_janelaBorda != null) _janelaBorda.CornerRadius = new CornerRadius(0);
+                    }
+                }
             }
         }
 
@@ -776,8 +789,8 @@ namespace GotinhaAgua
             {
                 if (_janelaBorda != null)
                 {
-                    _janelaBorda.CornerRadius = new CornerRadius(20);
-                    _janelaBorda.BorderThickness = new Thickness(1.5);
+                    _janelaBorda.CornerRadius = new CornerRadius(_backdropAtivo ? 0 : 20);
+                    _janelaBorda.BorderThickness = new Thickness(_backdropAtivo ? 0 : 1.5);
                 }
                 if (_btnMax != null)
                 {
@@ -809,7 +822,9 @@ namespace GotinhaAgua
             StateChanged += MainWindow_StateChanged;
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             WindowStyle = WindowStyle.None;
-            AllowsTransparency = true;
+            // Windows 11: janela sem camada transparente para permitir Mica real (DWM)
+            _backdropAtivo = DwmApiHelper.SuportaMica;
+            AllowsTransparency = !_backdropAtivo;
 
             // Nitidez e renderização precisa de texto e bordas (evita desfoque no WPF)
             SnapsToDevicePixels = true;
@@ -820,6 +835,9 @@ namespace GotinhaAgua
             RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
 
             Icon = IconeHelper.ObterIconeJanela();
+
+            // Tipografia Windows 11 (Segoe UI Variable) com fallback para Segoe UI
+            FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
 
             Background = Brushes.Transparent;
         }
@@ -2178,6 +2196,28 @@ namespace GotinhaAgua
                 ToolTip = "Digite um valor em ml (ex: 200, 350, 600)"
             };
             customBoxBorder.Child = _txtCustomAgua;
+
+            // Foco animado: borda azul com brilho suave ao digitar
+            DropShadowEffect glowCampo = new DropShadowEffect { Color = Color.FromRgb(56, 189, 248), BlurRadius = 12, ShadowDepth = 0, Opacity = 0 };
+            customBoxBorder.Effect = glowCampo;
+            _txtCustomAgua.GotKeyboardFocus += delegate
+            {
+                Color de = _dados.ModoEscuro ? Color.FromRgb(51, 65, 85) : Color.FromRgb(203, 213, 225);
+                SolidColorBrush sb = new SolidColorBrush(de);
+                customBoxBorder.BorderBrush = sb;
+                customBoxBorder.BorderThickness = new Thickness(1.5);
+                sb.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(Color.FromRgb(14, 165, 233), TimeSpan.FromMilliseconds(180)));
+                glowCampo.BeginAnimation(DropShadowEffect.OpacityProperty, new DoubleAnimation(0.55, TimeSpan.FromMilliseconds(180)));
+            };
+            _txtCustomAgua.LostKeyboardFocus += delegate
+            {
+                Color para = _dados.ModoEscuro ? Color.FromRgb(51, 65, 85) : Color.FromRgb(203, 213, 225);
+                SolidColorBrush sb = new SolidColorBrush(Color.FromRgb(14, 165, 233));
+                customBoxBorder.BorderBrush = sb;
+                customBoxBorder.BorderThickness = new Thickness(1);
+                sb.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(para, TimeSpan.FromMilliseconds(220)));
+                glowCampo.BeginAnimation(DropShadowEffect.OpacityProperty, new DoubleAnimation(0, TimeSpan.FromMilliseconds(220)));
+            };
             Grid.SetColumn(customBoxBorder, 0);
             customGrid.Children.Add(customBoxBorder);
 
@@ -2286,6 +2326,35 @@ namespace GotinhaAgua
             sp.Children.Add(info.TxtMl);
 
             btn.Content = sp;
+
+            // Brilho suave (hover glow) ao redor do botão; restaura a sombra original ao sair
+            Effect efBase = null;
+            DropShadowEffect glowBtn = null;
+            btn.MouseEnter += delegate
+            {
+                if (glowBtn == null)
+                {
+                    efBase = btn.Effect;
+                    glowBtn = new DropShadowEffect { Color = Color.FromRgb(56, 189, 248), BlurRadius = 18, ShadowDepth = 0, Opacity = 0 };
+                    btn.Effect = glowBtn;
+                }
+                glowBtn.BeginAnimation(DropShadowEffect.OpacityProperty, new DoubleAnimation(0.6, TimeSpan.FromMilliseconds(160)));
+            };
+            btn.MouseLeave += delegate
+            {
+                if (glowBtn == null) return;
+                DropShadowEffect g = glowBtn;
+                DoubleAnimation fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(220));
+                fade.Completed += delegate
+                {
+                    if (glowBtn == g)
+                    {
+                        btn.Effect = efBase;
+                        glowBtn = null;
+                    }
+                };
+                g.BeginAnimation(DropShadowEffect.OpacityProperty, fade);
+            };
 
             // Animações de Hover
             btn.MouseEnter += delegate
@@ -2524,6 +2593,17 @@ namespace GotinhaAgua
             return b;
         }
 
+        // Leve deslize vertical (8px) usado junto com o fade ao trocar de aba
+        private static void AnimarSlideEntrada(UIElement el)
+        {
+            TranslateTransform tt = new TranslateTransform(0, 8);
+            el.RenderTransform = tt;
+            tt.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(8, 0, TimeSpan.FromMilliseconds(260))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
+        }
+
         private void SelecionarAbaHistorico(int aba)
         {
             _abaHistoricoAtiva = aba;
@@ -2559,6 +2639,7 @@ namespace GotinhaAgua
                         EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                     };
                     _containerTabHoje.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                    AnimarSlideEntrada(_containerTabHoje);
                 }
                 AtualizarListaHoje(ObterDiaHoje());
             }
@@ -2590,6 +2671,7 @@ namespace GotinhaAgua
                         EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
                     };
                     _containerTabSemana.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                    AnimarSlideEntrada(_containerTabSemana);
                 }
                 AtualizarGraficoSemanal();
             }
@@ -3377,6 +3459,14 @@ namespace GotinhaAgua
                 };
                 barra.BeginAnimation(FrameworkElement.HeightProperty, animBarra);
 
+                // Entrada em cascata da coluna: surge e sobe levemente, uma após a outra
+                TranslateTransform ttCol = new TranslateTransform(0, 10);
+                col.RenderTransform = ttCol;
+                col.Opacity = 0;
+                TimeSpan atrasoCol = TimeSpan.FromMilliseconds((6 - i) * 55);
+                col.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(320)) { BeginTime = atrasoCol });
+                ttCol.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(380)) { BeginTime = atrasoCol, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+
                 colunas.Children.Add(col);
             }
 
@@ -3663,12 +3753,19 @@ namespace GotinhaAgua
             }
 
             // Exibir popup modal interativa se a janela estiver visível
-            if (WindowState != WindowState.Minimized && IsVisible)
+            if (WindowState != WindowState.Minimized && IsVisible && LembreteAlertaWindow.Atual == null)
             {
                 LembreteAlertaWindow alerta = new LembreteAlertaWindow(this);
-                alerta.Owner = this;
-                alerta.ShowDialog();
+                alerta.Show();
             }
+        }
+
+        // Reinicia a contagem do lembrete com o tempo escolhido (usado pelo botão "Adiar")
+        public void AdiarLembrete(int minutos)
+        {
+            _segundosRestantes = minutos * 60;
+            AtualizarDisplayTimer();
+            ExibirSnackBar("Lembrete adiado por " + minutos + " minutos. \u23F3");
         }
 
         public void AtivarModoWidget()
@@ -3910,36 +4007,91 @@ namespace GotinhaAgua
         // ==========================================
                 private Border CriarCardBase()
         {
-            LinearGradientBrush bgBrush = new LinearGradientBrush();
-            bgBrush.StartPoint = new Point(0, 0);
-            bgBrush.EndPoint = new Point(0, 1);
-            bgBrush.GradientStops.Add(new GradientStop(Color.FromArgb(250, 255, 255, 255), 0.0));
-            bgBrush.GradientStops.Add(new GradientStop(Color.FromArgb(242, 248, 252, 255), 1.0));
-
-            LinearGradientBrush borderBrush = new LinearGradientBrush();
-            borderBrush.StartPoint = new Point(0, 0);
-            borderBrush.EndPoint = new Point(1, 1);
-            borderBrush.GradientStops.Add(new GradientStop(Color.FromArgb(240, 255, 255, 255), 0.0));
-            borderBrush.GradientStops.Add(new GradientStop(Color.FromArgb(170, 186, 230, 253), 1.0));
-
             Border card = new Border
             {
-                Background = bgBrush,
-                CornerRadius = new CornerRadius(18),
-                BorderBrush = borderBrush,
-                BorderThickness = new Thickness(1.2),
                 Padding = new Thickness(16),
-                Margin = new Thickness(0, 0, 0, 10),
-                Effect = new DropShadowEffect
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            AplicarSuperficieCard(card, _dados != null && _dados.ModoEscuro);
+
+            // Elevação ao passar o mouse: card sobe 2px e a sombra se aprofunda
+            TranslateTransform ttCard = new TranslateTransform(0, 0);
+            card.RenderTransform = ttCard;
+            card.MouseEnter += delegate
+            {
+                DoubleAnimation up = new DoubleAnimation(-2, TimeSpan.FromMilliseconds(180)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                ttCard.BeginAnimation(TranslateTransform.YProperty, up);
+                DropShadowEffect ef = card.Effect as DropShadowEffect;
+                if (ef != null)
                 {
-                    Color = Color.FromRgb(2, 132, 199),
-                    Opacity = 0.08,
-                    BlurRadius = 18,
-                    ShadowDepth = 3
+                    ef.BeginAnimation(DropShadowEffect.ShadowDepthProperty, new DoubleAnimation(8, TimeSpan.FromMilliseconds(180)));
+                    ef.BeginAnimation(DropShadowEffect.BlurRadiusProperty, new DoubleAnimation(36, TimeSpan.FromMilliseconds(180)));
+                }
+            };
+            card.MouseLeave += delegate
+            {
+                DoubleAnimation down = new DoubleAnimation(0, TimeSpan.FromMilliseconds(220)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+                ttCard.BeginAnimation(TranslateTransform.YProperty, down);
+                DropShadowEffect ef = card.Effect as DropShadowEffect;
+                if (ef != null)
+                {
+                    ef.BeginAnimation(DropShadowEffect.ShadowDepthProperty, new DoubleAnimation(5, TimeSpan.FromMilliseconds(220)));
+                    ef.BeginAnimation(DropShadowEffect.BlurRadiusProperty, new DoubleAnimation(28, TimeSpan.FromMilliseconds(220)));
                 }
             };
             _cardsLista.Add(card);
             return card;
+        }
+
+        // Superfície de card estilo Fluent: cantos de 16px, brilho de luz no topo da borda
+        // e sombra de elevação difusa projetada para baixo.
+        private void AplicarSuperficieCard(Border card, bool escuro)
+        {
+            LinearGradientBrush bg = new LinearGradientBrush();
+            bg.StartPoint = new Point(0, 0);
+            bg.EndPoint = new Point(0, 1);
+
+            LinearGradientBrush borda = new LinearGradientBrush();
+            borda.StartPoint = new Point(0, 0);
+            borda.EndPoint = new Point(0, 1);
+
+            DropShadowEffect sombra = new DropShadowEffect();
+            sombra.Direction = 270;
+            sombra.BlurRadius = 24;
+            sombra.ShadowDepth = 3;
+            sombra.RenderingBias = RenderingBias.Performance;
+
+            if (escuro)
+            {
+                bg.GradientStops.Add(new GradientStop(Color.FromArgb(228, 30, 41, 59), 0.0));
+                bg.GradientStops.Add(new GradientStop(Color.FromArgb(228, 20, 30, 51), 1.0));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(120, 125, 211, 252), 0.0));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(50, 56, 189, 248), 0.35));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(32, 56, 189, 248), 1.0));
+                sombra.Color = Color.FromRgb(0, 0, 0);
+                sombra.Opacity = 0.45;
+                sombra.BlurRadius = 28;
+                sombra.ShadowDepth = 5;
+            }
+            else
+            {
+                byte a = _backdropAtivo ? (byte)240 : (byte)250;
+                bg.GradientStops.Add(new GradientStop(Color.FromArgb(a, 255, 255, 255), 0.0));
+                bg.GradientStops.Add(new GradientStop(Color.FromArgb((byte)(a - 10), 244, 250, 255), 1.0));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(255, 255, 255, 255), 0.0));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(200, 186, 230, 253), 0.4));
+                borda.GradientStops.Add(new GradientStop(Color.FromArgb(140, 186, 230, 253), 1.0));
+                sombra.Color = Color.FromRgb(2, 132, 199);
+                sombra.Opacity = 0.20;
+                sombra.BlurRadius = 28;
+                sombra.ShadowDepth = 5;
+            }
+
+            card.Background = bg;
+            card.BorderBrush = borda;
+            card.BorderThickness = new Thickness(1);
+            card.CornerRadius = new CornerRadius(16);
+            card.Effect = sombra;
         }
 
                         private static UIElement CriarIconeMinimizar(Brush cor)
@@ -4103,6 +4255,26 @@ namespace GotinhaAgua
             }
         }
 
+        // Windows 11: fundo translúcido sobre Mica; cantos e sombra ficam por conta do DWM
+        private void AplicarVisualBackdrop(bool escuro)
+        {
+            _janelaBorda.Effect = null;
+            _janelaBorda.CornerRadius = new CornerRadius(0);
+            _janelaBorda.BorderThickness = new Thickness(0);
+
+            LinearGradientBrush g = _janelaBorda.Background as LinearGradientBrush;
+            if (g != null)
+            {
+                byte alfa = escuro ? (byte)205 : (byte)175;
+                foreach (GradientStop gs in g.GradientStops)
+                {
+                    Color c = gs.Color;
+                    gs.Color = Color.FromArgb(alfa, c.R, c.G, c.B);
+                }
+            }
+            DwmApiHelper.DefinirModoEscuro(this, escuro);
+        }
+
         private void AplicarTema()
         {
             bool escuro = (_dados != null && _dados.ModoEscuro);
@@ -4118,9 +4290,9 @@ namespace GotinhaAgua
                     LinearGradientBrush janelaBg = new LinearGradientBrush();
                     janelaBg.StartPoint = new Point(0, 0);
                     janelaBg.EndPoint = new Point(1, 1);
-                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(10, 17, 32), 0.0));
+                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(11, 17, 32), 0.0));
                     janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 0.5));
-                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(11, 19, 43), 1.0));
+                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(12, 20, 38), 1.0));
 
                     _janelaBorda.Background = janelaBg;
                     _janelaBorda.BorderBrush = new SolidColorBrush(Color.FromArgb(140, 56, 189, 248));
@@ -4137,9 +4309,9 @@ namespace GotinhaAgua
                     LinearGradientBrush janelaBg = new LinearGradientBrush();
                     janelaBg.StartPoint = new Point(0, 0);
                     janelaBg.EndPoint = new Point(1, 1);
-                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(224, 242, 254), 0.0));
-                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(240, 249, 255), 0.45));
-                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(229, 246, 254), 1.0));
+                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(186, 227, 252), 0.0));
+                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(230, 246, 255), 0.5));
+                    janelaBg.GradientStops.Add(new GradientStop(Color.FromRgb(200, 234, 253), 1.0));
 
                     LinearGradientBrush janelaBordaBrush = new LinearGradientBrush();
                     janelaBordaBrush.StartPoint = new Point(0, 0);
@@ -4159,53 +4331,12 @@ namespace GotinhaAgua
                 }
             }
 
+            if (_backdropAtivo && _janelaBorda != null) AplicarVisualBackdrop(escuro);
+
             // 2. Os 5 Cards principais
             foreach (Border card in _cardsLista)
             {
-                if (escuro)
-                {
-                    LinearGradientBrush bgCard = new LinearGradientBrush();
-                    bgCard.StartPoint = new Point(0, 0);
-                    bgCard.EndPoint = new Point(0, 1);
-                    bgCard.GradientStops.Add(new GradientStop(Color.FromRgb(23, 32, 54), 0.0));
-                    bgCard.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 1.0));
-
-                    card.Background = bgCard;
-                    card.BorderBrush = new SolidColorBrush(Color.FromArgb(90, 56, 189, 248));
-                    card.BorderThickness = new Thickness(1.2);
-                    card.Effect = new DropShadowEffect
-                    {
-                        Color = Color.FromRgb(0, 0, 0),
-                        Opacity = 0.35,
-                        BlurRadius = 16,
-                        ShadowDepth = 4
-                    };
-                }
-                else
-                {
-                    LinearGradientBrush bgCard = new LinearGradientBrush();
-                    bgCard.StartPoint = new Point(0, 0);
-                    bgCard.EndPoint = new Point(0, 1);
-                    bgCard.GradientStops.Add(new GradientStop(Color.FromArgb(250, 255, 255, 255), 0.0));
-                    bgCard.GradientStops.Add(new GradientStop(Color.FromArgb(242, 248, 252, 255), 1.0));
-
-                    LinearGradientBrush borderCard = new LinearGradientBrush();
-                    borderCard.StartPoint = new Point(0, 0);
-                    borderCard.EndPoint = new Point(1, 1);
-                    borderCard.GradientStops.Add(new GradientStop(Color.FromArgb(240, 255, 255, 255), 0.0));
-                    borderCard.GradientStops.Add(new GradientStop(Color.FromArgb(170, 186, 230, 253), 1.0));
-
-                    card.Background = bgCard;
-                    card.BorderBrush = borderCard;
-                    card.BorderThickness = new Thickness(1.2);
-                    card.Effect = new DropShadowEffect
-                    {
-                        Color = Color.FromRgb(2, 132, 199),
-                        Opacity = 0.08,
-                        BlurRadius = 18,
-                        ShadowDepth = 3
-                    };
-                }
+                AplicarSuperficieCard(card, escuro);
             }
 
             // 3. Barra de Título
@@ -5405,139 +5536,257 @@ namespace GotinhaAgua
     {
         private MainWindow _main;
 
+        public static LembreteAlertaWindow Atual;
+        private DispatcherTimer _timerAutoFechar;
+        private bool _fechando;
+
         public LembreteAlertaWindow(MainWindow main)
         {
             _main = main;
             bool escuro = (_main != null && _main._dados != null && _main._dados.ModoEscuro);
 
+            // Notificação flutuante compacta (estilo pílula) no canto da tela
             Title = "Hora do Gole! \uD83D\uDCA7";
-            Width = 350;
-            Height = 320;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            FontFamily = new FontFamily("Segoe UI Variable Text, Segoe UI");
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
             ResizeMode = ResizeMode.NoResize;
-            Background = escuro ? new SolidColorBrush(Color.FromRgb(15, 23, 42)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
+            ShowInTaskbar = false;
+            Topmost = true;
+            ShowActivated = false;
+            Width = 412;
+            SizeToContent = SizeToContent.Height;
             Opacity = 0;
-
+            SnapsToDevicePixels = true;
+            UseLayoutRounding = true;
             Icon = IconeHelper.ObterIconeJanela();
 
-            Loaded += delegate {
-                DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) {
+            Atual = this;
+            Closed += delegate { if (Atual == this) Atual = null; };
+
+            Loaded += delegate
+            {
+                Rect area = SystemParameters.WorkArea;
+                double destinoLeft = area.Right - Width - 8;
+                Top = area.Bottom - ActualHeight - 8;
+                Left = destinoLeft + 48;
+                BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
+                BeginAnimation(Window.LeftProperty, new DoubleAnimation(destinoLeft + 48, destinoLeft, TimeSpan.FromMilliseconds(380))
+                {
                     EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                };
-                BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                });
+
+                // Some sozinha após 60s se ignorado
+                _timerAutoFechar = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
+                _timerAutoFechar.Tick += delegate { _timerAutoFechar.Stop(); FecharSuave(); };
+                _timerAutoFechar.Start();
             };
 
-            StackPanel sp = new StackPanel { Margin = new Thickness(22), VerticalAlignment = VerticalAlignment.Center };
+            Brush corTitulo = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199));
+            Brush corTexto = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
 
-            string mascotAlertPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
-            if (File.Exists(mascotAlertPath))
+            LinearGradientBrush bg = new LinearGradientBrush();
+            bg.StartPoint = new Point(0, 0);
+            bg.EndPoint = new Point(0, 1);
+            if (escuro)
             {
-                try
-                {
-                    Image imgAlert = new Image
-                    {
-                        Width = 72,
-                        Height = 72,
-                        Stretch = Stretch.Uniform,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 0, 0, 10),
-                        Effect = new DropShadowEffect
-                        {
-                            BlurRadius = 16,
-                            ShadowDepth = 3,
-                            Opacity = 0.35,
-                            Color = Color.FromRgb(56, 189, 248)
-                        }
-                    };
-                    BitmapImage bmpAlert = new BitmapImage();
-                    bmpAlert.BeginInit();
-                    bmpAlert.UriSource = new Uri(mascotAlertPath, UriKind.Absolute);
-                    bmpAlert.CacheOption = BitmapCacheOption.OnLoad;
-                    bmpAlert.EndInit();
-                    imgAlert.Source = bmpAlert;
-                    sp.Children.Add(imgAlert);
-                }
-                catch
-                {
-                    sp.Children.Add(new TextBlock { Text = "\uD83D\uDCA7", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
-                }
+                bg.GradientStops.Add(new GradientStop(Color.FromRgb(30, 41, 59), 0.0));
+                bg.GradientStops.Add(new GradientStop(Color.FromRgb(15, 23, 42), 1.0));
             }
             else
             {
-                sp.Children.Add(new TextBlock { Text = "\uD83D\uDCA7", FontSize = 44, HorizontalAlignment = HorizontalAlignment.Center });
+                bg.GradientStops.Add(new GradientStop(Color.FromRgb(255, 255, 255), 0.0));
+                bg.GradientStops.Add(new GradientStop(Color.FromRgb(236, 247, 255), 1.0));
             }
 
-            TextBlock title = new TextBlock
+            Border card = new Border
             {
-                Text = "Hora de Beber \u00C1gua!",
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(56, 189, 248)) : new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 4, 0, 4)
+                Margin = new Thickness(16),
+                Padding = new Thickness(18, 16, 18, 16),
+                CornerRadius = new CornerRadius(22),
+                Background = bg,
+                BorderBrush = escuro ? new SolidColorBrush(Color.FromArgb(110, 56, 189, 248)) : new SolidColorBrush(Color.FromRgb(186, 230, 253)),
+                BorderThickness = new Thickness(1),
+                Effect = new DropShadowEffect
+                {
+                    Color = escuro ? Color.FromRgb(0, 0, 0) : Color.FromRgb(2, 132, 199),
+                    BlurRadius = 28,
+                    ShadowDepth = 6,
+                    Direction = 270,
+                    Opacity = escuro ? 0.5 : 0.28
+                }
             };
-            sp.Children.Add(title);
 
-            string textoDicaLembrete = "Seus olhos e sua mente precisam de uma pausa.\nHidrate seu corpo agora!";
+            StackPanel sp = new StackPanel();
+
+            // Linha superior: mascote + textos
+            Grid topo = new Grid();
+            topo.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            topo.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            UIElement mascote;
+            string mascotAlertPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mascote.png");
+            try
+            {
+                if (!File.Exists(mascotAlertPath)) throw new FileNotFoundException();
+                BitmapImage bmpAlert = new BitmapImage();
+                bmpAlert.BeginInit();
+                bmpAlert.UriSource = new Uri(mascotAlertPath, UriKind.Absolute);
+                bmpAlert.CacheOption = BitmapCacheOption.OnLoad;
+                bmpAlert.EndInit();
+                mascote = new Image { Source = bmpAlert, Width = 60, Height = 60, Stretch = Stretch.Uniform };
+            }
+            catch
+            {
+                mascote = new TextBlock { Text = "\uD83D\uDCA7", FontSize = 40, VerticalAlignment = VerticalAlignment.Center };
+            }
+            FrameworkElement mascoteFe = (FrameworkElement)mascote;
+            mascoteFe.Margin = new Thickness(0, 0, 14, 0);
+            mascoteFe.VerticalAlignment = VerticalAlignment.Center;
+            mascoteFe.RenderTransformOrigin = new Point(0.5, 0.5);
+            ScaleTransform stMascote = new ScaleTransform(1, 1);
+            mascoteFe.RenderTransform = stMascote;
+            DoubleAnimation respira = new DoubleAnimation(1.0, 1.07, TimeSpan.FromMilliseconds(1100))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            stMascote.BeginAnimation(ScaleTransform.ScaleXProperty, respira);
+            stMascote.BeginAnimation(ScaleTransform.ScaleYProperty, respira);
+            Grid.SetColumn(mascoteFe, 0);
+            topo.Children.Add(mascoteFe);
+
+            string textoDicaLembrete = "Seus olhos e sua mente precisam de uma pausa. Hidrate seu corpo agora!";
             if (_main != null && _main._dados != null && !string.IsNullOrEmpty(_main._dados.SexoUsuario))
             {
                 if (_main._dados.SexoUsuario == "M")
                 {
-                    textoDicaLembrete = "Homens t\u00EAm mais massa muscular e gastam \u00E1gua r\u00E1pido.\nAbaste\u00E7a seu corpo com mais um gole d'\u00E1gua agora!";
+                    textoDicaLembrete = "Homens t\u00EAm mais massa muscular e gastam \u00E1gua r\u00E1pido. Mais um gole agora!";
                 }
                 else if (_main._dados.SexoUsuario == "F")
                 {
-                    textoDicaLembrete = "Manter a hidrata\u00E7\u00E3o constante revigora a energia e a pele.\nHora de fazer uma pausa e beber \u00E1gua!";
+                    textoDicaLembrete = "Hidrata\u00E7\u00E3o constante revigora a energia e a pele. Hora de beber \u00E1gua!";
                 }
             }
 
-            TextBlock desc = new TextBlock
+            StackPanel textos = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            textos.Children.Add(new TextBlock
+            {
+                Text = "Hora de Beber \u00C1gua! \uD83D\uDCA7",
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = corTitulo
+            });
+            textos.Children.Add(new TextBlock
             {
                 Text = textoDicaLembrete,
                 FontSize = 11.5,
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                TextAlignment = TextAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 16)
-            };
-            sp.Children.Add(desc);
+                Foreground = corTexto,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 3, 0, 0)
+            });
+            Grid.SetColumn(textos, 1);
+            topo.Children.Add(textos);
+            sp.Children.Add(topo);
 
-            Button btn200 = new Button
+            // Linha de ações de 1 toque
+            Grid acoes = new Grid { Margin = new Thickness(0, 14, 0, 0) };
+            acoes.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            acoes.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            acoes.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            Button btnBebi = new Button
             {
-                Content = "\uD83E\uDD5B Tomei um Copo (+200 ml)",
+                Content = "\uD83E\uDD5B Bebi um copo!",
                 FontWeight = FontWeights.Bold,
                 FontSize = 12.5,
                 Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(2, 132, 199)),
-                Padding = new Thickness(14, 10, 14, 10),
-                Margin = new Thickness(0, 0, 0, 8),
+                Background = new LinearGradientBrush(Color.FromRgb(14, 165, 233), Color.FromRgb(2, 132, 199), 90),
+                Padding = new Thickness(14, 9, 14, 9),
                 BorderThickness = new Thickness(0),
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null
             };
-            AplicarPillModal(btn200, 12);
-            btn200.Click += delegate
+            AplicarPillModal(btnBebi, 14);
+            AdicionarFeedbackToque(btnBebi);
+            btnBebi.Click += delegate
             {
                 _main.AdicionarAgua(200, "Copo (\uD83E\uDD5B)");
                 FecharSuave();
             };
-            sp.Children.Add(btn200);
+            Grid.SetColumn(btnBebi, 0);
+            acoes.Children.Add(btnBebi);
 
             Button btnAdiar = new Button
             {
-                Content = "\u23F3 Adiar por 5 minutos",
+                Content = "\u23F3 Adiar 10m",
                 FontSize = 11.5,
-                FontWeight = FontWeights.Medium,
-                Foreground = escuro ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139)),
+                FontWeight = FontWeights.SemiBold,
+                Foreground = corTexto,
                 Background = escuro ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(241, 245, 249)),
                 BorderBrush = escuro ? new SolidColorBrush(Color.FromRgb(51, 65, 85)) : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(12, 7, 12, 7),
-                Cursor = Cursors.Hand
+                Padding = new Thickness(12, 8, 12, 8),
+                Margin = new Thickness(8, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null
             };
-            AplicarPillModal(btnAdiar, 12);
-            btnAdiar.Click += delegate { FecharSuave(); };
-            sp.Children.Add(btnAdiar);
+            AplicarPillModal(btnAdiar, 14);
+            AdicionarFeedbackToque(btnAdiar);
+            btnAdiar.Click += delegate
+            {
+                if (_main != null) _main.AdiarLembrete(10);
+                FecharSuave();
+            };
+            Grid.SetColumn(btnAdiar, 1);
+            acoes.Children.Add(btnAdiar);
 
-            Content = sp;
+            Button btnDispensar = new Button
+            {
+                Content = "Dispensar",
+                FontSize = 11.5,
+                Foreground = corTexto,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(10, 8, 10, 8),
+                Margin = new Thickness(2, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                FocusVisualStyle = null
+            };
+            AplicarPillModal(btnDispensar, 14);
+            AdicionarFeedbackToque(btnDispensar);
+            btnDispensar.Click += delegate { FecharSuave(); };
+            Grid.SetColumn(btnDispensar, 2);
+            acoes.Children.Add(btnDispensar);
+
+            sp.Children.Add(acoes);
+            card.Child = sp;
+            Content = card;
+        }
+
+        // Compressão suave ao pressionar e retorno elástico ao soltar
+        private static void AdicionarFeedbackToque(Button btn)
+        {
+            ScaleTransform st = new ScaleTransform(1, 1);
+            btn.RenderTransformOrigin = new Point(0.5, 0.5);
+            btn.RenderTransform = st;
+            btn.PreviewMouseDown += delegate
+            {
+                DoubleAnimation a = new DoubleAnimation(0.95, TimeSpan.FromMilliseconds(70));
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, a);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, a);
+            };
+            btn.PreviewMouseUp += delegate
+            {
+                DoubleAnimation a = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(260))
+                {
+                    EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.8 }
+                };
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, a);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, a);
+            };
         }
 
         private static void AplicarPillModal(Button btn, double cornerRadius)
@@ -5561,9 +5810,16 @@ namespace GotinhaAgua
 
         private void FecharSuave()
         {
-            DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(160));
+            if (_fechando) return;
+            _fechando = true;
+            if (_timerAutoFechar != null) _timerAutoFechar.Stop();
+            DoubleAnimation fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(200));
             fadeOut.Completed += delegate { Close(); };
             BeginAnimation(UIElement.OpacityProperty, fadeOut);
+            BeginAnimation(Window.LeftProperty, new DoubleAnimation(Left, Left + 40, TimeSpan.FromMilliseconds(200))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+            });
         }
     }
 
@@ -7822,6 +8078,119 @@ namespace GotinhaAgua
             return new HistoricoApp();
         }
     }
+    /// <summary>
+    /// Integração nativa com o DWM do Windows 11 (Mica, cantos arredondados, modo escuro imersivo).
+    /// Em versões sem suporte (Windows 10) tudo é ignorado e o visual anterior é mantido.
+    /// </summary>
+    public static class DwmApiHelper
+    {
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
+        private const int DWMWCP_ROUND = 2;
+        private const int DWMSBT_MAINWINDOW = 2; // Mica
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MARGINS
+        {
+            public int Left;
+            public int Right;
+            public int Top;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct OSVERSIONINFO
+        {
+            public int dwOSVersionInfoSize;
+            public int dwMajorVersion;
+            public int dwMinorVersion;
+            public int dwBuildNumber;
+            public int dwPlatformId;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string szCSDVersion;
+        }
+
+        [DllImport("ntdll.dll")]
+        private static extern int RtlGetVersion(ref OSVERSIONINFO info);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS margins);
+
+        private static bool? _suportaMica;
+
+        /// <summary>True no Windows 11 22H2 (build 22621) ou superior.</summary>
+        public static bool SuportaMica
+        {
+            get
+            {
+                if (_suportaMica.HasValue) return _suportaMica.Value;
+                bool ok = false;
+                try
+                {
+                    OSVERSIONINFO v = new OSVERSIONINFO();
+                    v.dwOSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFO));
+                    if (RtlGetVersion(ref v) == 0)
+                        ok = v.dwMajorVersion >= 10 && v.dwBuildNumber >= 22621;
+                }
+                catch { }
+                _suportaMica = ok;
+                return ok;
+            }
+        }
+
+        public static void DefinirModoEscuro(Window w, bool escuro)
+        {
+            try
+            {
+                IntPtr hwnd = new WindowInteropHelper(w).Handle;
+                if (hwnd == IntPtr.Zero) return;
+                int dark = escuro ? 1 : 0;
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, 4);
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Aplica Mica, cantos arredondados e modo escuro. Com estenderQuadro=true o fundo
+        /// da janela inteira fica sob o Mica (requer janela sem AllowsTransparency).
+        /// Retorna true se o backdrop foi aplicado com sucesso.
+        /// </summary>
+        public static bool Aplicar(Window w, bool escuro, bool estenderQuadro)
+        {
+            try
+            {
+                IntPtr hwnd = new WindowInteropHelper(w).Handle;
+                if (hwnd == IntPtr.Zero) return false;
+
+                DefinirModoEscuro(w, escuro);
+                if (!SuportaMica) return false;
+
+                int corner = DWMWCP_ROUND;
+                DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, 4);
+
+                int backdrop = DWMSBT_MAINWINDOW;
+                int hr = DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, 4);
+                if (hr != 0) return false;
+
+                if (estenderQuadro)
+                {
+                    HwndSource src = HwndSource.FromHwnd(hwnd);
+                    if (src != null && src.CompositionTarget != null)
+                        src.CompositionTarget.BackgroundColor = Colors.Transparent;
+                    MARGINS m = new MARGINS();
+                    m.Left = -1; m.Right = -1; m.Top = -1; m.Bottom = -1;
+                    if (DwmExtendFrameIntoClientArea(hwnd, ref m) != 0) return false;
+                }
+                return true;
+            }
+            catch { return false; }
+        }
+    }
+
     public class Program
     {
         [DllImport("user32.dll")]
